@@ -1,0 +1,629 @@
+================================================================================
+                    SISTEMA DE TICKETS TI - INSTALAÇÃO GRÁFICA
+                      TUTORIAL VISUAL GOOGLE CLOUD CONSOLE
+================================================================================
+
+ÍNDICE:
+1. PREPARAÇÃO INICIAL
+2. CRIAÇÃO DA VM COMPUTE ENGINE
+3. CONFIGURAÇÃO DO CLOUD SQL
+4. CONFIGURAÇÃO DE REDE E VPC
+5. CONFIGURAÇÃO DE FIREWALL
+6. CONFIGURAÇÃO DE LOAD BALANCER
+7. CONFIGURAÇÃO DE SSL/HTTPS
+8. CONFIGURAÇÃO DE DNS
+9. DEPLOY DA APLICAÇÃO
+10. CONFIGURAÇÕES FINAIS
+11. MONITORAMENTO
+
+================================================================================
+1. PREPARAÇÃO INICIAL
+================================================================================
+
+ACESSO AO CONSOLE:
+1. Acesse: https://console.cloud.google.com
+2. Faça login com sua conta Google
+3. Selecione ou crie um projeto
+4. Ative o faturamento (Billing) se ainda não estiver ativo
+
+HABILITAR APIs NECESSÁRIAS:
+1. No menu lateral, vá em "APIs e serviços" > "Biblioteca"
+2. Pesquise e habilite as seguintes APIs:
+   - Compute Engine API
+   - Cloud SQL Admin API
+   - Cloud Storage API
+   - Cloud DNS API
+   - Cloud Resource Manager API
+
+DEFINIR REGIÃO PADRÃO:
+1. No canto superior direito, clique no ícone de configurações
+2. Selecione "Configurações do projeto"
+3. Defina região padrão: us-central1
+
+================================================================================
+2. CRIAÇÃO DA VM COMPUTE ENGINE
+================================================================================
+
+PASSO 1 - ACESSAR COMPUTE ENGINE:
+1. No menu lateral, clique em "Compute Engine"
+2. Clique em "Instâncias de VM"
+3. Clique no botão "CRIAR INSTÂNCIA"
+
+PASSO 2 - CONFIGURAÇÕES BÁSICAS:
+Nome: tickets-server
+Região: us-central1
+Zona: us-central1-a
+
+PASSO 3 - CONFIGURAÇÃO DA MÁQUINA:
+Série: E2
+Tipo de máquina: e2-standard-2 (2 vCPU, 8 GB de memória)
+
+PASSO 4 - DISCO DE INICIALIZAÇÃO:
+1. Clique em "ALTERAR"
+2. Sistema operacional: Ubuntu
+3. Versão: Ubuntu 22.04 LTS
+4. Tipo de disco de inicialização: SSD persistente
+5. Tamanho: 50 GB
+6. Clique em "SELECIONAR"
+
+PASSO 5 - IDENTIDADE E ACESSO À API:
+Conta de serviço: Compute Engine default service account
+Escopos de acesso: Permitir acesso completo a todas as APIs do Cloud
+
+PASSO 6 - FIREWALL:
+✅ Permitir tráfego HTTP
+✅ Permitir tráfego HTTPS
+✅ Permitir verificações de integridade do balanceador de carga
+
+PASSO 7 - CONFIGURAÇÕES AVANÇADAS:
+Clique em "Configurações avançadas"
+
+Rede:
+- Tags de rede: tickets-server
+- Interfaces de rede: default (mantenha padrão)
+
+Segurança:
+- VM protegida:
+  ✅ Ativar o vTPM
+  ✅ Ativar o monitoramento de integridade
+  ❌ Ativar a inicialização segura (deixe desmarcado)
+
+Acesso à VM:
+- Mantenha todas as opções desmarcadas (usar padrão)
+
+PASSO 8 - CRIAR:
+Clique no botão "CRIAR" no final da página
+
+================================================================================
+3. CONFIGURAÇÃO DO CLOUD SQL
+================================================================================
+
+PASSO 1 - ACESSAR CLOUD SQL:
+1. No menu lateral, clique em "SQL"
+2. Clique no botão "CRIAR INSTÂNCIA"
+
+PASSO 2 - ESCOLHER BANCO:
+Clique em "PostgreSQL"
+
+PASSO 3 - CONFIGURAÇÕES BÁSICAS:
+ID da instância: tickets-db
+Senha: [Digite uma senha segura, ex: TicketsDB2024!]
+Região: us-central1
+Zona: us-central1-a
+
+PASSO 4 - CONFIGURAÇÕES DA MÁQUINA:
+Tipo de máquina: db-n1-standard-1 (3.75 GB RAM)
+Armazenamento: 20 GB SSD
+
+PASSO 5 - CONFIGURAÇÕES DE REDE:
+1. Clique em "Configurações avançadas"
+2. Na aba "Rede":
+   - Rede autorizada: default
+   - ❌ Desmarque "IP público"
+   - ✅ Marque "IP privado"
+   - Rede: default
+
+PASSO 6 - BACKUP E RECUPERAÇÃO:
+✅ Backups automáticos
+Horário de início do backup: 03:00
+Retenção: 7 dias
+✅ Recuperação point-in-time
+
+PASSO 7 - CRIAR:
+Clique em "CRIAR INSTÂNCIA"
+
+PASSO 8 - CRIAR BANCO DE DADOS:
+1. Após a instância ser criada, clique nela
+2. Vá na aba "Bancos de dados"
+3. Clique em "CRIAR BANCO DE DADOS"
+4. Nome: tickets
+5. Clique em "CRIAR"
+
+PASSO 9 - CRIAR USUÁRIO:
+1. Vá na aba "Usuários"
+2. Clique em "ADICIONAR CONTA DE USUÁRIO"
+3. Nome de usuário: ticketsuser
+4. Senha: [Digite uma senha segura]
+5. Clique em "ADICIONAR"
+
+================================================================================
+4. CONFIGURAÇÃO DE REDE E VPC (OPCIONAL)
+================================================================================
+
+PARA USAR VPC PERSONALIZADA (RECOMENDADO):
+
+PASSO 1 - CRIAR VPC:
+1. No menu lateral, vá em "VPC network" > "Redes VPC"
+2. Clique em "CRIAR REDE VPC"
+3. Nome: tickets-vpc
+4. Modo de criação de sub-rede: Personalizado
+
+PASSO 2 - CRIAR SUB-REDE:
+1. Clique em "ADICIONAR SUB-REDE"
+2. Nome: tickets-subnet
+3. Região: us-central1
+4. Intervalo de endereços IP: 10.0.0.0/24
+5. Clique em "CONCLUÍDO"
+
+PASSO 3 - CRIAR VPC:
+Clique em "CRIAR"
+
+PASSO 4 - MIGRAR VM PARA NOVA VPC:
+1. Vá em "Compute Engine" > "Instâncias de VM"
+2. Pare a VM tickets-server
+3. Clique em "EDITAR"
+4. Em "Interfaces de rede", clique no lápis
+5. Rede: tickets-vpc
+6. Sub-rede: tickets-subnet
+7. Clique em "CONCLUÍDO" e "SALVAR"
+8. Inicie a VM novamente
+
+================================================================================
+5. CONFIGURAÇÃO DE FIREWALL
+================================================================================
+
+PASSO 1 - ACESSAR FIREWALL:
+1. No menu lateral, vá em "VPC network" > "Firewall"
+2. Clique em "CRIAR REGRA DE FIREWALL"
+
+PASSO 2 - REGRA PARA WEB (HTTP/HTTPS):
+Nome: allow-tickets-web
+Direção: Entrada
+Ação: Permitir
+Destinos: Tags especificadas
+Tags de destino: tickets-server
+Filtro de origem: Intervalos de IP
+Intervalos de IP de origem: 0.0.0.0/0
+Protocolos e portas: ✅ TCP - Portas: 80,443
+Clique em "CRIAR"
+
+PASSO 3 - REGRA PARA SSH:
+Nome: allow-tickets-ssh
+Direção: Entrada
+Ação: Permitir
+Destinos: Tags especificadas
+Tags de destino: tickets-server
+Filtro de origem: Intervalos de IP
+Intervalos de IP de origem: [SEU_IP_PÚBLICO]/32
+Protocolos e portas: ✅ TCP - Portas: 22
+Clique em "CRIAR"
+
+PASSO 4 - REGRA INTERNA:
+Nome: allow-internal
+Direção: Entrada
+Ação: Permitir
+Destinos: Todas as instâncias na rede
+Filtro de origem: Intervalos de IP
+Intervalos de IP de origem: 10.0.0.0/24
+Protocolos e portas: ✅ Permitir tudo
+Clique em "CRIAR"
+
+================================================================================
+6. CONFIGURAÇÃO DE LOAD BALANCER
+================================================================================
+
+PASSO 1 - CRIAR IP ESTÁTICO:
+1. Vá em "VPC network" > "Endereços IP externos"
+2. Clique em "RESERVAR ENDEREÇO ESTÁTICO EXTERNO"
+3. Nome: tickets-ip
+4. Tipo: Global
+5. Clique em "RESERVAR"
+
+PASSO 2 - CRIAR HEALTH CHECK:
+1. Vá em "Compute Engine" > "Verificações de integridade"
+2. Clique em "CRIAR VERIFICAÇÃO DE INTEGRIDADE"
+3. Nome: tickets-health-check
+4. Protocolo: HTTP
+5. Porta: 80
+6. Caminho da solicitação: /health
+7. Clique em "CRIAR"
+
+PASSO 3 - CRIAR GRUPO DE INSTÂNCIAS:
+1. Vá em "Compute Engine" > "Grupos de instâncias"
+2. Clique em "CRIAR GRUPO DE INSTÂNCIAS"
+3. Nome: tickets-ig
+4. Local: Zona única
+5. Região: us-central1
+6. Zona: us-central1-a
+7. Rede: default (ou tickets-vpc)
+8. Sub-rede: default (ou tickets-subnet)
+9. Clique em "CRIAR"
+10. Após criado, clique no grupo
+11. Clique em "ADICIONAR INSTÂNCIAS"
+12. Selecione: tickets-server
+13. Clique em "ADICIONAR"
+
+PASSO 4 - CRIAR BACKEND SERVICE:
+1. Vá em "Rede" > "Serviços de load balancing"
+2. Clique em "CRIAR LOAD BALANCER"
+3. Escolha "HTTP(S) Load Balancing"
+4. Clique em "COMEÇAR A CONFIGURAÇÃO"
+5. Internet para minhas VMs: SIM
+6. Global ou Regional: Global
+7. Clique em "CONTINUAR"
+
+Nome do load balancer: tickets-lb
+
+Backend:
+1. Clique em "CRIAR UM SERVIÇO DE BACKEND"
+2. Nome: tickets-backend
+3. Tipo de backend: Grupo de instâncias
+4. Protocolo: HTTP
+5. Porta nomeada: http
+6. Tempo limite: 30 segundos
+7. Grupo de instâncias: tickets-ig
+8. Porta: 80
+9. Verificação de integridade: tickets-health-check
+10. Clique em "CONCLUÍDO"
+
+Frontend:
+1. Nome: tickets-frontend
+2. Protocolo: HTTP
+3. IP: tickets-ip
+4. Porta: 80
+5. Clique em "CONCLUÍDO"
+
+Clique em "CRIAR"
+
+================================================================================
+7. CONFIGURAÇÃO DE SSL/HTTPS
+================================================================================
+
+PASSO 1 - CRIAR CERTIFICADO SSL:
+1. Vá em "Rede" > "Serviços de load balancing"
+2. Clique no load balancer "tickets-lb"
+3. Clique em "EDITAR"
+4. Na seção Frontend, clique em "ADICIONAR FRONTEND IP E PORTA"
+
+PASSO 2 - CONFIGURAR HTTPS:
+Nome: tickets-https-frontend
+Protocolo: HTTPS
+IP: tickets-ip
+Porta: 443
+
+PASSO 3 - CRIAR CERTIFICADO:
+1. Certificado: "Criar um novo certificado"
+2. Nome: tickets-ssl-cert
+3. Criar certificado SSL gerenciado pelo Google: SIM
+4. Domínios: tickets.seudominio.com.br
+5. Clique em "CRIAR"
+
+PASSO 4 - SALVAR:
+Clique em "ATUALIZAR"
+
+PASSO 5 - REDIRECIONAR HTTP PARA HTTPS:
+1. Vá em "Rede" > "Serviços de load balancing"
+2. Clique em "CRIAR LOAD BALANCER"
+3. HTTP(S) Load Balancing
+4. Nome: tickets-redirect
+5. Backend: (deixe vazio)
+6. Regras de host e caminho:
+   - Ação: Redirecionar
+   - Tipo de redirecionamento: Redirecionamento permanente
+   - HTTPS redirect: SIM
+7. Frontend:
+   - Protocolo: HTTP
+   - IP: tickets-ip
+   - Porta: 80
+8. Clique em "CRIAR"
+
+================================================================================
+8. CONFIGURAÇÃO DE DNS
+================================================================================
+
+PASSO 1 - OBTER IP DO LOAD BALANCER:
+1. Vá em "VPC network" > "Endereços IP externos"
+2. Anote o IP do "tickets-ip"
+
+PASSO 2 - CONFIGURAR DNS NO SEU PROVEDOR:
+1. Acesse o painel do seu provedor de domínio
+2. Vá na seção de DNS/Zona DNS
+3. Adicione um registro A:
+   - Nome: tickets (ou o subdomínio desejado)
+   - Tipo: A
+   - Valor: [IP_DO_LOAD_BALANCER]
+   - TTL: 300
+
+PASSO 3 - AGUARDAR PROPAGAÇÃO:
+- Aguarde 5-60 minutos para propagação DNS
+- Teste: ping tickets.seudominio.com.br
+
+================================================================================
+9. DEPLOY DA APLICAÇÃO
+================================================================================
+
+PASSO 1 - CONECTAR NA VM:
+1. Vá em "Compute Engine" > "Instâncias de VM"
+2. Clique em "SSH" na linha da VM tickets-server
+
+PASSO 2 - ATUALIZAR SISTEMA:
+sudo apt update && sudo apt upgrade -y
+
+PASSO 3 - INSTALAR DOCKER:
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+sudo usermod -aG docker $USER
+
+PASSO 4 - INSTALAR DOCKER COMPOSE:
+sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
+
+PASSO 5 - INSTALAR NGINX:
+sudo apt install nginx -y
+
+PASSO 6 - INSTALAR GIT:
+sudo apt install git -y
+
+PASSO 7 - CLONAR PROJETO:
+sudo mkdir -p /opt/tickets
+sudo chown $USER:$USER /opt/tickets
+cd /opt/tickets
+git clone https://github.com/seu-usuario/sistema-tickets-ti.git .
+
+PASSO 8 - CONFIGURAR NGINX:
+sudo nano /etc/nginx/sites-available/tickets
+
+Copie e cole:
+server {
+    listen 80;
+    server_name tickets.seudominio.com.br;
+
+    # Security headers
+    add_header X-Frame-Options DENY;
+    add_header X-Content-Type-Options nosniff;
+    add_header X-XSS-Protection "1; mode=block";
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains";
+
+    # Health check
+    location /health {
+        return 200 "OK";
+        add_header Content-Type text/plain;
+    }
+
+    # Frontend
+    location / {
+        proxy_pass http://localhost:3000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Backend API
+    location /api/ {
+        proxy_pass http://localhost:8000;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+
+Salve (Ctrl+X, Y, Enter)
+
+PASSO 9 - ATIVAR NGINX:
+sudo ln -s /etc/nginx/sites-available/tickets /etc/nginx/sites-enabled/
+sudo rm /etc/nginx/sites-enabled/default
+sudo nginx -t
+sudo systemctl reload nginx
+
+PASSO 10 - OBTER IP PRIVADO DO CLOUD SQL:
+1. Volte ao console Google Cloud
+2. Vá em "SQL" > clique na instância "tickets-db"
+3. Na aba "Visão geral", anote o "IP privado"
+
+PASSO 11 - CONFIGURAR VARIÁVEIS:
+nano .env
+
+Copie e cole (substitua os valores):
+DATABASE_URL=postgresql://ticketsuser:SUA_SENHA_SQL@IP_PRIVADO_SQL:5432/tickets
+SECRET_KEY=sua_chave_secreta_muito_segura_aqui_32_chars
+ALGORITHM=HS256
+ACCESS_TOKEN_EXPIRE_MINUTES=1440
+LDAP_SERVER=ldap://IP_DO_AD:389
+LDAP_BASE_DN=DC=cliente,DC=local
+LDAP_BIND_DN=CN=TicketsService,OU=Users,DC=cliente,DC=local
+LDAP_BIND_PASSWORD=SenhaDoServico123!
+APP_NAME=Sistema de Tickets TI
+REACT_APP_API_URL=https://tickets.seudominio.com.br
+
+Salve (Ctrl+X, Y, Enter)
+
+PASSO 12 - CRIAR DOCKER COMPOSE:
+nano docker-compose.yml
+
+Copie e cole:
+version: '3.8'
+
+services:
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - ./uploads:/app/uploads
+    restart: unless-stopped
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - REACT_APP_API_URL=https://tickets.seudominio.com.br
+    restart: unless-stopped
+
+volumes:
+  uploads:
+
+Salve (Ctrl+X, Y, Enter)
+
+PASSO 13 - FAZER BUILD E INICIAR:
+docker-compose build
+docker-compose up -d
+
+PASSO 14 - CRIAR USUÁRIO ADMIN:
+docker-compose exec backend python setup_admin.py
+
+================================================================================
+10. CONFIGURAÇÕES FINAIS
+================================================================================
+
+PASSO 1 - CONFIGURAR CLOUD ARMOR (PROTEÇÃO):
+1. Vá em "Rede" > "Cloud Armor"
+2. Clique em "CRIAR POLÍTICA"
+3. Nome: tickets-security-policy
+4. Tipo: Política de segurança de backend
+
+Regras:
+1. Prioridade: 1000
+   Condição: origin.region_code == 'BR'
+   Ação: Permitir
+
+2. Prioridade: 2000
+   Condição: true
+   Ação: Rate based ban
+   Taxa limite: 100 requests/60 seconds
+   Duração do banimento: 600 seconds
+
+3. Clique em "CRIAR"
+
+PASSO 2 - APLICAR POLÍTICA AO BACKEND:
+1. Vá em "Rede" > "Serviços de load balancing"
+2. Clique no load balancer "tickets-lb"
+3. Clique em "EDITAR"
+4. Na seção Backend, clique no backend "tickets-backend"
+5. Em "Política de segurança", selecione "tickets-security-policy"
+6. Clique em "ATUALIZAR"
+
+PASSO 3 - CONFIGURAR BACKUP AUTOMÁTICO:
+1. Vá em "Compute Engine" > "Snapshots"
+2. Clique em "CRIAR PROGRAMAÇÃO DE SNAPSHOT"
+3. Nome: tickets-backup
+4. Região: us-central1
+5. Programação: Diária
+6. Horário de início: 02:00
+7. Retenção máxima: 30 dias
+8. Clique em "CRIAR"
+
+PASSO 4 - APLICAR BACKUP À VM:
+1. Vá em "Compute Engine" > "Discos"
+2. Clique no disco da VM "tickets-server"
+3. Clique em "EDITAR"
+4. Em "Programação de snapshot", selecione "tickets-backup"
+5. Clique em "SALVAR"
+
+================================================================================
+11. MONITORAMENTO
+================================================================================
+
+PASSO 1 - CONFIGURAR ALERTAS:
+1. Vá em "Monitoring" > "Alerting"
+2. Clique em "CRIAR POLÍTICA"
+3. Nome: CPU Alta - Tickets Server
+4. Condições:
+   - Recurso: VM Instance
+   - Métrica: CPU utilization
+   - Filtro: instance_name = "tickets-server"
+   - Condição: Maior que 80%
+   - Duração: 5 minutos
+5. Configurar notificações (email, SMS)
+6. Clique em "SALVAR"
+
+PASSO 2 - DASHBOARD PERSONALIZADO:
+1. Vá em "Monitoring" > "Dashboards"
+2. Clique em "CRIAR DASHBOARD"
+3. Nome: Sistema Tickets - Monitoramento
+4. Adicione gráficos para:
+   - CPU da VM
+   - Memória da VM
+   - Conexões do Cloud SQL
+   - Latência do Load Balancer
+5. Clique em "SALVAR"
+
+================================================================================
+VERIFICAÇÃO FINAL
+================================================================================
+
+CHECKLIST DE VERIFICAÇÃO:
+□ VM tickets-server criada e rodando
+□ Cloud SQL tickets-db criado e acessível
+□ Load balancer configurado e funcionando
+□ SSL/HTTPS ativo e certificado válido
+□ DNS apontando para o IP correto
+□ Aplicação rodando (frontend + backend)
+□ Usuário admin criado
+□ Firewall configurado corretamente
+□ Cloud Armor ativo
+□ Backups automáticos configurados
+□ Monitoramento e alertas ativos
+
+TESTE FINAL:
+1. Acesse: https://tickets.seudominio.com.br
+2. Faça login com: admin / !@Adm1n@sw!
+3. Verifique se o sistema carrega corretamente
+
+COMANDOS ÚTEIS (SSH na VM):
+- Ver logs: docker-compose logs -f
+- Reiniciar: docker-compose restart
+- Status: docker-compose ps
+- Atualizar: git pull && docker-compose build && docker-compose up -d
+
+================================================================================
+CUSTOS ESTIMADOS (USD/MÊS)
+================================================================================
+
+Compute Engine (e2-standard-2): ~$50
+Cloud SQL (db-n1-standard-1): ~$70
+Load Balancer: ~$18
+Armazenamento: ~$8
+Rede: ~$10
+Cloud Armor: ~$5
+TOTAL: ~$161/mês
+
+================================================================================
+SUPORTE
+================================================================================
+
+Console Google Cloud: https://console.cloud.google.com
+Documentação: https://cloud.google.com/docs
+Suporte: https://cloud.google.com/support
+
+================================================================================
+NOTAS IMPORTANTES
+================================================================================
+
+1. Substitua TODOS os valores de exemplo pelos seus valores reais
+2. Mantenha as senhas em local seguro
+3. Monitore os custos regularmente
+4. Faça backups regulares
+5. Mantenha o sistema atualizado
+6. Configure alertas de billing para evitar surpresas
+
+Este tutorial fornece uma implementação completa via interface gráfica do
+Google Cloud Console, sem necessidade de linha de comando.
+
+================================================================================
+FIM DO TUTORIAL GRÁFICO
+================================================================================
