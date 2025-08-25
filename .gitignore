@@ -1,0 +1,50 @@
+ # Environment files
+.env
+*.env
+backend/.env
+
+# Database
+*.db
+*.sqlite
+tickets.db
+
+# Node modules
+node_modules/
+frontend/node_modules/
+**/node_modules/
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+**/__pycache__/
+
+# Uploads e arquivos temporários
+uploads/
+backend/uploads/
+*.tmp
+
+# Logs
+*.log
+logs/
+
+# IDE e editores
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Sistema operacional
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# Build files
+dist/
+build/
+*.egg-info/

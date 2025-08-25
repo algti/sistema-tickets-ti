@@ -1,0 +1,55 @@
+version: '3.8'
+
+services:
+  postgres:
+    image: postgres:15
+    container_name: tickets_db
+    environment:
+      POSTGRES_DB: tickets_db
+      POSTGRES_USER: tickets_user
+      POSTGRES_PASSWORD: tickets_password
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./backend/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - tickets_network
+
+  backend:
+    build: ./backend
+    container_name: tickets_backend
+    ports:
+      - "8000:8000"
+    environment:
+      DATABASE_URL: postgresql://tickets_user:tickets_password@postgres:5432/tickets_db
+      SECRET_KEY: your-secret-key-change-in-production
+      LDAP_SERVER: ldap://your-ad-server.local
+      LDAP_BASE_DN: DC=empresa,DC=local
+      LDAP_BIND_DN: CN=service-account,OU=Users,DC=empresa,DC=local
+      LDAP_BIND_PASSWORD: service-account-password
+    depends_on:
+      - postgres
+    volumes:
+      - ./backend/uploads:/app/uploads
+    networks:
+      - tickets_network
+
+  frontend:
+    build: ./frontend
+    container_name: tickets_frontend
+    ports:
+      - "3000:3000"
+    environment:
+      REACT_APP_API_URL: http://localhost:8000
+    depends_on:
+      - backend
+    networks:
+      - tickets_network
+
+volumes:
+  postgres_data:
+
+networks:
+  tickets_network:
+    driver: bridge
