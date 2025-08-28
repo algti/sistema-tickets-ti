@@ -28,15 +28,15 @@ function Users() {
   const [showLdapModal, setShowLdapModal] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [modalLoading, setModalLoading] = useState(false);
-  
-  // User form data
+
+    // User form data
   const [userForm, setUserForm] = useState({
     username: '',
     email: '',
     full_name: '',
     department: '',
     phone: '',
-    role: 'USER',
+    role: 'user',
     password: '',
     is_active: true
   });
