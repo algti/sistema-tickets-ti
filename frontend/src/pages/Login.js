@@ -119,7 +119,7 @@ const Login = () => {
             <div className="text-sm text-gray-600">
               <p>Desenvolvido por:</p>
               <p className="font-mono text-xs mt-1">
-                <strong>Admin:</strong> ALG Soluções em Tecnologia
+                <strong></strong> ALG Soluções em Tecnologia
               </p>
             </div>
           </div>
