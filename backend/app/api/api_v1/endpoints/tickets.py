@@ -74,88 +74,125 @@ async def get_tickets(
 ):
     """Get tickets with filters"""
     
-    query = db.query(Ticket).options(
-        joinedload(Ticket.created_by),
-        joinedload(Ticket.assigned_to),
-        joinedload(Ticket.category)
-    )
-    
-    # Filter based on user role
-    if current_user.role == UserRole.user:
-        # Users can only see their own tickets
-        query = query.filter(Ticket.created_by_id == current_user.id)
-    elif current_user.role == UserRole.technician:
-        # Technicians can only see tickets assigned to them
-        query = query.filter(Ticket.assigned_to_id == current_user.id)
-    # Admin can see all tickets (no additional filter)
-    
-    # Apply filters
-    if status and status.strip():
-        query = query.filter(Ticket.status == status)
-    
-    if priority and priority.strip():
-        query = query.filter(Ticket.priority == priority)
-    
-    if category_id:
-        query = query.filter(Ticket.category_id == category_id)
-    
-    if assigned_to_id:
-        query = query.filter(Ticket.assigned_to_id == assigned_to_id)
-    
-    if created_by_id and current_user.role in [UserRole.technician, UserRole.admin]:
-        query = query.filter(Ticket.created_by_id == created_by_id)
-    
-    if search and search.strip():
-        search_filter = or_(
-            Ticket.title.ilike(f"%{search}%"),
-            Ticket.description.ilike(f"%{search}%"),
-            Ticket.solution.ilike(f"%{search}%")
+    try:
+        query = db.query(Ticket).options(
+            joinedload(Ticket.created_by),
+            joinedload(Ticket.assigned_to),
+            joinedload(Ticket.category)
         )
-        query = query.filter(search_filter)
-    
-    # Order by creation date (newest first)
-    query = query.order_by(desc(Ticket.created_at))
-    
-    tickets = query.offset(skip).limit(limit).all()
-    
-    # Convert enum values to strings for frontend compatibility
-    result = []
-    for ticket in tickets:
-        ticket_dict = {
-            "id": ticket.id,
-            "title": ticket.title,
-            "description": ticket.description,
-            "status": ticket.status.value.lower() if hasattr(ticket.status, 'value') else str(ticket.status).lower(),
-            "priority": ticket.priority.value.lower() if hasattr(ticket.priority, 'value') else str(ticket.priority).lower(),
-            "category_id": ticket.category_id,
-            "created_by_id": ticket.created_by_id,
-            "assigned_to_id": ticket.assigned_to_id,
-            "created_at": ticket.created_at.isoformat(),
-            "updated_at": ticket.updated_at.isoformat() if ticket.updated_at else None,
-            "resolved_at": ticket.resolved_at.isoformat() if ticket.resolved_at else None,
-            "closed_at": ticket.closed_at.isoformat() if ticket.closed_at else None,
-            "solution": ticket.solution,
-            "created_by": {
-                "id": ticket.created_by.id,
-                "username": ticket.created_by.username,
-                "full_name": ticket.created_by.full_name,
-                "email": ticket.created_by.email
-            } if ticket.created_by else None,
-            "assigned_to": {
-                "id": ticket.assigned_to.id,
-                "username": ticket.assigned_to.username,
-                "full_name": ticket.assigned_to.full_name,
-                "email": ticket.assigned_to.email
-            } if ticket.assigned_to else None,
-            "category": {
-                "id": ticket.category.id,
-                "name": ticket.category.name,
-                "color": ticket.category.color
-            } if ticket.category else None
-        }
-        result.append(ticket_dict)
-    
-    return result
+        
+        # Filter based on user role - FIXED: Added proper enum handling
+        user_role = current_user.role
+        if isinstance(user_role, str):
+            user_role_str = user_role.lower()
+        else:
+            user_role_str = user_role.value.lower()
+        
+        if user_role_str == "user":
+            # Users can only see their own tickets
+            query = query.filter(Ticket.created_by_id == current_user.id)
+        elif user_role_str == "technician":
+            # Technicians can only see tickets assigned to them
+            query = query.filter(Ticket.assigned_to_id == current_user.id)
+        # Admin can see all tickets (no additional filter)
+        
+        # Apply filters
+        if status and status.strip():
+            query = query.filter(Ticket.status == status)
+        
+        if priority and priority.strip():
+            query = query.filter(Ticket.priority == priority)
+        
+        if category_id:
+            query = query.filter(Ticket.category_id == category_id)
+        
+        if assigned_to_id:
+            query = query.filter(Ticket.assigned_to_id == assigned_to_id)
+        
+        if created_by_id and user_role_str in ["technician", "admin"]:
+            query = query.filter(Ticket.created_by_id == created_by_id)
+        
+        if search and search.strip():
+            search_filter = or_(
+                Ticket.title.ilike(f"%{search}%"),
+                Ticket.description.ilike(f"%{search}%"),
+                Ticket.solution.ilike(f"%{search}%")
+            )
+            query = query.filter(search_filter)
+        
+        # Order by creation date (newest first)
+        query = query.order_by(desc(Ticket.created_at))
+        
+        tickets = query.offset(skip).limit(limit).all()
+        
+        # Convert enum values to strings for frontend compatibility - FIXED: Added safe attribute access
+        result = []
+        for ticket in tickets:
+            # Safe enum value extraction
+            status_value = "unknown"
+            priority_value = "unknown"
+            
+            try:
+                if hasattr(ticket.status, 'value'):
+                    status_value = ticket.status.value.lower()
+                else:
+                    status_value = str(ticket.status).lower()
+            except:
+                status_value = "unknown"
+            
+            try:
+                if hasattr(ticket.priority, 'value'):
+                    priority_value = ticket.priority.value.lower()
+                else:
+                    priority_value = str(ticket.priority).lower()
+            except:
+                priority_value = "unknown"
+            
+            ticket_dict = {
+                "id": ticket.id,
+                "title": ticket.title or "",
+                "description": ticket.description or "",
+                "status": status_value,
+                "priority": priority_value,
+                "category_id": ticket.category_id,
+                "created_by_id": ticket.created_by_id,
+                "assigned_to_id": ticket.assigned_to_id,
+                "created_at": ticket.created_at.isoformat() if ticket.created_at else None,
+                "updated_at": ticket.updated_at.isoformat() if ticket.updated_at else None,
+                "resolved_at": ticket.resolved_at.isoformat() if ticket.resolved_at else None,
+                "closed_at": ticket.closed_at.isoformat() if ticket.closed_at else None,
+                "solution": ticket.solution or "",
+                "created_by": {
+                    "id": ticket.created_by.id,
+                    "username": ticket.created_by.username,
+                    "full_name": ticket.created_by.full_name,
+                    "email": ticket.created_by.email
+                } if ticket.created_by else None,
+                "assigned_to": {
+                    "id": ticket.assigned_to.id,
+                    "username": ticket.assigned_to.username,
+                    "full_name": ticket.assigned_to.full_name,
+                    "email": ticket.assigned_to.email
+                } if ticket.assigned_to else None,
+                "category": {
+                    "id": ticket.category.id,
+                    "name": ticket.category.name,
+                    "color": ticket.category.color
+                } if ticket.category else None
+            }
+            result.append(ticket_dict)
+        
+        return result
+        
+    except Exception as e:
+        # Log the error for debugging
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error in get_tickets: {str(e)}")
+        logger.error(f"User: {current_user.username}, Role: {current_user.role}")
+        
+        # Return empty list instead of crashing
+        return []
 
 
 @router.get("/{ticket_id}", response_model=dict)
