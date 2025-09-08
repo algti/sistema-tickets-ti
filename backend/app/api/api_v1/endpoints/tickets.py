@@ -77,10 +77,10 @@ async def get_tickets(
     )
     
     # Filter based on user role
-    if current_user.role == UserRole.USER:
+    if current_user.role == UserRole.user:
         # Users can only see their own tickets
         query = query.filter(Ticket.created_by_id == current_user.id)
-    elif current_user.role == UserRole.TECHNICIAN:
+    elif current_user.role == UserRole.technician:
         # Technicians can only see tickets assigned to them
         query = query.filter(Ticket.assigned_to_id == current_user.id)
     # Admin can see all tickets (no additional filter)
@@ -98,7 +98,7 @@ async def get_tickets(
     if assigned_to_id:
         query = query.filter(Ticket.assigned_to_id == assigned_to_id)
     
-    if created_by_id and current_user.role in [UserRole.TECHNICIAN, UserRole.ADMIN]:
+    if created_by_id and current_user.role in [UserRole.technician, UserRole.admin]:
         query = query.filter(Ticket.created_by_id == created_by_id)
     
     if search and search.strip():
@@ -310,8 +310,8 @@ async def update_ticket(
     
     # Check permissions
     can_update = (
-        current_user.role in [UserRole.TECHNICIAN, UserRole.ADMIN] or
-        (current_user.role == UserRole.USER and ticket.created_by_id == current_user.id)
+        current_user.role in [UserRole.technician, UserRole.admin] or
+        (current_user.role == UserRole.user and ticket.created_by_id == current_user.id)
     )
     
     if not can_update:
@@ -424,7 +424,7 @@ async def add_comment(
     
     # Check permissions
     can_comment = (
-        current_user.role in [UserRole.TECHNICIAN, UserRole.ADMIN] or
+        current_user.role in [UserRole.technician, UserRole.admin] or
         ticket.created_by_id == current_user.id
     )
     
@@ -480,7 +480,7 @@ async def get_ticket_comments(
     
     # Check permissions
     can_view = (
-        current_user.role in [UserRole.TECHNICIAN, UserRole.ADMIN] or
+        current_user.role in [UserRole.technician, UserRole.admin] or
         ticket.created_by_id == current_user.id
     )
     
@@ -538,7 +538,7 @@ async def upload_attachment(
     
     # Check permissions
     can_upload = (
-        current_user.role in [UserRole.TECHNICIAN, UserRole.ADMIN] or
+        current_user.role in [UserRole.technician, UserRole.admin] or
         ticket.created_by_id == current_user.id
     )
     
