@@ -463,6 +463,63 @@ async def add_comment(
     
     return {"message": "Comment added successfully", "comment_id": db_comment.id}
 
+@router.get("/{ticket_id}/comments")
+async def get_ticket_comments(
+    ticket_id: int,
+    current_user: User = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Get comments for a specific ticket"""
+    
+    ticket = db.query(Ticket).filter(Ticket.id == ticket_id).first()
+    if not ticket:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Ticket not found"
+        )
+    
+    # Check permissions
+    can_view = (
+        current_user.role in [UserRole.TECHNICIAN, UserRole.ADMIN] or
+        ticket.created_by_id == current_user.id
+    )
+    
+    if not can_view:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not enough permissions"
+        )
+    
+    # Get comments with user information
+    comments_query = db.query(TicketComment).options(
+        joinedload(TicketComment.user)
+    ).filter(TicketComment.ticket_id == ticket_id)
+    
+    # Filter internal comments for regular users
+    if current_user.role == UserRole.USER:
+        comments_query = comments_query.filter(TicketComment.is_internal == False)
+    
+    comments = comments_query.order_by(TicketComment.created_at).all()
+    
+    # Convert to dict format
+    result = []
+    for comment in comments:
+        comment_dict = {
+            "id": comment.id,
+            "content": comment.content,
+            "is_internal": comment.is_internal,
+            "created_at": comment.created_at.isoformat(),
+            "user": {
+                "id": comment.user.id,
+                "username": comment.user.username,
+                "full_name": comment.user.full_name,
+                "role": comment.user.role.value.lower() if hasattr(comment.user.role, 'value') else str(comment.user.role).lower()
+            } if comment.user else None
+        }
+        result.append(comment_dict)
+    
+    return result
+
 @router.post("/{ticket_id}/attachments")
 async def upload_attachment(
     ticket_id: int,
