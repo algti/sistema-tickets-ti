@@ -35,7 +35,7 @@ async def login(
                 full_name=ldap_user_info['full_name'],
                 department=ldap_user_info.get('department'),
                 phone=ldap_user_info.get('phone'),
-                role=UserRole.USER,
+                role=UserRole.user,
                 is_ldap_user=True,
                 is_active=True
             )
@@ -43,9 +43,9 @@ async def login(
             # Check if user should be technician or admin based on AD groups
             groups = ldap_user_info.get('groups', [])
             if any('ti-admin' in group.lower() or 'helpdesk-admin' in group.lower() for group in groups):
-                user.role = UserRole.ADMIN
+                user.role = UserRole.admin
             elif any('ti-tech' in group.lower() or 'helpdesk-tech' in group.lower() for group in groups):
-                user.role = UserRole.TECHNICIAN
+                user.role = UserRole.technician
             
             db.add(user)
             db.commit()
@@ -61,12 +61,12 @@ async def login(
             if user.is_ldap_user:
                 groups = ldap_user_info.get('groups', [])
                 if any('ti-admin' in group.lower() or 'helpdesk-admin' in group.lower() for group in groups):
-                    user.role = UserRole.ADMIN
+                    user.role = UserRole.admin
                 elif any('ti-tech' in group.lower() or 'helpdesk-tech' in group.lower() for group in groups):
-                    user.role = UserRole.TECHNICIAN
-                elif user.role in [UserRole.ADMIN, UserRole.TECHNICIAN]:
+                    user.role = UserRole.technician
+                elif user.role in [UserRole.admin, UserRole.technician]:
                     # Demote if no longer in groups
-                    user.role = UserRole.USER
+                    user.role = UserRole.user
             
             db.commit()
             db.refresh(user)
