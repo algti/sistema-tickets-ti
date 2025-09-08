@@ -44,13 +44,13 @@ def test_ticket_filters():
             )
             
             # Aplicar filtros baseados no role
-            if user.role == UserRole.USER:
+            if user.role == UserRole.user:
                 print(f"Aplicando filtro USER: created_by_id == {user.id}")
                 query = query.filter(Ticket.created_by_id == user.id)
-            elif user.role == UserRole.TECHNICIAN:
+            elif user.role == UserRole.technician:
                 print(f"Aplicando filtro TECHNICIAN: assigned_to_id == {user.id}")
                 query = query.filter(Ticket.assigned_to_id == user.id)
-            elif user.role == UserRole.ADMIN:
+            elif user.role == UserRole.admin:
                 print("Aplicando filtro ADMIN: sem filtro (todos os tickets)")
             
             # Executar query
