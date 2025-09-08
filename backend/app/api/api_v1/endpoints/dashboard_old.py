@@ -5,7 +5,7 @@ from datetime import datetime, timedelta
 from typing import Optional
 
 from app.core.database import get_db
-from app.core.deps import get_current_technician
+from app.core.deps import get_current_active_user
 from app.models.models import Ticket, TicketStatus, TicketPriority, Category, User, UserRole, TicketActivity
 from app.schemas.schemas import DashboardStats
 
@@ -14,7 +14,7 @@ router = APIRouter()
 @router.get("/stats", response_model=DashboardStats)
 async def get_dashboard_stats(
     days: int = Query(30, ge=1, le=365),
-    current_user: User = Depends(get_current_technician),
+    current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
     """Get dashboard statistics"""
@@ -28,6 +28,27 @@ async def get_dashboard_stats(
     
     # Filter by date range
     date_filter = Ticket.created_at >= start_date
+    
+    # Apply role-based filtering
+    user_role = current_user.role
+    if isinstance(user_role, str):
+        user_role_str = user_role.lower()
+    else:
+        user_role_str = user_role.value.lower()
+    
+    # Role-based filtering
+    if user_role_str == "admin":
+        # Admin sees all tickets - no additional filtering
+        pass
+    elif user_role_str == "technician":
+        # Technician sees only tickets assigned to them
+        base_query = base_query.filter(Ticket.assigned_to_id == current_user.id)
+    elif user_role_str == "user":
+        # Regular user sees only their own tickets
+        base_query = base_query.filter(Ticket.created_by_id == current_user.id)
+    else:
+        # Unknown role - restrict to own tickets
+        base_query = base_query.filter(Ticket.created_by_id == current_user.id)
     
     # Total tickets
     total_tickets = base_query.filter(date_filter).count()
@@ -68,11 +89,11 @@ async def get_dashboard_stats(
         ])
         avg_resolution_time = total_time / len(resolved_tickets_with_time)
     
-    # Tickets by priority
-    priority_stats = db.query(
+    # Tickets by priority (apply same role-based filtering)
+    priority_stats = base_query.filter(date_filter).with_entities(
         Ticket.priority,
         func.count(Ticket.id).label('count')
-    ).filter(date_filter).group_by(Ticket.priority).all()
+    ).group_by(Ticket.priority).all()
     
     tickets_by_priority = {
         priority.value: 0 for priority in TicketPriority
@@ -80,22 +101,40 @@ async def get_dashboard_stats(
     for priority, count in priority_stats:
         tickets_by_priority[priority.value] = count
     
-    # Tickets by category
-    category_stats = db.query(
+    # Tickets by category (apply same role-based filtering)
+    category_query = db.query(
         Category.name,
         func.count(Ticket.id).label('count')
     ).join(
         Ticket, Category.id == Ticket.category_id
-    ).filter(date_filter).group_by(Category.name).all()
+    ).filter(date_filter)
+    
+    # Apply role-based filtering to category stats
+    if user_role_str == "technician":
+        category_query = category_query.filter(Ticket.assigned_to_id == current_user.id)
+    elif user_role_str == "user":
+        category_query = category_query.filter(Ticket.created_by_id == current_user.id)
+    
+    category_stats = category_query.group_by(Category.name).all()
     
     tickets_by_category = dict(category_stats)
     
-    # Recent activities (last 10)
-    recent_activities = db.query(TicketActivity).join(
+    # Recent activities (last 10) - apply role-based filtering
+    activities_query = db.query(TicketActivity).join(
         User, TicketActivity.user_id == User.id
+    ).join(
+        Ticket, TicketActivity.ticket_id == Ticket.id
     ).filter(
         TicketActivity.created_at >= start_date
-    ).order_by(
+    )
+    
+    # Apply role-based filtering to activities
+    if user_role_str == "technician":
+        activities_query = activities_query.filter(Ticket.assigned_to_id == current_user.id)
+    elif user_role_str == "user":
+        activities_query = activities_query.filter(Ticket.created_by_id == current_user.id)
+    
+    recent_activities = activities_query.order_by(
         TicketActivity.created_at.desc()
     ).limit(10).all()
     
@@ -114,19 +153,43 @@ async def get_dashboard_stats(
 @router.get("/tickets-by-month")
 async def get_tickets_by_month(
     months: int = Query(12, ge=1, le=24),
-    current_user: User = Depends(get_current_technician),
+    current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
     """Get tickets count by month"""
     
-    # Get tickets grouped by month
-    monthly_stats = db.query(
+    # Apply role-based filtering
+    user_role = current_user.role
+    if isinstance(user_role, str):
+        user_role_str = user_role.lower()
+    else:
+        user_role_str = user_role.value.lower()
+    
+    # Base query with date filter
+    base_query = db.query(
         extract('year', Ticket.created_at).label('year'),
         extract('month', Ticket.created_at).label('month'),
         func.count(Ticket.id).label('count')
     ).filter(
         Ticket.created_at >= datetime.utcnow() - timedelta(days=months * 30)
-    ).group_by(
+    )
+    
+    # Apply role-based filtering
+    if user_role_str == "admin":
+        # Admin sees all tickets - no additional filtering
+        pass
+    elif user_role_str == "technician":
+        # Technician sees only tickets assigned to them
+        base_query = base_query.filter(Ticket.assigned_to_id == current_user.id)
+    elif user_role_str == "user":
+        # Regular user sees only their own tickets
+        base_query = base_query.filter(Ticket.created_by_id == current_user.id)
+    else:
+        # Unknown role - restrict to own tickets
+        base_query = base_query.filter(Ticket.created_by_id == current_user.id)
+    
+    # Get tickets grouped by month
+    monthly_stats = base_query.group_by(
         extract('year', Ticket.created_at),
         extract('month', Ticket.created_at)
     ).order_by(
@@ -147,17 +210,28 @@ async def get_tickets_by_month(
 @router.get("/technician-performance")
 async def get_technician_performance(
     days: int = Query(30, ge=1, le=365),
-    current_user: User = Depends(get_current_technician),
+    current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
     """Get technician performance statistics"""
+    
+    # Apply role-based filtering
+    user_role = current_user.role
+    if isinstance(user_role, str):
+        user_role_str = user_role.lower()
+    else:
+        user_role_str = user_role.value.lower()
+    
+    # Only admins and technicians can see performance stats
+    if user_role_str not in ["admin", "technician"]:
+        return []
     
     # Date range
     end_date = datetime.utcnow()
     start_date = end_date - timedelta(days=days)
     
-    # Get technician statistics
-    technician_stats = db.query(
+    # Base query for technician statistics
+    base_query = db.query(
         User.full_name,
         User.id,
         func.count(Ticket.id).label('total_tickets'),
@@ -172,7 +246,15 @@ async def get_technician_performance(
     ).filter(
         User.role.in_([UserRole.technician, UserRole.admin]),
         Ticket.created_at >= start_date
-    ).group_by(
+    )
+    
+    # Apply role-based filtering
+    if user_role_str == "technician":
+        # Technician sees only their own performance
+        base_query = base_query.filter(User.id == current_user.id)
+    # Admin sees all technicians' performance - no additional filtering needed
+    
+    technician_stats = base_query.group_by(
         User.id, User.full_name
     ).all()
     
@@ -190,24 +272,48 @@ async def get_technician_performance(
 @router.get("/priority-trends")
 async def get_priority_trends(
     days: int = Query(30, ge=1, le=365),
-    current_user: User = Depends(get_current_technician),
+    current_user: User = Depends(get_current_active_user),
     db: Session = Depends(get_db)
 ):
     """Get priority trends over time"""
+    
+    # Apply role-based filtering
+    user_role = current_user.role
+    if isinstance(user_role, str):
+        user_role_str = user_role.lower()
+    else:
+        user_role_str = user_role.value.lower()
     
     # Date range
     end_date = datetime.utcnow()
     start_date = end_date - timedelta(days=days)
     
-    # Get priority trends by week
-    priority_trends = db.query(
+    # Base query for priority trends by week
+    base_query = db.query(
         extract('week', Ticket.created_at).label('week'),
         extract('year', Ticket.created_at).label('year'),
         Ticket.priority,
         func.count(Ticket.id).label('count')
     ).filter(
         Ticket.created_at >= start_date
-    ).group_by(
+    )
+    
+    # Apply role-based filtering
+    if user_role_str == "admin":
+        # Admin sees all tickets - no additional filtering
+        pass
+    elif user_role_str == "technician":
+        # Technician sees only tickets assigned to them
+        base_query = base_query.filter(Ticket.assigned_to_id == current_user.id)
+    elif user_role_str == "user":
+        # Regular user sees only their own tickets
+        base_query = base_query.filter(Ticket.created_by_id == current_user.id)
+    else:
+        # Unknown role - restrict to own tickets
+        base_query = base_query.filter(Ticket.created_by_id == current_user.id)
+    
+    # Get priority trends by week
+    priority_trends = base_query.group_by(
         extract('week', Ticket.created_at),
         extract('year', Ticket.created_at),
         Ticket.priority
