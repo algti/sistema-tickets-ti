@@ -103,7 +103,7 @@ async def get_ticket_evaluation(
     # Check permissions (creator, assigned technician, or admin/technician role)
     if (ticket.created_by_id != current_user.id and 
         ticket.assigned_to_id != current_user.id and
-        current_user.role not in [UserRole.ADMIN, UserRole.TECHNICIAN]):
+        current_user.role not in [UserRole.admin, UserRole.technician]):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to view this evaluation"
