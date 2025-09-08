@@ -63,7 +63,7 @@ function TicketDetail() {
     }
   };
 
-  const handleAddComment = async (e) => {
+    const handleAddComment = async (e) => {
     e.preventDefault();
     if (!newComment.trim()) return;
 
