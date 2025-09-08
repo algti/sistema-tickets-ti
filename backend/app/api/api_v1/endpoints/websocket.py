@@ -27,7 +27,7 @@ async def get_user_from_websocket_token(token: str, db: Session) -> User:
             raise HTTPException(status_code=401, detail="Invalid token")
         
         logger.info(f"Looking for user: {username}")
-        user = db.query(UserModel).filter(UserModel.username == username).first()
+        user = db.query(User).filter(User.username == username).first()
         if not user:
             logger.error(f"User not found: {username}")
             raise HTTPException(status_code=401, detail="User not found")
@@ -78,7 +78,7 @@ async def websocket_endpoint(
                     
                     elif message_type == "get_connected_users":
                         # Retorna lista de usuários conectados (apenas para admins)
-                        if user.role.value == "ADMIN":
+                        if user.role.value == "admin":
                             connected_users = manager.get_connected_users()
                             await manager.send_personal_message({
                                 "type": "connected_users",
