@@ -22,7 +22,7 @@ def create_admin_user():
             admin.full_name = 'Administrador do Sistema'
             admin.department = 'TI'
             admin.phone = '(11) 99999-9999'
-            admin.role = UserRole.ADMIN  # Usar enum correto
+            admin.role = UserRole.admin  # Usar enum correto
             admin.is_active = True
             admin.is_ldap_user = False
             admin.hashed_password = get_password_hash('admin123')  # Hash correto do FastAPI
@@ -36,7 +36,7 @@ def create_admin_user():
                 full_name='Administrador do Sistema',
                 department='TI',
                 phone='(11) 99999-9999',
-                role=UserRole.ADMIN,  # Usar enum correto
+                role=UserRole.admin,  # Usar enum correto
                 is_active=True,
                 is_ldap_user=False,
                 hashed_password=get_password_hash('admin123'),  # Hash correto do FastAPI
