@@ -52,10 +52,10 @@ const Login = () => {
             </svg>
           </div>
           <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
-            Sistema de Tickets TI
+            TICKETS - ALG Soluções em Tecnologia
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600">
-            Faça login com suas credenciais do Active Directory
+            Faça login com suas credenciais
           </p>
         </div>
         
@@ -117,9 +117,9 @@ const Login = () => {
 
           <div className="text-center">
             <div className="text-sm text-gray-600">
-              <p>Usuário de teste:</p>
+              <p>Desenvolvido por:</p>
               <p className="font-mono text-xs mt-1">
-                <strong>Admin:</strong> admin / admin123
+                <strong></strong> ALG Soluções em Tecnologia
               </p>
             </div>
           </div>

@@ -31,7 +31,7 @@ def create_admin_user():
         # Create admin user
         admin = User(
             username="admin",
-            email="admin@sistema-tickets.com",
+            email="contato@algti.com",
             full_name="Administrador do Sistema",
             department="TI",
             role=UserRole.ADMIN,
