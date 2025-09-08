@@ -69,7 +69,7 @@ function TicketDetail() {
 
     setAddingComment(true);
     try {
-      await ticketsAPI.addTicketComment(id, { content: newComment });
+      await ticketsAPI.addComment(id, { content: newComment });
       setNewComment('');
       await fetchComments();
     } catch (error) {
@@ -150,7 +150,7 @@ function TicketDetail() {
   const downloadAttachment = async (attachmentId, filename) => {
     try {
       const token = localStorage.getItem('token');
-      const url = `http://127.0.0.1:8000/api/v1/tickets/${id}/attachments/${attachmentId}/download?token=${token}`;
+      const url = `[http://127.0.0.1](http://127.0.0.1):8000/api/v1/tickets/${id}/attachments/${attachmentId}/download?token=${token}`;
       
       // Use window.open for more reliable download
       const newWindow = window.open(url, '_blank');
@@ -520,7 +520,7 @@ function TicketDetail() {
             <div className="space-y-4">
               {comments.length === 0 ? (
                 <div className="text-center py-8">
-                  <svg className="mx-auto h-8 w-8 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <svg className="mx-auto h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                   </svg>
                   <p className="mt-2 text-sm text-gray-500">Nenhum comentário ainda</p>
@@ -549,168 +549,4 @@ function TicketDetail() {
                           </span>
                         )}
                       </div>
-                      <span className="text-xs text-gray-500">
-                        {new Date(comment.created_at).toLocaleString('pt-BR')}
-                      </span>
-                    </div>
-                    <p className="text-sm text-gray-700 ml-8 whitespace-pre-wrap">{comment.content}</p>
-                  </div>
-                ))
-              )}
-            </div>
-          </div>
-        </div>
-
-        {/* Sidebar */}
-        <div className="space-y-6">
-          {/* Status Actions */}
-          {canUpdateStatus() && (
-            <div className="bg-white shadow rounded-lg p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Ações</h3>
-              <div className="space-y-2">
-                {/* Assign Technician */}
-                {(user?.role?.toLowerCase() === 'admin' || user?.role?.toLowerCase() === 'technician') && (
-                  <button
-                    onClick={() => setShowAssignModal(true)}
-                    disabled={assigningTechnician}
-                    className="w-full px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
-                  >
-                    {ticket.assigned_to ? 'Reatribuir Técnico' : 'Atribuir Técnico'}
-                  </button>
-                )}
-                {ticket.status !== 'in_progress' && (
-                  <button
-                    onClick={() => handleStatusChange('in_progress')}
-                    disabled={updatingStatus}
-                    className="w-full px-3 py-2 bg-yellow-600 text-white rounded-md hover:bg-yellow-700 disabled:opacity-50"
-                  >
-                    Iniciar Trabalho
-                  </button>
-                )}
-                {ticket.status !== 'resolved' && ticket.status !== 'closed' && (
-                  <button
-                    onClick={() => handleStatusChange('resolved')}
-                    disabled={updatingStatus}
-                    className="w-full px-3 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 disabled:opacity-50"
-                  >
-                    Marcar como Resolvido
-                  </button>
-                )}
-                {ticket.status !== 'closed' && (
-                  <button
-                    onClick={() => handleStatusChange('closed')}
-                    disabled={updatingStatus}
-                    className="w-full px-3 py-2 bg-gray-600 text-white rounded-md hover:bg-gray-700 disabled:opacity-50"
-                  >
-                    Fechar Ticket
-                  </button>
-                )}
-                {ticket.status === 'closed' && (
-                  <button
-                    onClick={() => handleStatusChange('open')}
-                    disabled={updatingStatus}
-                    className="w-full px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50"
-                  >
-                    Reabrir Ticket
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Ticket Details */}
-          <div className="bg-white shadow rounded-lg p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">Detalhes</h3>
-            <dl className="space-y-3">
-              <div>
-                <dt className="text-sm font-medium text-gray-500">Criado por</dt>
-                <dd className="text-sm text-gray-900">
-                  {ticket.created_by?.full_name || ticket.created_by?.username || 'N/A'}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-sm font-medium text-gray-500">Atribuído para</dt>
-                <dd className="text-sm text-gray-900">
-                  {ticket.assigned_to?.full_name || ticket.assigned_to?.username || 'Não atribuído'}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-sm font-medium text-gray-500">Categoria</dt>
-                <dd className="text-sm text-gray-900">
-                  {ticket.category?.name || 'N/A'}
-                </dd>
-              </div>
-              <div>
-                <dt className="text-sm font-medium text-gray-500">Criado em</dt>
-                <dd className="text-sm text-gray-900">
-                  {formatDate(ticket.created_at)}
-                </dd>
-              </div>
-              {ticket.updated_at !== ticket.created_at && (
-                <div>
-                  <dt className="text-sm font-medium text-gray-500">Última atualização</dt>
-                  <dd className="text-sm text-gray-900">
-                    {formatDate(ticket.updated_at)}
-                  </dd>
-                </div>
-              )}
-            </dl>
-          </div>
-        </div>
-      </div>
-
-      {/* Assign Technician Modal */}
-      {showAssignModal && (
-        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
-            <div className="mt-3">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">
-                {ticket.assigned_to ? 'Reatribuir Técnico' : 'Atribuir Técnico'}
-              </h3>
-              <div className="space-y-2 max-h-60 overflow-y-auto">
-                {technicians.map((tech) => (
-                  <button
-                    key={tech.id}
-                    onClick={() => handleAssignTechnician(tech.id)}
-                    disabled={assigningTechnician}
-                    className={`w-full p-3 text-left rounded-md border hover:bg-gray-50 disabled:opacity-50 ${
-                      ticket.assigned_to?.id === tech.id ? 'bg-blue-50 border-blue-200' : 'border-gray-200'
-                    }`}
-                  >
-                    <div className="font-medium text-gray-900">{tech.full_name}</div>
-                    <div className="text-sm text-gray-500">{tech.username}</div>
-                    {tech.department && (
-                      <div className="text-xs text-gray-400">{tech.department}</div>
-                    )}
-                  </button>
-                ))}
-                {technicians.length === 0 && (
-                  <p className="text-gray-500 text-center py-4">Nenhum técnico disponível</p>
-                )}
-              </div>
-              <div className="flex justify-end space-x-2 mt-4">
-                <button
-                  onClick={() => setShowAssignModal(false)}
-                  className="px-4 py-2 text-gray-600 border border-gray-300 rounded-md hover:bg-gray-50"
-                >
-                  Cancelar
-                </button>
-                {ticket.assigned_to && (
-                  <button
-                    onClick={() => handleAssignTechnician(null)}
-                    disabled={assigningTechnician}
-                    className="px-4 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 disabled:opacity-50"
-                  >
-                    Remover Atribuição
-                  </button>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-    </div>
-  );
-}
-
-export default TicketDetail;
+                      <span className="text
