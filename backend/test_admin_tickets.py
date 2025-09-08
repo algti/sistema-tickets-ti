@@ -44,15 +44,15 @@ def test_admin_tickets():
         print(f"\n3️⃣ Aplicando filtros por role...")
         print(f"Admin role: {admin.role}")
         print(f"UserRole.ADMIN: {UserRole.ADMIN}")
-        print(f"Role comparison: {admin.role == UserRole.ADMIN}")
+        print(f"Role comparison: {admin.role == UserRole.admin}")
         
-        if admin.role == UserRole.USER:
+        if admin.role == UserRole.user:
             print("❌ ERRO: Admin sendo tratado como USER!")
             query = query.filter(Ticket.created_by_id == admin.id)
-        elif admin.role == UserRole.TECHNICIAN:
+        elif admin.role == UserRole.technician:
             print("❌ ERRO: Admin sendo tratado como TECHNICIAN!")
             query = query.filter(Ticket.assigned_to_id == admin.id)
-        elif admin.role == UserRole.ADMIN:
+        elif admin.role == UserRole.admin:
             print("✅ Admin sendo tratado como ADMIN (sem filtro)")
         else:
             print(f"❌ ERRO: Role não reconhecido: {admin.role}")
@@ -86,7 +86,7 @@ def test_admin_tickets():
             print(f"Aplicando filtro assigned_to_id: {assigned_to_id}")
             query = query.filter(Ticket.assigned_to_id == assigned_to_id)
         
-        if created_by_id and admin.role in [UserRole.TECHNICIAN, UserRole.ADMIN]:
+        if created_by_id and admin.role in [UserRole.technician, UserRole.admin]:
             print(f"Aplicando filtro created_by_id: {created_by_id}")
             query = query.filter(Ticket.created_by_id == created_by_id)
         
