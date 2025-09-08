@@ -28,15 +28,15 @@ function Users() {
   const [showLdapModal, setShowLdapModal] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [modalLoading, setModalLoading] = useState(false);
-  
-  // User form data
+
+    // User form data
   const [userForm, setUserForm] = useState({
     username: '',
     email: '',
     full_name: '',
     department: '',
     phone: '',
-    role: 'USER',
+    role: 'user',
     password: '',
     is_active: true
   });
@@ -85,18 +85,18 @@ function Users() {
 
   const getRoleColor = (role) => {
     const colors = {
-      'USER': 'bg-blue-100 text-blue-800',
-      'TECHNICIAN': 'bg-green-100 text-green-800',
-      'ADMIN': 'bg-purple-100 text-purple-800'
+      'user': 'bg-blue-100 text-blue-800',
+      'technician': 'bg-green-100 text-green-800',
+      'admin': 'bg-purple-100 text-purple-800'
     };
     return colors[role] || 'bg-gray-100 text-gray-800';
   };
 
   const getRoleLabel = (role) => {
     const labels = {
-      'USER': 'Usuário',
-      'TECHNICIAN': 'Técnico',
-      'ADMIN': 'Administrador'
+      'user': 'Usuário',
+      'technician': 'Técnico',
+      'admin': 'Administrador'
     };
     return labels[role] || role;
   };
@@ -119,7 +119,7 @@ function Users() {
         full_name: userToEdit.full_name || '',
         department: userToEdit.department || '',
         phone: userToEdit.phone || '',
-        role: userToEdit.role || 'USER',
+        role: userToEdit.role || 'user',
         password: '',
         is_active: userToEdit.is_active !== undefined ? userToEdit.is_active : true
       });
@@ -131,7 +131,7 @@ function Users() {
         full_name: '',
         department: '',
         phone: '',
-        role: 'USER',
+        role: 'user',
         password: '',
         is_active: true
       });
@@ -148,7 +148,7 @@ function Users() {
       full_name: '',
       department: '',
       phone: '',
-      role: 'USER',
+      role: 'user',
       password: '',
       is_active: true
     });
@@ -314,9 +314,9 @@ function Users() {
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             >
               <option value="">Todos os Perfis</option>
-              <option value="USER">Usuário</option>
-              <option value="TECHNICIAN">Técnico</option>
-              <option value="ADMIN">Administrador</option>
+              <option value="user">Usuário</option>
+              <option value="technician">Técnico</option>
+              <option value="admin">Administrador</option>
             </select>
           </div>
           <div>
@@ -545,9 +545,9 @@ function Users() {
                       onChange={(e) => setUserForm({...userForm, role: e.target.value})}
                       className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
-                      <option value="USER">Usuário</option>
-                      <option value="TECHNICIAN">Técnico</option>
-                      <option value="ADMIN">Administrador</option>
+                      <option value="user">Usuário</option>
+                      <option value="technician">Técnico</option>
+                      <option value="admin">Administrador</option>
                     </select>
                   </div>
                 </div>

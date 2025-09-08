@@ -27,7 +27,7 @@ export const WebSocketProvider = ({ children }) => {
     }
 
     try {
-      const wsUrl = `ws://127.0.0.1:8000/api/v1/notifications/ws?token=${token}`;
+      const wsUrl = `wss://ticket.algti.com/api/v1/notifications/ws?token=${token}`;
       console.log('Attempting WebSocket connection to:', wsUrl);
       console.log('User info:', { id: user.id, username: user.username, role: user.role });
       const newSocket = new WebSocket(wsUrl);
