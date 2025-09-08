@@ -203,76 +203,106 @@ async def get_ticket(
 ):
     """Get specific ticket"""
     
-    ticket = db.query(Ticket).options(
-        joinedload(Ticket.created_by),
-        joinedload(Ticket.assigned_to),
-        joinedload(Ticket.category),
-        joinedload(Ticket.comments).joinedload(TicketComment.user),
-        joinedload(Ticket.attachments),
-        joinedload(Ticket.activities).joinedload(TicketActivity.user),
-        joinedload(Ticket.evaluation)
-    ).filter(Ticket.id == ticket_id).first()
-    
-    if not ticket:
+    try:
+        ticket = db.query(Ticket).options(
+            joinedload(Ticket.created_by),
+            joinedload(Ticket.assigned_to),
+            joinedload(Ticket.category),
+            joinedload(Ticket.comments).joinedload(TicketComment.user),
+            joinedload(Ticket.attachments),
+            joinedload(Ticket.activities).joinedload(TicketActivity.user),
+            joinedload(Ticket.evaluation)
+        ).filter(Ticket.id == ticket_id).first()
+        
+        if not ticket:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Ticket not found"
+            )
+        
+        # Check permissions - FIXED: Safe role comparison
+        user_role = current_user.role
+        if isinstance(user_role, str):
+            user_role_str = user_role.lower()
+        else:
+            user_role_str = user_role.value.lower()
+        
+        if user_role_str == "user" and ticket.created_by_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not enough permissions"
+            )
+        
+        # Convert to dict with enum values as strings and include attachments - FIXED: Safe attribute access
+        try:
+            status_value = ticket.status.value.lower() if hasattr(ticket.status, 'value') else str(ticket.status).lower()
+        except:
+            status_value = "unknown"
+        
+        try:
+            priority_value = ticket.priority.value.lower() if hasattr(ticket.priority, 'value') else str(ticket.priority).lower()
+        except:
+            priority_value = "unknown"
+        
+        ticket_dict = {
+            "id": ticket.id,
+            "title": ticket.title or "",
+            "description": ticket.description or "",
+            "status": status_value,
+            "priority": priority_value,
+            "category_id": ticket.category_id,
+            "created_by_id": ticket.created_by_id,
+            "assigned_to_id": ticket.assigned_to_id,
+            "created_at": ticket.created_at.isoformat() if ticket.created_at else None,
+            "updated_at": ticket.updated_at.isoformat() if ticket.updated_at else None,
+            "resolved_at": ticket.resolved_at.isoformat() if ticket.resolved_at else None,
+            "closed_at": ticket.closed_at.isoformat() if ticket.closed_at else None,
+            "solution": ticket.solution or "",
+            "created_by": {
+                "id": ticket.created_by.id,
+                "username": ticket.created_by.username,
+                "full_name": ticket.created_by.full_name,
+                "email": ticket.created_by.email
+            } if ticket.created_by else None,
+            "assigned_to": {
+                "id": ticket.assigned_to.id,
+                "username": ticket.assigned_to.username,
+                "full_name": ticket.assigned_to.full_name,
+                "email": ticket.assigned_to.email
+            } if ticket.assigned_to else None,
+            "category": {
+                "id": ticket.category.id,
+                "name": ticket.category.name,
+                "color": ticket.category.color
+            } if ticket.category else None,
+            "attachments": [
+                {
+                    "id": att.id,
+                    "filename": att.filename,
+                    "original_filename": att.original_filename,
+                    "file_size": att.file_size,
+                    "content_type": att.content_type,
+                    "uploaded_by_id": att.uploaded_by_id,
+                    "created_at": att.created_at.isoformat() if att.created_at else None
+                }
+                for att in ticket.attachments
+            ] if ticket.attachments else []
+        }
+        
+        return ticket_dict
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error in get_ticket: {str(e)}")
+        logger.error(f"Ticket ID: {ticket_id}, User: {current_user.username}")
+        
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Ticket not found"
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error"
         )
-    
-    # Check permissions
-    if current_user.role == UserRole.user and ticket.created_by_id != current_user.id:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions"
-        )
-    
-    # Convert to dict with enum values as strings and include attachments
-    ticket_dict = {
-        "id": ticket.id,
-        "title": ticket.title,
-        "description": ticket.description,
-        "status": ticket.status.value.lower() if hasattr(ticket.status, 'value') else str(ticket.status).lower(),
-        "priority": ticket.priority.value.lower() if hasattr(ticket.priority, 'value') else str(ticket.priority).lower(),
-        "category_id": ticket.category_id,
-        "created_by_id": ticket.created_by_id,
-        "assigned_to_id": ticket.assigned_to_id,
-        "created_at": ticket.created_at.isoformat(),
-        "updated_at": ticket.updated_at.isoformat() if ticket.updated_at else None,
-        "resolved_at": ticket.resolved_at.isoformat() if ticket.resolved_at else None,
-        "closed_at": ticket.closed_at.isoformat() if ticket.closed_at else None,
-        "solution": ticket.solution,
-        "created_by": {
-            "id": ticket.created_by.id,
-            "username": ticket.created_by.username,
-            "full_name": ticket.created_by.full_name,
-            "email": ticket.created_by.email
-        } if ticket.created_by else None,
-        "assigned_to": {
-            "id": ticket.assigned_to.id,
-            "username": ticket.assigned_to.username,
-            "full_name": ticket.assigned_to.full_name,
-            "email": ticket.assigned_to.email
-        } if ticket.assigned_to else None,
-        "category": {
-            "id": ticket.category.id,
-            "name": ticket.category.name,
-            "color": ticket.category.color
-        } if ticket.category else None,
-        "attachments": [
-            {
-                "id": att.id,
-                "filename": att.filename,
-                "original_filename": att.original_filename,
-                "file_size": att.file_size,
-                "content_type": att.content_type,
-                "uploaded_by_id": att.uploaded_by_id,
-                "created_at": att.created_at.isoformat()
-            }
-            for att in ticket.attachments
-        ] if ticket.attachments else []
-    }
-    
-    return ticket_dict
 
 
 @router.post("/", response_model=TicketSchema)
@@ -517,54 +547,77 @@ async def get_ticket_comments(
 ):
     """Get comments for a specific ticket"""
     
-    ticket = db.query(Ticket).filter(Ticket.id == ticket_id).first()
-    if not ticket:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Ticket not found"
+    try:
+        ticket = db.query(Ticket).filter(Ticket.id == ticket_id).first()
+        if not ticket:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Ticket not found"
+            )
+        
+        # Check permissions - FIXED: Safe role comparison
+        user_role = current_user.role
+        if isinstance(user_role, str):
+            user_role_str = user_role.lower()
+        else:
+            user_role_str = user_role.value.lower()
+        
+        can_view = (
+            user_role_str in ["technician", "admin"] or
+            ticket.created_by_id == current_user.id
         )
-    
-    # Check permissions
-    can_view = (
-        current_user.role in [UserRole.technician, UserRole.admin] or
-        ticket.created_by_id == current_user.id
-    )
-    
-    if not can_view:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions"
-        )
-    
-    # Get comments with user information
-    comments_query = db.query(TicketComment).options(
-        joinedload(TicketComment.user)
-    ).filter(TicketComment.ticket_id == ticket_id)
-    
-    # Filter internal comments for regular users
-    if current_user.role == UserRole.user:
-        comments_query = comments_query.filter(TicketComment.is_internal == False)
-    
-    comments = comments_query.order_by(TicketComment.created_at).all()
-    
-    # Convert to dict format
-    result = []
-    for comment in comments:
-        comment_dict = {
-            "id": comment.id,
-            "content": comment.content,
-            "is_internal": comment.is_internal,
-            "created_at": comment.created_at.isoformat(),
-            "user": {
-                "id": comment.user.id,
-                "username": comment.user.username,
-                "full_name": comment.user.full_name,
-                "role": comment.user.role.value.lower() if hasattr(comment.user.role, 'value') else str(comment.user.role).lower()
-            } if comment.user else None
-        }
-        result.append(comment_dict)
-    
-    return result
+        
+        if not can_view:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not enough permissions"
+            )
+        
+        # Get comments with user information
+        comments_query = db.query(TicketComment).options(
+            joinedload(TicketComment.user)
+        ).filter(TicketComment.ticket_id == ticket_id)
+        
+        # Filter internal comments for regular users
+        if user_role_str == "user":
+            comments_query = comments_query.filter(TicketComment.is_internal == False)
+        
+        comments = comments_query.order_by(TicketComment.created_at).all()
+        
+        # Convert to dict format - FIXED: Safe attribute access
+        result = []
+        for comment in comments:
+            try:
+                user_role_value = comment.user.role.value.lower() if hasattr(comment.user.role, 'value') else str(comment.user.role).lower()
+            except:
+                user_role_value = "unknown"
+            
+            comment_dict = {
+                "id": comment.id,
+                "content": comment.content or "",
+                "is_internal": comment.is_internal,
+                "created_at": comment.created_at.isoformat() if comment.created_at else None,
+                "user": {
+                    "id": comment.user.id,
+                    "username": comment.user.username,
+                    "full_name": comment.user.full_name,
+                    "role": user_role_value
+                } if comment.user else None
+            }
+            result.append(comment_dict)
+        
+        return result
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error in get_ticket_comments: {str(e)}")
+        logger.error(f"Ticket ID: {ticket_id}, User: {current_user.username}")
+        
+        # Return empty list instead of crashing
+        return []
 
 
 @router.post("/{ticket_id}/attachments")
