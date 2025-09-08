@@ -60,7 +60,7 @@ async def get_technicians(
     """Get list of technicians for assignment"""
     
     technicians = db.query(UserModel).filter(
-        UserModel.role.in_([UserRole.TECHNICIAN, UserRole.ADMIN]),
+        UserModel.role.in_([UserRole.technician, UserRole.admin]),
         UserModel.is_active == True
     ).all()
     
