@@ -6,7 +6,6 @@ from typing import List, Optional
 import os
 import uuid
 from datetime import datetime
-
 from app.core.database import get_db
 from app.core.deps import get_current_user, get_current_technician, get_user_from_token_param
 from app.models.models import (
@@ -20,12 +19,15 @@ from app.schemas.schemas import (
 from app.core.config import settings
 from app.websocket.notifications import notification_service
 
+
 router = APIRouter()
+
 
 @router.get("/test")
 async def test_endpoint():
     """Simple test endpoint without authentication"""
     return {"message": "Backend is working", "tickets_count": 3}
+
 
 @router.get("/simple", response_model=List[dict])
 async def get_simple_tickets(db: Session = Depends(get_db)):
@@ -42,6 +44,7 @@ async def get_simple_tickets(db: Session = Depends(get_db)):
         for ticket in tickets
     ]
 
+
 def create_activity(db: Session, ticket_id: int, user_id: int, action: str, description: str, old_value: str = None, new_value: str = None):
     """Create ticket activity log"""
     activity = TicketActivity(
@@ -54,6 +57,7 @@ def create_activity(db: Session, ticket_id: int, user_id: int, action: str, desc
     )
     db.add(activity)
     return activity
+
 
 @router.get("/", response_model=List[dict])
 async def get_tickets(
@@ -153,6 +157,7 @@ async def get_tickets(
     
     return result
 
+
 @router.get("/{ticket_id}", response_model=dict)
 async def get_ticket(
     ticket_id: int,
@@ -178,7 +183,7 @@ async def get_ticket(
         )
     
     # Check permissions
-    if current_user.role == UserRole.USER and ticket.created_by_id != current_user.id:
+    if current_user.role == UserRole.user and ticket.created_by_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions"
@@ -231,6 +236,7 @@ async def get_ticket(
     }
     
     return ticket_dict
+
 
 @router.post("/", response_model=TicketSchema)
 async def create_ticket(
@@ -292,6 +298,7 @@ async def create_ticket(
     
     return ticket_with_relations
 
+
 @router.put("/{ticket_id}", response_model=TicketSchema)
 async def update_ticket(
     ticket_id: int,
@@ -321,7 +328,7 @@ async def update_ticket(
         )
     
     # Users can only update title, description, and priority of their own open tickets
-    if current_user.role == UserRole.USER:
+    if current_user.role == UserRole.user:
         if ticket.status not in [TicketStatus.OPEN, TicketStatus.WAITING_USER]:
             raise HTTPException(
                 status_code=status.HTTP_400_BAD_REQUEST,
@@ -406,6 +413,7 @@ async def update_ticket(
     
     return ticket_with_relations
 
+
 @router.post("/{ticket_id}/comments")
 async def add_comment(
     ticket_id: int,
@@ -435,7 +443,7 @@ async def add_comment(
         )
     
     # Users cannot create internal comments
-    if current_user.role == UserRole.USER and comment.is_internal:
+    if current_user.role == UserRole.user and comment.is_internal:
         comment.is_internal = False
     
     db_comment = TicketComment(
@@ -446,6 +454,8 @@ async def add_comment(
     )
     
     db.add(db_comment)
+    db.commit()
+    db.refresh(db_comment)
     
     # Create activity log
     comment_type = "comentário interno" if comment.is_internal else "comentário"
@@ -453,15 +463,14 @@ async def add_comment(
         db, ticket_id, current_user.id,
         "commented", f"Adicionou {comment_type}"
     )
-    
     db.commit()
-    db.refresh(db_comment)
     
     # Send notification for new comment (only for non-internal comments or to technicians)
     if not comment.is_internal:
         await notification_service.notify_new_comment(ticket, comment.content, current_user)
     
     return {"message": "Comment added successfully", "comment_id": db_comment.id}
+
 
 @router.get("/{ticket_id}/comments")
 async def get_ticket_comments(
@@ -496,7 +505,7 @@ async def get_ticket_comments(
     ).filter(TicketComment.ticket_id == ticket_id)
     
     # Filter internal comments for regular users
-    if current_user.role == UserRole.USER:
+    if current_user.role == UserRole.user:
         comments_query = comments_query.filter(TicketComment.is_internal == False)
     
     comments = comments_query.order_by(TicketComment.created_at).all()
@@ -519,6 +528,7 @@ async def get_ticket_comments(
         result.append(comment_dict)
     
     return result
+
 
 @router.post("/{ticket_id}/attachments")
 async def upload_attachment(
@@ -548,11 +558,23 @@ async def upload_attachment(
             detail="Not enough permissions"
         )
     
-    # Validate file
-    if file.size > settings.MAX_FILE_SIZE:
+    # Validate file - FIXED: Added proper validation
+    if not file.filename or not file.filename.strip():
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Invalid filename"
+        )
+    
+    if file.size is None or file.size > settings.MAX_FILE_SIZE:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail=f"File too large. Maximum size: {settings.MAX_FILE_SIZE} bytes"
+        )
+    
+    if '.' not in file.filename:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="File must have an extension"
         )
     
     file_extension = file.filename.split('.')[-1].lower()
@@ -604,6 +626,7 @@ async def upload_attachment(
         "filename": attachment.original_filename
     }
 
+
 @router.get("/{ticket_id}/attachments/{attachment_id}/download")
 async def download_attachment(
     ticket_id: int,
@@ -613,12 +636,14 @@ async def download_attachment(
 ):
     """Download ticket attachment"""
     
-    # Validate token and get user
+    # Validate token and get user - FIXED: Added fallback for ALGORITHM
     try:
         from jose import jwt
         from app.core.config import settings
         
-        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+        # Use HS256 as default algorithm if not specified
+        algorithm = getattr(settings, 'ALGORITHM', 'HS256')
+        payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[algorithm])
         username: str = payload.get("sub")
         if username is None:
             raise HTTPException(status_code=401, detail="Invalid token")
@@ -636,9 +661,9 @@ async def download_attachment(
         raise HTTPException(status_code=404, detail="Ticket not found")
     
     # Check permissions
-    if current_user.role == UserRole.USER and ticket.created_by_id != current_user.id:
+    if current_user.role == UserRole.user and ticket.created_by_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not authorized to access this ticket")
-    elif current_user.role == UserRole.TECHNICIAN and ticket.assigned_to_id != current_user.id:
+    elif current_user.role == UserRole.technician and ticket.assigned_to_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not authorized to access this ticket")
     
     # Get attachment
@@ -674,6 +699,7 @@ async def download_attachment(
             "Expires": "0"
         }
     )
+
 
 @router.delete("/{ticket_id}")
 async def delete_ticket(
