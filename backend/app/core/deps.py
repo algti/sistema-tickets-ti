@@ -59,7 +59,7 @@ def get_current_technician(
     """Get current user if they are technician or admin"""
     # Handle both string and enum values
     if isinstance(current_user.role, str):
-        user_role = current_user.role.upper()
+        user_role = current_user.role.lower()
         allowed_roles = ['technician', 'admin']
     else:
         user_role = current_user.role
