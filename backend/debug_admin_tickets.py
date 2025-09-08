@@ -28,13 +28,13 @@ def debug_admin_tickets():
         print(f"Total tickets no banco: {total_tickets}")
         
         # 3. Aplicar apenas filtro de role (como no endpoint)
-        if admin.role == UserRole.USER:
+        if admin.role == UserRole.user:
             print("❌ Admin sendo tratado como USER!")
             query = query.filter(Ticket.created_by_id == admin.id)
-        elif admin.role == UserRole.TECHNICIAN:
+        elif admin.role == UserRole.technician:
             print("❌ Admin sendo tratado como TECHNICIAN!")
             query = query.filter(Ticket.assigned_to_id == admin.id)
-        elif admin.role == UserRole.ADMIN:
+        elif admin.role == UserRole.admin:
             print("✅ Admin = sem filtro adicional")
         
         tickets_after_role_filter = query.count()
