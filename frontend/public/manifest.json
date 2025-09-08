@@ -1,15 +1,20 @@
 {
-  "short_name": "Tickets TI",
-  "name": "Sistema de Tickets TI",
+  "short_name": "Tickets ALG",
+  "name": "Sistema de Tickets - ALG Soluções em Tecnologia",
   "icons": [
     {
-      "src": "favicon.ico",
+      "src": "logo-alg.png",
       "sizes": "64x64 32x32 24x24 16x16",
-      "type": "image/x-icon"
-    }
+      "type": "image/png"
+    },
+	{
+	  "src": "logo-alg.png",
+         "sizes": "512x512",
+         "type": "image/png"
+	}
   ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#3b82f6",
+  "theme_color": "#000000",
   "background_color": "#ffffff"
 }
