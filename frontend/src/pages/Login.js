@@ -35,28 +35,23 @@ const Login = () => {
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
-        <div>
-          <div className="mx-auto h-12 w-12 flex items-center justify-center rounded-full bg-primary-600">
-            <svg
-              className="h-6 w-6 text-white"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
+        <div className="text-center">
+          <img
+            className="mx-auto h-24 w-auto"
+            src="/logo-alg.png"
+            alt="ALG Soluções em Tecnologia"
+          />
+          <div className="mt-6">
+            <h2 className="text-3xl font-bold tracking-tight text-gray-900">
+              SISTEMA DE TICKETS
+            </h2>
+            <h3 className="mt-2 text-xl font-semibold text-gray-800">
+              ALG Soluções em Tecnologia
+            </h3>
+            <p className="mt-2 text-sm text-gray-600">
+              Faça login com suas credenciais
+            </p>
           </div>
-          <h2 className="mt-6 text-center text-3xl font-bold tracking-tight text-gray-900">
-            TICKETS - ALG Soluções em Tecnologia
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600">
-            Faça login com suas credenciais
-          </p>
         </div>
         
         <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
