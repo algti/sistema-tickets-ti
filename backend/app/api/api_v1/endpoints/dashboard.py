@@ -170,7 +170,7 @@ async def get_technician_performance(
     ).join(
         Ticket, User.id == Ticket.assigned_to_id
     ).filter(
-        User.role.in_([UserRole.TECHNICIAN, UserRole.ADMIN]),
+        User.role.in_([UserRole.technician, UserRole.admin]),
         Ticket.created_at >= start_date
     ).group_by(
         User.id, User.full_name
