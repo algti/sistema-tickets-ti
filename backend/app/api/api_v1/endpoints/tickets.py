@@ -490,53 +490,73 @@ async def add_comment(
 ):
     """Add comment to ticket"""
     
-    ticket = db.query(Ticket).filter(Ticket.id == ticket_id).first()
-    if not ticket:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Ticket not found"
+    try:
+        ticket = db.query(Ticket).filter(Ticket.id == ticket_id).first()
+        if not ticket:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Ticket not found"
+            )
+        
+        # Check permissions - FIXED: Safe role comparison
+        user_role = current_user.role
+        if isinstance(user_role, str):
+            user_role_str = user_role.lower()
+        else:
+            user_role_str = user_role.value.lower()
+        
+        can_comment = (
+            user_role_str in ["technician", "admin"] or
+            ticket.created_by_id == current_user.id
         )
-    
-    # Check permissions
-    can_comment = (
-        current_user.role in [UserRole.technician, UserRole.admin] or
-        ticket.created_by_id == current_user.id
-    )
-    
-    if not can_comment:
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Not enough permissions"
+        
+        if not can_comment:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="Not enough permissions"
+            )
+        
+        # Users cannot create internal comments
+        if user_role_str == "user" and comment.is_internal:
+            comment.is_internal = False
+        
+        db_comment = TicketComment(
+            content=comment.content,
+            is_internal=comment.is_internal,
+            ticket_id=ticket_id,
+            user_id=current_user.id
         )
-    
-    # Users cannot create internal comments
-    if current_user.role == UserRole.user and comment.is_internal:
-        comment.is_internal = False
-    
-    db_comment = TicketComment(
-        content=comment.content,
-        is_internal=comment.is_internal,
-        ticket_id=ticket_id,
-        user_id=current_user.id
-    )
-    
-    db.add(db_comment)
-    db.commit()
-    db.refresh(db_comment)
-    
-    # Create activity log
-    comment_type = "comentário interno" if comment.is_internal else "comentário"
-    create_activity(
-        db, ticket_id, current_user.id,
-        "commented", f"Adicionou {comment_type}"
-    )
-    db.commit()
-    
-    # Send notification for new comment (only for non-internal comments or to technicians)
-    if not comment.is_internal:
-        await notification_service.notify_new_comment(ticket, comment.content, current_user)
-    
-    return {"message": "Comment added successfully", "comment_id": db_comment.id}
+        
+        db.add(db_comment)
+        db.commit()
+        db.refresh(db_comment)
+        
+        # Create activity log
+        comment_type = "comentário interno" if comment.is_internal else "comentário"
+        create_activity(
+            db, ticket_id, current_user.id,
+            "commented", f"Adicionou {comment_type}"
+        )
+        db.commit()
+        
+        # Send notification for new comment (only for non-internal comments or to technicians)
+        if not comment.is_internal:
+            await notification_service.notify_new_comment(ticket, comment.content, current_user)
+        
+        return {"message": "Comment added successfully", "comment_id": db_comment.id}
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.error(f"Error in add_comment: {str(e)}")
+        logger.error(f"Ticket ID: {ticket_id}, User: {current_user.username}")
+        
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail="Internal server error"
+        )
 
 
 @router.get("/{ticket_id}/comments")
