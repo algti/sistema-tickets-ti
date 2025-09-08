@@ -64,13 +64,13 @@ def test_tickets_endpoint_direct():
         print(f"Admin role: {admin.role}")
         print(f"Role type: {type(admin.role)}")
         
-        if admin.role == UserRole.USER:
+        if admin.role == UserRole.user:
             print("❌ ERRO: Admin sendo tratado como USER!")
             query = query.filter(Ticket.created_by_id == admin.id)
-        elif admin.role == UserRole.TECHNICIAN:
+        elif admin.role == UserRole.technician:
             print("❌ ERRO: Admin sendo tratado como TECHNICIAN!")
             query = query.filter(Ticket.assigned_to_id == admin.id)
-        elif admin.role == UserRole.ADMIN:
+        elif admin.role == UserRole.admin:
             print("✅ Admin sendo tratado como ADMIN (sem filtro de role)")
         else:
             print(f"❌ ERRO: Role não reconhecido: {admin.role}")
@@ -116,7 +116,7 @@ def test_tickets_endpoint_direct():
         else:
             print("Assigned_to_id vazio - sem filtro")
         
-        if created_by_id and admin.role in [UserRole.TECHNICIAN, UserRole.ADMIN]:
+        if created_by_id and admin.role in [UserRole.technician, UserRole.admin]:
             print(f"Aplicando filtro created_by_id: {created_by_id}")
             query = query.filter(Ticket.created_by_id == created_by_id)
         else:
