@@ -547,4 +547,122 @@ const canUpdateStatus = () => {
                           </span>
                         )}
                       </div>
-                      <span className="text
+                                            <span className="text-xs text-gray-500">
+                        {new Date(comment.created_at).toLocaleString('pt-BR')}
+                      </span>
+                    </div>
+                    <p className="text-sm text-gray-700 ml-8 whitespace-pre-wrap">{comment.content}</p>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Sidebar */}
+        <div className="space-y-6">
+          {/* Status Actions */}
+          {canUpdateStatus() && (
+            <div className="bg-white shadow rounded-lg p-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Ações</h3>
+              <div className="space-y-3">
+                {ticket.status === 'open' && (
+                  <button
+                    onClick={() => handleStatusChange('in_progress')}
+                    disabled={updatingStatus}
+                    className="w-full bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 disabled:opacity-50"
+                  >
+                    Iniciar Atendimento
+                  </button>
+                )}
+                {ticket.status === 'in_progress' && (
+                  <>
+                    <button
+                      onClick={() => handleStatusChange('waiting_user')}
+                      disabled={updatingStatus}
+                      className="w-full bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 disabled:opacity-50"
+                    >
+                      Aguardar Usuário
+                    </button>
+                    <button
+                      onClick={() => handleStatusChange('resolved')}
+                      disabled={updatingStatus}
+                      className="w-full bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50"
+                    >
+                      Resolver
+                    </button>
+                  </>
+                )}
+                {ticket.status === 'waiting_user' && (
+                  <button
+                    onClick={() => handleStatusChange('in_progress')}
+                    disabled={updatingStatus}
+                    className="w-full bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 disabled:opacity-50"
+                  >
+                    Retomar Atendimento
+                  </button>
+                )}
+                {ticket.status === 'resolved' && (
+                  <button
+                    onClick={() => handleStatusChange('closed')}
+                    disabled={updatingStatus}
+                    className="w-full bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 disabled:opacity-50"
+                  >
+                    Fechar Ticket
+                  </button>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Assign Technician */}
+          {(user?.role === 'admin' || user?.role === 'technician') && (
+            <div className="bg-white shadow rounded-lg p-6">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Atribuir Técnico</h3>
+              <button
+                onClick={() => setShowAssignModal(true)}
+                className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+              >
+                {ticket.assigned_to ? 'Reatribuir' : 'Atribuir'} Técnico
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Assign Modal */}
+      {showAssignModal && (
+        <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div className="mt-3">
+              <h3 className="text-lg font-medium text-gray-900 mb-4">Atribuir Técnico</h3>
+              <div className="space-y-2 max-h-60 overflow-y-auto">
+                {technicians.map((tech) => (
+                  <button
+                    key={tech.id}
+                    onClick={() => handleAssignTechnician(tech.id)}
+                    disabled={assigningTechnician}
+                    className="w-full text-left p-3 border rounded-lg hover:bg-gray-50 disabled:opacity-50"
+                  >
+                    <div className="font-medium">{tech.full_name || tech.username}</div>
+                    <div className="text-sm text-gray-500">@{tech.username}</div>
+                  </button>
+                ))}
+              </div>
+              <div className="flex justify-end space-x-3 mt-4">
+                <button
+                  onClick={() => setShowAssignModal(false)}
+                  className="px-4 py-2 text-gray-600 border rounded-lg hover:bg-gray-50"
+                >
+                  Cancelar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+export default TicketDetail;
