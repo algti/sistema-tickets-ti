@@ -60,10 +60,10 @@ def get_current_technician(
     # Handle both string and enum values
     if isinstance(current_user.role, str):
         user_role = current_user.role.upper()
-        allowed_roles = ['TECHNICIAN', 'ADMIN']
+        allowed_roles = ['technician', 'admin']
     else:
         user_role = current_user.role
-        allowed_roles = [UserRole.TECHNICIAN, UserRole.ADMIN]
+        allowed_roles = [UserRole.technician, UserRole.admin]
     
     if user_role not in allowed_roles:
         raise HTTPException(
@@ -79,10 +79,10 @@ def get_current_admin(
     # Handle both string and enum values
     if isinstance(current_user.role, str):
         user_role = current_user.role.upper()
-        allowed_roles = ['ADMIN']
+        allowed_roles = ['admin']
     else:
         user_role = current_user.role
-        allowed_roles = [UserRole.ADMIN]
+        allowed_roles = [UserRole.admin]
     
     if user_role not in allowed_roles:
         raise HTTPException(
