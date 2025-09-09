@@ -59,12 +59,32 @@ async def get_technicians(
 ):
     """Get list of technicians for assignment"""
     
-    technicians = db.query(UserModel).filter(
-        UserModel.role.in_([UserRole.technician, UserRole.admin]),
-        UserModel.is_active == True
-    ).all()
-    
-    return technicians
+    try:
+        # Handle role comparison safely
+        technicians = db.query(UserModel).filter(
+            UserModel.is_active == True
+        ).all()
+        
+        # Filter by role in Python to handle enum/string comparison safely
+        filtered_technicians = []
+        for tech in technicians:
+            user_role = tech.role
+            if isinstance(user_role, str):
+                user_role_str = user_role.lower()
+            else:
+                user_role_str = user_role.value.lower()
+            
+            if user_role_str in ["technician", "admin"]:
+                filtered_technicians.append(tech)
+        
+        return filtered_technicians
+        
+    except Exception as e:
+        print(f"Error in get_technicians: {str(e)}")
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error fetching technicians: {str(e)}"
+        )
 
 @router.get("/{user_id}", response_model=UserSchema)
 async def get_user(
