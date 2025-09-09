@@ -113,7 +113,7 @@ async def get_dashboard_stats(
     if active_tickets:
         current_time = datetime.utcnow()
         total_open_time = sum([
-            (current_time - ticket.created_at).total_seconds() / 3600
+            (current_time - ticket.created_at.replace(tzinfo=None)).total_seconds() / 3600
             for ticket in active_tickets
         ])
         avg_time_open = total_open_time / len(active_tickets)
