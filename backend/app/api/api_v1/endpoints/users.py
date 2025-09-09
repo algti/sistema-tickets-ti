@@ -190,11 +190,20 @@ async def update_profile(
 ):
     """Update current user profile"""
     
+    print(f"=== PROFILE UPDATE ENDPOINT CALLED ===")
+    print(f"Current user: {current_user.username} (ID: {current_user.id})")
+    print(f"User active: {current_user.is_active}")
+    print(f"User role: {current_user.role}")
+    print(f"Profile data: {profile_data.dict(exclude_unset=True)}")
+    
     try:
         # Get the actual user from database
         user = db.query(UserModel).filter(UserModel.id == current_user.id).first()
         if not user:
+            print(f"✗ User not found in database: ID {current_user.id}")
             raise HTTPException(status_code=404, detail="User not found")
+        
+        print(f"Database user found: {user.username}, active: {user.is_active}")
         
         # Convert ProfileUpdate to dict, excluding None values
         update_data = profile_data.dict(exclude_unset=True)
@@ -205,14 +214,20 @@ async def update_profile(
         
         for field, value in update_data.items():
             if field in allowed_fields and hasattr(user, field):
+                old_value = getattr(user, field)
                 setattr(user, field, value)
                 updated_fields.append(field)
+                print(f"✓ Updated {field}: '{old_value}' -> '{value}'")
         
         if updated_fields:
+            print(f"Committing changes for fields: {updated_fields}")
             db.commit()
             db.refresh(user)
+            print("✓ Database commit successful")
+        else:
+            print("No fields to update")
         
-        return {
+        response_data = {
             "message": "Profile updated successfully" if updated_fields else "No changes detected",
             "updated_fields": updated_fields,
             "user": {
@@ -229,7 +244,11 @@ async def update_profile(
             }
         }
         
+        print(f"✓ Returning response: {response_data}")
+        return response_data
+        
     except Exception as e:
+        print(f"✗ Exception occurred: {str(e)}")
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
