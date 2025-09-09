@@ -41,7 +41,7 @@ def get_current_user(
     
     if not user.is_active:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
+            status_code=status.HTTP_403_FORBIDDEN,
             detail="Inactive user"
         )
     
@@ -78,7 +78,7 @@ def get_current_admin(
     """Get current user if they are admin"""
     # Handle both string and enum values
     if isinstance(current_user.role, str):
-        user_role = current_user.role.upper()
+        user_role = current_user.role.lower()
         allowed_roles = ['admin']
     else:
         user_role = current_user.role
