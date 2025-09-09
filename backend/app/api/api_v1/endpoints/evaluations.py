@@ -38,7 +38,7 @@ async def create_ticket_evaluation(
         )
     
     # Check if ticket is closed (not resolved)
-    if ticket.status != TicketStatus.closed:
+    if ticket.status != TicketStatus.CLOSED:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
             detail="Evaluation can only be created for closed tickets"
