@@ -31,7 +31,7 @@ class NotificationService:
             "timestamp": datetime.now().isoformat()
         }
         
-        # Notifica todos os técnicos e admins
+        # Notifica apenas técnicos e admins (não o próprio criador)
         await manager.send_to_role(message, "technician")
         await manager.send_to_role(message, "admin")
         
@@ -78,7 +78,8 @@ class NotificationService:
             TicketStatus.IN_PROGRESS: "em andamento",
             TicketStatus.RESOLVED: "resolvido",
             TicketStatus.CLOSED: "fechado",
-            TicketStatus.WAITING_USER: "aguardando usuário"
+            TicketStatus.WAITING_USER: "aguardando usuário",
+            TicketStatus.REOPENED: "reaberto"
         }
         
         message = {
