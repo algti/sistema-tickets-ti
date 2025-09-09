@@ -44,11 +44,11 @@ async def create_ticket_evaluation(
             detail="Only the ticket creator can evaluate the ticket"
         )
     
-    # Check if ticket is resolved or closed
-    if ticket.status not in [TicketStatus.RESOLVED, TicketStatus.CLOSED]:
+    # Check if ticket is closed (changed from resolved or closed to only closed)
+    if ticket.status != TicketStatus.CLOSED:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Ticket must be resolved or closed to be evaluated"
+            detail="Ticket must be closed to be evaluated"
         )
     
     # Check if evaluation already exists
@@ -79,7 +79,7 @@ async def create_ticket_evaluation(
     
     # Load relationships
     db_evaluation = db.query(TicketEvaluation).options(
-        joinedload(TicketEvaluation.evaluated_by)
+        joinedload(TicketEvaluation.user)
     ).filter(TicketEvaluation.id == db_evaluation.id).first()
     
     return db_evaluation
@@ -101,9 +101,17 @@ async def get_ticket_evaluation(
         )
     
     # Check permissions (creator, assigned technician, or admin/technician role)
+    user_role = current_user.role
+    if isinstance(user_role, str):
+        user_role_str = user_role.lower()
+        allowed_roles = ['admin', 'technician']
+    else:
+        user_role_str = user_role.value.lower()
+        allowed_roles = [UserRole.admin.value.lower(), UserRole.technician.value.lower()]
+    
     if (ticket.created_by_id != current_user.id and 
         ticket.assigned_to_id != current_user.id and
-        current_user.role not in [UserRole.admin, UserRole.technician]):
+        user_role_str not in allowed_roles):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to view this evaluation"
@@ -111,7 +119,7 @@ async def get_ticket_evaluation(
     
     # Get evaluation
     evaluation = db.query(TicketEvaluation).options(
-        joinedload(TicketEvaluation.evaluated_by)
+        joinedload(TicketEvaluation.user)
     ).filter(TicketEvaluation.ticket_id == ticket_id).first()
     
     if not evaluation:
@@ -161,7 +169,7 @@ async def update_ticket_evaluation(
     
     # Load relationships
     evaluation = db.query(TicketEvaluation).options(
-        joinedload(TicketEvaluation.evaluated_by)
+        joinedload(TicketEvaluation.user)
     ).filter(TicketEvaluation.id == evaluation.id).first()
     
     return evaluation
@@ -180,7 +188,7 @@ async def get_evaluations(
     """Get evaluations list (technicians and admins only)"""
     
     query = db.query(TicketEvaluation).options(
-        joinedload(TicketEvaluation.evaluated_by),
+        joinedload(TicketEvaluation.user),
         joinedload(TicketEvaluation.ticket).joinedload(Ticket.assigned_to)
     )
     
