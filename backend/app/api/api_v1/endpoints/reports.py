@@ -45,7 +45,7 @@ async def get_technician_performance(
     ).outerjoin(
         TicketEvaluation, Ticket.id == TicketEvaluation.ticket_id
     ).filter(
-        User.role.in_(['TECHNICIAN', 'ADMIN']),
+        User.role.in_(['technician', 'admin']),
         Ticket.created_at >= start_date,
         Ticket.created_at <= end_date
     )
