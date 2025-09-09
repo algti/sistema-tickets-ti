@@ -40,6 +40,8 @@ const TicketEvaluation = ({ ticket, onEvaluationSubmitted, onClose }) => {
       if (error.response?.status !== 404) {
         console.error('Error loading evaluation:', error);
       }
+      // Reset evaluation state if not found
+      setEvaluation(null);
     } finally {
       setLoading(false);
     }
@@ -68,7 +70,7 @@ const TicketEvaluation = ({ ticket, onEvaluationSubmitted, onClose }) => {
     try {
       setSubmitting(true);
       setError(null);
-
+      
       const evaluationData = {
         rating: formData.rating,
         feedback: formData.feedback.trim() || null,
@@ -80,7 +82,13 @@ const TicketEvaluation = ({ ticket, onEvaluationSubmitted, onClose }) => {
       if (evaluation) {
         await evaluationsAPI.updateEvaluation(ticket.id, evaluationData);
       } else {
-        await evaluationsAPI.createEvaluation(ticket.id, evaluationData);
+        // Reload evaluation state before creating to avoid duplicates
+        await loadExistingEvaluation();
+        if (evaluation) {
+          await evaluationsAPI.updateEvaluation(ticket.id, evaluationData);
+        } else {
+          await evaluationsAPI.createEvaluation(ticket.id, evaluationData);
+        }
       }
 
       if (onEvaluationSubmitted) {
