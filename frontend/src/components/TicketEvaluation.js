@@ -17,10 +17,14 @@ const TicketEvaluation = ({ ticket, onEvaluationSubmitted, onClose }) => {
   const [error, setError] = useState(null);
 
   useEffect(() => {
-    loadExistingEvaluation();
-  }, [ticket.id]);
+    if (ticket?.id) {
+      loadExistingEvaluation();
+    }
+  }, [ticket?.id]);
 
   const loadExistingEvaluation = async () => {
+    if (!ticket?.id) return;
+    
     try {
       setLoading(true);
       const response = await evaluationsAPI.getEvaluation(ticket.id);
@@ -53,6 +57,11 @@ const TicketEvaluation = ({ ticket, onEvaluationSubmitted, onClose }) => {
     
     if (formData.rating === 0) {
       setError('Por favor, selecione uma avaliação geral');
+      return;
+    }
+
+    if (!ticket?.id) {
+      setError('Ticket não encontrado');
       return;
     }
 
@@ -158,16 +167,18 @@ const TicketEvaluation = ({ ticket, onEvaluationSubmitted, onClose }) => {
         </div>
 
         {/* Ticket Info */}
-        <div className="bg-gray-50 rounded-lg p-4 mb-6">
-          <h3 className="font-medium text-gray-900 mb-2">Ticket #{ticket.id}</h3>
-          <p className="text-sm text-gray-600 mb-2">{ticket.title}</p>
-          <div className="flex items-center space-x-4 text-xs text-gray-500">
-            <span>Status: {ticket.status}</span>
-            {ticket.assigned_to && (
-              <span>Técnico: {ticket.assigned_to.full_name || ticket.assigned_to.username}</span>
-            )}
+        {ticket && (
+          <div className="bg-gray-50 rounded-lg p-4 mb-6">
+            <h3 className="font-medium text-gray-900 mb-2">Ticket #{ticket.id}</h3>
+            <p className="text-sm text-gray-600 mb-2">{ticket.title}</p>
+            <div className="flex items-center space-x-4 text-xs text-gray-500">
+              <span>Status: {ticket.status}</span>
+              {ticket.assigned_to && (
+                <span>Técnico: {ticket.assigned_to.full_name || ticket.assigned_to.username}</span>
+              )}
+            </div>
           </div>
-        </div>
+        )}
 
         <form onSubmit={handleSubmit} className="space-y-6">
           {error && (
