@@ -110,7 +110,8 @@ function TicketDetail() {
       'in_progress': 'bg-yellow-100 text-yellow-800',
       'resolved': 'bg-green-100 text-green-800',
       'closed': 'bg-gray-100 text-gray-800',
-      'waiting_user': 'bg-purple-100 text-purple-800'
+      'waiting_user': 'bg-purple-100 text-purple-800',
+      'reopened': 'bg-orange-100 text-orange-800'
     };
     return colors[status] || 'bg-gray-100 text-gray-800';
   };
@@ -415,11 +416,47 @@ const canUpdateStatus = () => {
               </div>
             )}
 
-            {/* Ticket Evaluation Section */}
+            {/* User Resolution Actions */}
             {ticket.status === 'resolved' && user && ticket.created_by && user.id === ticket.created_by.id && (
+              <div className="mt-6">
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+                  <div className="flex items-center mb-4">
+                    <div className="w-8 h-8 bg-yellow-600 rounded-lg flex items-center justify-center mr-3">
+                      <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                      </svg>
+                    </div>
+                    <h4 className="text-lg font-semibold text-yellow-800">Ticket Resolvido - Sua Confirmação</h4>
+                  </div>
+                  <p className="text-yellow-700 mb-4">
+                    O técnico marcou este ticket como resolvido. Por favor, confirme se o problema foi realmente solucionado:
+                  </p>
+                  <div className="flex space-x-3">
+                    <button
+                      onClick={() => handleStatusChange('closed')}
+                      disabled={updatingStatus}
+                      className="bg-green-600 text-white px-6 py-2 rounded-lg hover:bg-green-700 disabled:opacity-50 transition-colors font-medium"
+                    >
+                      ✓ Marcar como Resolvido
+                    </button>
+                    <button
+                      onClick={() => handleStatusChange('reopened')}
+                      disabled={updatingStatus}
+                      className="bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700 disabled:opacity-50 transition-colors font-medium"
+                    >
+                      ✗ Marcar como Não Resolvido
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Ticket Evaluation Section */}
+            {ticket.status === 'closed' && user && ticket.created_by && user.id === ticket.created_by.id && (
               <div className="mt-6">
                 <TicketEvaluation 
                   ticketId={ticket.id} 
+                  ticket={ticket}
                   onEvaluationSubmitted={() => {
                     // Refresh ticket data to show updated evaluation
                     fetchTicket();
@@ -602,13 +639,22 @@ const canUpdateStatus = () => {
                     Retomar Atendimento
                   </button>
                 )}
-                {ticket.status === 'resolved' && (
+                {ticket.status === 'resolved' && (user?.role === 'admin' || user?.role === 'technician') && (
                   <button
                     onClick={() => handleStatusChange('closed')}
                     disabled={updatingStatus}
                     className="w-full bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 disabled:opacity-50"
                   >
                     Fechar Ticket
+                  </button>
+                )}
+                {ticket.status === 'reopened' && (
+                  <button
+                    onClick={() => handleStatusChange('in_progress')}
+                    disabled={updatingStatus}
+                    className="w-full bg-yellow-600 text-white px-4 py-2 rounded-lg hover:bg-yellow-700 disabled:opacity-50"
+                  >
+                    Retomar Atendimento
                   </button>
                 )}
               </div>
