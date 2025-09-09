@@ -382,10 +382,16 @@ async def update_ticket(
             detail="Ticket not found"
         )
     
-    # Check permissions
+    # Check permissions using safe role handling
+    user_role = current_user.role
+    if isinstance(user_role, str):
+        user_role_str = user_role.lower()
+    else:
+        user_role_str = user_role.value.lower()
+    
     can_update = (
-        current_user.role in [UserRole.technician, UserRole.admin] or
-        (current_user.role == UserRole.user and ticket.created_by_id == current_user.id)
+        user_role_str in ["technician", "admin"] or
+        (user_role_str == "user" and ticket.created_by_id == current_user.id)
     )
     
     if not can_update:
@@ -395,15 +401,36 @@ async def update_ticket(
         )
     
     # Users can only update title, description, and priority of their own open tickets
-    if current_user.role == UserRole.user:
-        if ticket.status not in [TicketStatus.OPEN, TicketStatus.WAITING_USER]:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="Cannot update ticket in current status"
-            )
-        # Limit what users can update
-        allowed_fields = ['title', 'description', 'priority']
-        update_data = {k: v for k, v in ticket_update.dict(exclude_unset=True).items() if k in allowed_fields}
+    # BUT users can also change status from 'resolved' to 'closed' or 'reopened'
+    if user_role_str == "user":
+        update_data_dict = ticket_update.dict(exclude_unset=True)
+        
+        # Allow status changes for resolved tickets (user confirmation flow)
+        if 'status' in update_data_dict:
+            if ticket.status == TicketStatus.RESOLVED:
+                # Users can mark resolved tickets as closed or reopened
+                if update_data_dict['status'] in [TicketStatus.CLOSED, TicketStatus.REOPENED]:
+                    update_data = update_data_dict
+                else:
+                    raise HTTPException(
+                        status_code=status.HTTP_400_BAD_REQUEST,
+                        detail="Invalid status transition"
+                    )
+            else:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Cannot update ticket status in current state"
+                )
+        else:
+            # Regular field updates - only for open/waiting tickets
+            if ticket.status not in [TicketStatus.OPEN, TicketStatus.WAITING_USER]:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="Cannot update ticket in current status"
+                )
+            # Limit what users can update
+            allowed_fields = ['title', 'description', 'priority']
+            update_data = {k: v for k, v in update_data_dict.items() if k in allowed_fields}
     else:
         update_data = ticket_update.dict(exclude_unset=True)
     
@@ -656,9 +683,15 @@ async def upload_attachment(
             detail="Ticket not found"
         )
     
-    # Check permissions
+    # Check permissions using safe role handling
+    user_role = current_user.role
+    if isinstance(user_role, str):
+        user_role_str = user_role.lower()
+    else:
+        user_role_str = user_role.value.lower()
+    
     can_upload = (
-        current_user.role in [UserRole.technician, UserRole.admin] or
+        user_role_str in ["technician", "admin"] or
         ticket.created_by_id == current_user.id
     )
     
@@ -770,10 +803,16 @@ async def download_attachment(
     if not ticket:
         raise HTTPException(status_code=404, detail="Ticket not found")
     
-    # Check permissions
-    if current_user.role == UserRole.user and ticket.created_by_id != current_user.id:
+    # Check permissions using safe role handling
+    user_role = current_user.role
+    if isinstance(user_role, str):
+        user_role_str = user_role.lower()
+    else:
+        user_role_str = user_role.value.lower()
+    
+    if user_role_str == "user" and ticket.created_by_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not authorized to access this ticket")
-    elif current_user.role == UserRole.technician and ticket.assigned_to_id != current_user.id:
+    elif user_role_str == "technician" and ticket.assigned_to_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not authorized to access this ticket")
     
     # Get attachment
