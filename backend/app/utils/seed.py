@@ -13,7 +13,7 @@ def create_admin_user(db: Session):
             email="admin@sistema-tickets.com",
             full_name="Administrador do Sistema",
             department="TI",
-            role=UserRole.ADMIN,
+            role=UserRole.admin,
             hashed_password=get_password_hash("!@Adm1n@sw!"),
             is_ldap_user=False,
             is_active=True
