@@ -27,7 +27,7 @@ async def get_user_from_websocket_token(token: str, db: Session) -> User:
             raise HTTPException(status_code=401, detail="Invalid token")
         
         logger.info(f"Looking for user: {username}")
-        user = db.query(User).filter(User.username == username).first()
+        user = db.query(UserModel).filter(UserModel.username == username).first()
         if not user:
             logger.error(f"User not found: {username}")
             raise HTTPException(status_code=401, detail="User not found")
