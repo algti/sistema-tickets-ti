@@ -195,6 +195,7 @@ class DashboardStats(BaseModel):
     resolved_tickets: int
     closed_tickets: int
     avg_resolution_time: Optional[float]  # in hours
+    avg_time_open: Optional[float]  # in hours for active tickets
     tickets_by_priority: dict
     tickets_by_category: dict
     recent_activities: List[TicketActivity]
