@@ -37,18 +37,18 @@ async def create_ticket_evaluation(
             detail="Ticket not found"
         )
     
+    # Check if ticket is closed (not resolved)
+    if ticket.status != TicketStatus.closed:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Evaluation can only be created for closed tickets"
+        )
+    
     # Check if user is the ticket creator
     if ticket.created_by_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only the ticket creator can evaluate the ticket"
-        )
-    
-    # Check if ticket is closed (changed from resolved or closed to only closed)
-    if ticket.status != TicketStatus.CLOSED:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Ticket must be closed to be evaluated"
+            detail="Only ticket creator can create evaluation"
         )
     
     # Check if evaluation already exists
@@ -59,30 +59,31 @@ async def create_ticket_evaluation(
     if existing_evaluation:
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Ticket has already been evaluated"
+            detail="Evaluation already exists for this ticket"
         )
     
     # Create evaluation
-    db_evaluation = TicketEvaluation(
+    evaluation = TicketEvaluation(
         ticket_id=ticket_id,
         user_id=current_user.id,
         rating=evaluation_data.rating,
         feedback=evaluation_data.feedback,
         resolution_quality=evaluation_data.resolution_quality,
         response_time_rating=evaluation_data.response_time_rating,
-        technician_rating=evaluation_data.technician_rating
+        technician_rating=evaluation_data.technician_rating,
+        created_at=datetime.utcnow()
     )
     
-    db.add(db_evaluation)
+    db.add(evaluation)
     db.commit()
-    db.refresh(db_evaluation)
+    db.refresh(evaluation)
     
-    # Load relationships
-    db_evaluation = db.query(TicketEvaluation).options(
+    # Load user relationship
+    evaluation = db.query(TicketEvaluation).options(
         joinedload(TicketEvaluation.user)
-    ).filter(TicketEvaluation.id == db_evaluation.id).first()
+    ).filter(TicketEvaluation.id == evaluation.id).first()
     
-    return db_evaluation
+    return evaluation
 
 @router.get("/tickets/{ticket_id}/evaluation", response_model=TicketEvaluationSchema)
 async def get_ticket_evaluation(
@@ -100,18 +101,20 @@ async def get_ticket_evaluation(
             detail="Ticket not found"
         )
     
-    # Check permissions (creator, assigned technician, or admin/technician role)
+    # Check permissions - ticket creator, assigned technician, or admin/technician role
     user_role = current_user.role
     if isinstance(user_role, str):
         user_role_str = user_role.lower()
-        allowed_roles = ['admin', 'technician']
     else:
         user_role_str = user_role.value.lower()
-        allowed_roles = [UserRole.admin.value.lower(), UserRole.technician.value.lower()]
     
-    if (ticket.created_by_id != current_user.id and 
-        ticket.assigned_to_id != current_user.id and
-        user_role_str not in allowed_roles):
+    has_permission = (
+        ticket.created_by_id == current_user.id or  # Ticket creator
+        ticket.assigned_to_id == current_user.id or  # Assigned technician
+        user_role_str in ["admin", "technician"]  # Admin or technician role
+    )
+    
+    if not has_permission:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not authorized to view this evaluation"
@@ -137,7 +140,7 @@ async def update_ticket_evaluation(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
 ):
-    """Update evaluation for a ticket (only by evaluator)"""
+    """Update evaluation for a ticket (only by evaluation creator)"""
     
     # Get evaluation
     evaluation = db.query(TicketEvaluation).filter(
@@ -150,11 +153,11 @@ async def update_ticket_evaluation(
             detail="Evaluation not found"
         )
     
-    # Check if user is the evaluator
+    # Check if user is the evaluation creator
     if evaluation.user_id != current_user.id:
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
-            detail="Only the evaluator can update the evaluation"
+            detail="Only evaluation creator can update evaluation"
         )
     
     # Update fields
@@ -167,7 +170,7 @@ async def update_ticket_evaluation(
     db.commit()
     db.refresh(evaluation)
     
-    # Load relationships
+    # Load user relationship
     evaluation = db.query(TicketEvaluation).options(
         joinedload(TicketEvaluation.user)
     ).filter(TicketEvaluation.id == evaluation.id).first()
@@ -177,7 +180,7 @@ async def update_ticket_evaluation(
 @router.get("/evaluations", response_model=List[TicketEvaluationSchema])
 async def get_evaluations(
     skip: int = Query(0, ge=0),
-    limit: int = Query(50, ge=1, le=100),
+    limit: int = Query(100, ge=1, le=1000),
     rating: Optional[int] = Query(None, ge=1, le=5),
     technician_id: Optional[int] = Query(None),
     date_from: Optional[str] = Query(None),
@@ -204,19 +207,27 @@ async def get_evaluations(
             date_from_dt = datetime.fromisoformat(date_from.replace('Z', '+00:00'))
             query = query.filter(TicketEvaluation.created_at >= date_from_dt)
         except ValueError:
-            pass
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid date_from format. Use ISO format."
+            )
     
     if date_to:
         try:
             date_to_dt = datetime.fromisoformat(date_to.replace('Z', '+00:00'))
             query = query.filter(TicketEvaluation.created_at <= date_to_dt)
         except ValueError:
-            pass
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="Invalid date_to format. Use ISO format."
+            )
     
     # Order by creation date (newest first)
     query = query.order_by(desc(TicketEvaluation.created_at))
     
+    # Apply pagination
     evaluations = query.offset(skip).limit(limit).all()
+    
     return evaluations
 
 @router.get("/metrics/satisfaction", response_model=SatisfactionMetrics)
