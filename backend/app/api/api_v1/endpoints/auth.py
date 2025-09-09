@@ -64,9 +64,17 @@ async def login(
                     user.role = UserRole.admin
                 elif any('ti-tech' in group.lower() or 'helpdesk-tech' in group.lower() for group in groups):
                     user.role = UserRole.technician
-                elif user.role in [UserRole.admin, UserRole.technician]:
-                    # Demote if no longer in groups
-                    user.role = UserRole.user
+                else:
+                    # Safe role comparison for demotion
+                    current_role = user.role
+                    if isinstance(current_role, str):
+                        current_role_str = current_role.lower()
+                    else:
+                        current_role_str = current_role.value.lower()
+                    
+                    if current_role_str in ["admin", "technician"]:
+                        # Demote if no longer in groups
+                        user.role = UserRole.user
             
             db.commit()
             db.refresh(user)
