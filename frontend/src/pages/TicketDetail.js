@@ -20,6 +20,7 @@ function TicketDetail() {
   const [technicians, setTechnicians] = useState([]);
   const [assigningTechnician, setAssigningTechnician] = useState(false);
   const [showAssignModal, setShowAssignModal] = useState(false);
+  const [showEvaluationModal, setShowEvaluationModal] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -454,14 +455,21 @@ const canUpdateStatus = () => {
             {/* Ticket Evaluation Section */}
             {ticket.status === 'closed' && user && ticket.created_by && user.id === ticket.created_by.id && (
               <div className="mt-6">
-                <TicketEvaluation 
-                  ticketId={ticket.id} 
-                  ticket={ticket}
-                  onEvaluationSubmitted={() => {
-                    // Refresh ticket data to show updated evaluation
-                    fetchTicket();
-                  }}
-                />
+                <div className="bg-white shadow rounded-lg p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-gray-900">Avaliação do Ticket</h3>
+                    <button
+                      onClick={() => setShowEvaluationModal(true)}
+                      className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      {/* Will be determined by existing evaluation */}
+                      Avaliar Ticket
+                    </button>
+                  </div>
+                  <p className="text-gray-600">
+                    Avalie a qualidade do atendimento e resolução do seu ticket.
+                  </p>
+                </div>
               </div>
             )}
           </div>
@@ -706,6 +714,18 @@ const canUpdateStatus = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Evaluation Modal */}
+      {showEvaluationModal && (
+        <TicketEvaluation 
+          ticket={ticket}
+          onEvaluationSubmitted={() => {
+            fetchTicket();
+            setShowEvaluationModal(false);
+          }}
+          onClose={() => setShowEvaluationModal(false)}
+        />
       )}
     </div>
   );
