@@ -91,12 +91,13 @@ const TicketEvaluation = ({ ticket, onEvaluationSubmitted, onClose }) => {
         }
       }
 
-      if (onEvaluationSubmitted) {
-        onEvaluationSubmitted();
-      }
-      
+      // Close modal after successful operation
       if (onClose) {
         onClose();
+      }
+      
+      if (onEvaluationSubmitted) {
+        onEvaluationSubmitted();
       }
     } catch (error) {
       console.error('Error submitting evaluation:', error);
