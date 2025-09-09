@@ -31,7 +31,7 @@ async def get_categories(
             query = query.filter(Category.is_active == False)
     else:
         # By default, show only active categories for non-admin users
-        if current_user.role.upper() != "ADMIN":
+        if current_user.role.lower() != "admin":
             query = query.filter(Category.is_active == True)
     
     if search:
