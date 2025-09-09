@@ -19,7 +19,7 @@ const Dashboard = () => {
   
   const { data: stats, isLoading } = useQuery(
     ['dashboard-stats'],
-    () => dashboardService.getStats(),
+    () => dashboardService.getStats({ days: 365 }), // Get all tickets, not just last 30 days
     {
       select: (response) => response.data,
       refetchInterval: 30000, // Refresh every 30 seconds
@@ -111,6 +111,51 @@ const Dashboard = () => {
           </div>
         ))}
       </div>
+
+      {/* Time Metrics */}
+      {(stats?.avg_resolution_time || stats?.avg_time_open) && (
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          {stats?.avg_resolution_time && (
+            <div className="card p-6">
+              <div className="flex items-center mb-4">
+                <div className="p-3 rounded-lg bg-green-500">
+                  <CheckCircleIcon className="h-6 w-6 text-white" />
+                </div>
+                <div className="ml-4">
+                  <h3 className="text-lg font-medium text-gray-900">Tempo Médio de Resolução</h3>
+                  <p className="text-sm text-gray-600">Tickets fechados</p>
+                </div>
+              </div>
+              <div className="text-3xl font-bold text-green-600">
+                {stats.avg_resolution_time < 24 
+                  ? `${stats.avg_resolution_time.toFixed(1)}h`
+                  : `${(stats.avg_resolution_time / 24).toFixed(1)}d`
+                }
+              </div>
+            </div>
+          )}
+          
+          {stats?.avg_time_open && (
+            <div className="card p-6">
+              <div className="flex items-center mb-4">
+                <div className="p-3 rounded-lg bg-orange-500">
+                  <ClockIcon className="h-6 w-6 text-white" />
+                </div>
+                <div className="ml-4">
+                  <h3 className="text-lg font-medium text-gray-900">Tempo Médio Aberto</h3>
+                  <p className="text-sm text-gray-600">Tickets ativos</p>
+                </div>
+              </div>
+              <div className="text-3xl font-bold text-orange-600">
+                {stats.avg_time_open < 24 
+                  ? `${stats.avg_time_open.toFixed(1)}h`
+                  : `${(stats.avg_time_open / 24).toFixed(1)}d`
+                }
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Priority Distribution */}
       {stats?.tickets_by_priority && (
