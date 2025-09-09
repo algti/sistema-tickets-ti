@@ -34,7 +34,7 @@ class User(Base):
     full_name = Column(String(255), nullable=False)
     department = Column(String(100))
     phone = Column(String(20))
-    role = Column(Enum(UserRole), default=UserRole.USER)
+    role = Column(Enum(UserRole), default=UserRole.user)
     is_active = Column(Boolean, default=True)
     is_ldap_user = Column(Boolean, default=True)
     hashed_password = Column(String(255))  # For non-LDAP users
