@@ -214,7 +214,7 @@ const TicketEvaluation = ({ ticket, onEvaluationSubmitted, onClose }) => {
               label="Tempo de Resposta"
             />
             
-            {ticket.assigned_to && (
+            {ticket?.assigned_to && (
               <StarRating
                 value={formData.technician_rating}
                 onChange={(rating) => handleStarClick('technician_rating', rating)}
