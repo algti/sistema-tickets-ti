@@ -19,15 +19,17 @@ async def get_dashboard_stats(
 ):
     """Get dashboard statistics"""
     
-    # Date range
-    end_date = datetime.utcnow()
-    start_date = end_date - timedelta(days=days)
-    
     # Base query
     base_query = db.query(Ticket)
     
-    # Filter by date range
-    date_filter = Ticket.created_at >= start_date
+    # Date range - only apply if days parameter is reasonable
+    if days < 365:
+        end_date = datetime.utcnow()
+        start_date = end_date - timedelta(days=days)
+        date_filter = Ticket.created_at >= start_date
+    else:
+        # For very large date ranges, don't filter by date to show all tickets
+        date_filter = True
     
     # Apply role-based filtering
     user_role = current_user.role
@@ -50,36 +52,53 @@ async def get_dashboard_stats(
         # Unknown role - restrict to own tickets
         base_query = base_query.filter(Ticket.created_by_id == current_user.id)
     
+    # Apply date filter to base query if needed
+    if date_filter is not True:
+        filtered_query = base_query.filter(date_filter)
+    else:
+        filtered_query = base_query
+    
     # Total tickets
-    total_tickets = base_query.filter(date_filter).count()
+    total_tickets = filtered_query.count()
     
     # Tickets by status
-    open_tickets = base_query.filter(
-        date_filter,
+    open_tickets = filtered_query.filter(
         Ticket.status == TicketStatus.OPEN
     ).count()
     
-    in_progress_tickets = base_query.filter(
-        date_filter,
+    in_progress_tickets = filtered_query.filter(
         Ticket.status == TicketStatus.IN_PROGRESS
     ).count()
     
-    resolved_tickets = base_query.filter(
-        date_filter,
+    resolved_tickets = filtered_query.filter(
         Ticket.status == TicketStatus.RESOLVED
     ).count()
     
-    closed_tickets = base_query.filter(
-        date_filter,
+    closed_tickets = filtered_query.filter(
         Ticket.status == TicketStatus.CLOSED
     ).count()
     
-    # Average resolution time (in hours)
-    resolved_tickets_with_time = base_query.filter(
-        date_filter,
-        Ticket.status.in_([TicketStatus.RESOLVED, TicketStatus.CLOSED]),
-        Ticket.resolved_at.isnot(None)
-    ).all()
+    # Average resolution time (in hours) for closed tickets
+    if date_filter is not True:
+        resolved_tickets_with_time = base_query.filter(
+            date_filter,
+            Ticket.status.in_([TicketStatus.RESOLVED, TicketStatus.CLOSED]),
+            Ticket.resolved_at.isnot(None)
+        ).all()
+        
+        active_tickets = base_query.filter(
+            date_filter,
+            Ticket.status.in_([TicketStatus.OPEN, TicketStatus.IN_PROGRESS, TicketStatus.WAITING_USER, TicketStatus.REOPENED])
+        ).all()
+    else:
+        resolved_tickets_with_time = base_query.filter(
+            Ticket.status.in_([TicketStatus.RESOLVED, TicketStatus.CLOSED]),
+            Ticket.resolved_at.isnot(None)
+        ).all()
+        
+        active_tickets = base_query.filter(
+            Ticket.status.in_([TicketStatus.OPEN, TicketStatus.IN_PROGRESS, TicketStatus.WAITING_USER, TicketStatus.REOPENED])
+        ).all()
     
     avg_resolution_time = None
     if resolved_tickets_with_time:
@@ -89,11 +108,27 @@ async def get_dashboard_stats(
         ])
         avg_resolution_time = total_time / len(resolved_tickets_with_time)
     
+    # Average time open for all active tickets (open, in_progress, waiting_user, reopened)
+    avg_time_open = None
+    if active_tickets:
+        current_time = datetime.utcnow()
+        total_open_time = sum([
+            (current_time - ticket.created_at).total_seconds() / 3600
+            for ticket in active_tickets
+        ])
+        avg_time_open = total_open_time / len(active_tickets)
+    
     # Tickets by priority (apply same role-based filtering)
-    priority_stats = base_query.filter(date_filter).with_entities(
-        Ticket.priority,
-        func.count(Ticket.id).label('count')
-    ).group_by(Ticket.priority).all()
+    if date_filter is not True:
+        priority_stats = base_query.filter(date_filter).with_entities(
+            Ticket.priority,
+            func.count(Ticket.id).label('count')
+        ).group_by(Ticket.priority).all()
+    else:
+        priority_stats = base_query.with_entities(
+            Ticket.priority,
+            func.count(Ticket.id).label('count')
+        ).group_by(Ticket.priority).all()
     
     tickets_by_priority = {
         priority.value: 0 for priority in TicketPriority
@@ -107,7 +142,10 @@ async def get_dashboard_stats(
         func.count(Ticket.id).label('count')
     ).join(
         Ticket, Category.id == Ticket.category_id
-    ).filter(date_filter)
+    )
+    
+    if date_filter is not True:
+        category_query = category_query.filter(date_filter)
     
     # Apply role-based filtering to category stats
     if user_role_str == "technician":
@@ -124,9 +162,10 @@ async def get_dashboard_stats(
         User, TicketActivity.user_id == User.id
     ).join(
         Ticket, TicketActivity.ticket_id == Ticket.id
-    ).filter(
-        TicketActivity.created_at >= start_date
     )
+    
+    if date_filter is not True:
+        activities_query = activities_query.filter(TicketActivity.created_at >= start_date)
     
     # Apply role-based filtering to activities
     if user_role_str == "technician":
@@ -145,6 +184,7 @@ async def get_dashboard_stats(
         resolved_tickets=resolved_tickets,
         closed_tickets=closed_tickets,
         avg_resolution_time=avg_resolution_time,
+        avg_time_open=avg_time_open,
         tickets_by_priority=tickets_by_priority,
         tickets_by_category=tickets_by_category,
         recent_activities=recent_activities
