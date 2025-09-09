@@ -280,10 +280,10 @@ class TicketEvaluationUpdate(BaseModel):
 class TicketEvaluation(TicketEvaluationBase):
     id: int
     ticket_id: int
-    evaluated_by_id: int
+    user_id: int
     created_at: datetime
     updated_at: Optional[datetime] = None
-    evaluated_by: Optional[User] = None
+    user: Optional[User] = None
     
     class Config:
         from_attributes = True
