@@ -32,8 +32,8 @@ class NotificationService:
         }
         
         # Notifica todos os técnicos e admins
-        await manager.send_to_role(message, "TECHNICIAN")
-        await manager.send_to_role(message, "ADMIN")
+        await manager.send_to_role(message, "technician")
+        await manager.send_to_role(message, "admin")
         
         logger.info(f"Notification sent for new ticket {ticket.id}")
 
