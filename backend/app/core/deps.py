@@ -26,11 +26,14 @@ def get_current_user(
     
     try:
         print(f"Token received: {credentials.credentials[:20]}...")
+        print(f"SECRET_KEY (first 10 chars): {settings.SECRET_KEY[:10]}...")
+        print(f"ALGORITHM: {settings.ALGORITHM}")
         payload = jwt.decode(
             credentials.credentials, 
             settings.SECRET_KEY, 
             algorithms=[settings.ALGORITHM]
         )
+        print(f"Token payload: {payload}")
         username: str = payload.get("sub")
         print(f"Username from token: {username}")
         if username is None:
@@ -39,6 +42,7 @@ def get_current_user(
         token_data = TokenData(username=username)
     except JWTError as e:
         print(f"✗ JWT Error: {str(e)}")
+        print(f"Token that failed: {credentials.credentials}")
         raise credentials_exception
     
     user = db.query(UserModel).filter(UserModel.username == token_data.username).first()
