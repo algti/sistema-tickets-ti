@@ -37,7 +37,13 @@ async def debug_requests(request: Request, call_next):
                 if '/users/profile' in route.path or 'profile' in route.path:
                     print(f"FOUND ROUTE: {route.path} - Methods: {route.methods}")
                     if hasattr(route, 'dependant') and route.dependant:
-                        print(f"  Dependencies: {route.dependant.dependencies}")
+                        print(f"  Dependencies count: {len(route.dependant.dependencies)}")
+                        for i, dep in enumerate(route.dependant.dependencies):
+                            print(f"    Dep {i}: {dep.call}")
+                            if hasattr(dep, 'call') and hasattr(dep.call, '__name__'):
+                                print(f"      Function name: {dep.call.__name__}")
+                            if hasattr(dep, 'call') and hasattr(dep.call, '__module__'):
+                                print(f"      Module: {dep.call.__module__}")
         
         # Call the endpoint
         response = await call_next(request)
