@@ -104,8 +104,24 @@ def get_current_admin(
         print(f"User role: {user_role} (type: {type(user_role)})")
         print(f"Allowed roles: {allowed_roles}")
         print(f"This is get_current_admin being called somewhere!")
+        
+        # Get full stack trace as string
         import traceback
-        traceback.print_stack()
+        import inspect
+        
+        # Print current frame info
+        frame = inspect.currentframe()
+        try:
+            caller_frame = frame.f_back
+            while caller_frame:
+                filename = caller_frame.f_code.co_filename
+                line_number = caller_frame.f_lineno
+                function_name = caller_frame.f_code.co_name
+                print(f"STACK: {filename}:{line_number} in {function_name}")
+                caller_frame = caller_frame.f_back
+        finally:
+            del frame
+            
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions. Admin role required."
