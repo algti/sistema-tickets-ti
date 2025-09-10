@@ -190,11 +190,12 @@ async def update_profile(
 ):
     """Update current user profile"""
     
-    print(f"=== PROFILE UPDATE ENDPOINT CALLED ===")
+    print(f"=== USERS.PY PROFILE UPDATE ENDPOINT CALLED ===")
     print(f"Current user: {current_user.username} (ID: {current_user.id})")
     print(f"User active: {current_user.is_active}")
     print(f"User role: {current_user.role}")
     print(f"Profile data: {profile_data.dict(exclude_unset=True)}")
+    print(f"This should be the CORRECT endpoint being called")
     
     try:
         # Get the actual user from database
