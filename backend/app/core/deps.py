@@ -54,18 +54,18 @@ def get_current_user(
     
     print(f"✓ User authenticated successfully: {username}")
     
-    # Check if this is being called for profile update
+    # Check if there's a hidden dependency calling get_current_admin
     import inspect
     frame = inspect.currentframe()
     try:
-        caller_frames = []
         current_frame = frame.f_back
-        while current_frame and len(caller_frames) < 5:
-            caller_frames.append(f"{current_frame.f_code.co_filename}:{current_frame.f_lineno} in {current_frame.f_code.co_name}")
+        while current_frame:
+            filename = current_frame.f_code.co_filename
+            function_name = current_frame.f_code.co_name
+            if 'get_current_admin' in function_name:
+                print(f"FOUND get_current_admin in call stack: {filename}:{current_frame.f_lineno}")
+                raise HTTPException(status_code=403, detail="Not enough permissions. Admin role required.")
             current_frame = current_frame.f_back
-        print(f"CALL STACK for get_current_user:")
-        for i, frame_info in enumerate(caller_frames):
-            print(f"  Frame {i}: {frame_info}")
     finally:
         del frame
     
