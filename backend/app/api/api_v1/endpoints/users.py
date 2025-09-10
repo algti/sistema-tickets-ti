@@ -9,6 +9,12 @@ from app.schemas.schemas import UserCreate, UserUpdate, User as UserSchema, Prof
 
 router = APIRouter()
 
+# Check if router has global dependencies
+print(f"=== ROUTER DEPENDENCIES DEBUG ===")
+print(f"Router dependencies: {getattr(router, 'dependencies', 'None')}")
+print(f"Router prefix: {getattr(router, 'prefix', 'None')}")
+print(f"Router tags: {getattr(router, 'tags', 'None')}")
+
 @router.get("/", response_model=List[UserSchema])
 async def get_users(
     skip: int = Query(0, ge=0),
@@ -182,8 +188,9 @@ async def update_user(
     
     return user
 
-@router.put("/profile", dependencies=[])
+@router.put("/profile")
 async def update_profile(
+    request: Request,
     profile_data: ProfileUpdate,
     current_user: UserSchema = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -191,11 +198,18 @@ async def update_profile(
     """Update current user profile"""
     
     print(f"=== USERS.PY PROFILE UPDATE ENDPOINT CALLED ===")
+    print(f"Request URL: {request.url}")
+    print(f"Request method: {request.method}")
     print(f"Current user: {current_user.username} (ID: {current_user.id})")
     print(f"User active: {current_user.is_active}")
     print(f"User role: {current_user.role}")
     print(f"Profile data: {profile_data.dict(exclude_unset=True)}")
     print(f"This should be the CORRECT endpoint being called")
+    
+    # Check if this function is actually being called
+    import sys
+    print(f"Function frame: {sys._getframe().f_code.co_name}")
+    print(f"File: {sys._getframe().f_code.co_filename}")
     
     try:
         # Get the actual user from database
