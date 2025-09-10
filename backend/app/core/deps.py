@@ -24,42 +24,51 @@ def get_current_user(
         headers={"WWW-Authenticate": "Bearer"},
     )
     
+    print(f" === GET_CURRENT_USER CALLED ===")
+    print(f"Token received: {credentials.credentials[:20]}...")
+    print(f"SECRET_KEY (first 10 chars): {settings.SECRET_KEY[:10]}...")
+    print(f"ALGORITHM: {settings.ALGORITHM}")
+    
     try:
-        print(f"Token received: {credentials.credentials[:20]}...")
-        print(f"SECRET_KEY (first 10 chars): {settings.SECRET_KEY[:10]}...")
-        print(f"ALGORITHM: {settings.ALGORITHM}")
-        payload = jwt.decode(
-            credentials.credentials, 
-            settings.SECRET_KEY, 
-            algorithms=[settings.ALGORITHM]
-        )
+        payload = jwt.decode(credentials.credentials, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
         print(f"Token payload: {payload}")
         username: str = payload.get("sub")
-        print(f"Username from token: {username}")
         if username is None:
-            print("✗ Username is None in token payload")
+            print(f"✗ No username in token payload")
             raise credentials_exception
-        token_data = TokenData(username=username)
+        print(f"Username from token: {username}")
     except JWTError as e:
-        print(f"✗ JWT Error: {str(e)}")
-        print(f"Token that failed: {credentials.credentials}")
+        print(f"✗ JWT decode error: {e}")
         raise credentials_exception
     
-    user = db.query(UserModel).filter(UserModel.username == token_data.username).first()
+    user = db.query(UserModel).filter(UserModel.username == username).first()
     if user is None:
-        print(f"✗ User not found in database: {token_data.username}")
+        print(f"✗ User not found in database: {username}")
         raise credentials_exception
     
     print(f"User found: {user.username}, active: {user.is_active}, role: {user.role}")
     
     if not user.is_active:
-        print(f"✗ User is inactive: {user.username}")
-        raise HTTPException(
-            status_code=status.HTTP_403_FORBIDDEN,
-            detail="Inactive user"
-        )
+        print(f"✗ User is inactive: {username}")
+        raise HTTPException(status_code=403, detail="Inactive user")
     
-    print(f"✓ User authenticated successfully: {user.username}")
+    print(f"✓ User authenticated successfully: {username}")
+    
+    # Check if this is being called for profile update
+    import inspect
+    frame = inspect.currentframe()
+    try:
+        caller_frames = []
+        current_frame = frame.f_back
+        while current_frame and len(caller_frames) < 5:
+            caller_frames.append(f"{current_frame.f_code.co_filename}:{current_frame.f_lineno} in {current_frame.f_code.co_name}")
+            current_frame = current_frame.f_back
+        print(f"CALL STACK for get_current_user:")
+        for i, frame_info in enumerate(caller_frames):
+            print(f"  Frame {i}: {frame_info}")
+    finally:
+        del frame
+    
     return user
 
 def get_current_active_user(
