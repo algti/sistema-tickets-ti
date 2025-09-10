@@ -21,6 +21,24 @@ app = FastAPI(
 
 # Middleware removed - was consuming request body and preventing endpoint execution
 
+# Debug middleware to trace requests
+@app.middleware("http")
+async def debug_requests(request: Request, call_next):
+    if "/users/profile" in str(request.url) and request.method == "PUT":
+        print(f"=== MIDDLEWARE DEBUG: PUT /users/profile ===")
+        print(f"Request URL: {request.url}")
+        print(f"Request method: {request.method}")
+        print(f"Authorization header: {request.headers.get('authorization', 'MISSING')}")
+        
+        # Call the endpoint
+        response = await call_next(request)
+        
+        print(f"Response status: {response.status_code}")
+        print(f"=== END MIDDLEWARE DEBUG ===")
+        return response
+    
+    return await call_next(request)
+
 # CORS middleware - Explicit configuration
 app.add_middleware(
     CORSMiddleware,
