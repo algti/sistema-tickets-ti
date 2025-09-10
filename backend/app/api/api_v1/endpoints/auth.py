@@ -132,3 +132,4 @@ async def refresh_token(current_user: UserModel = Depends(get_current_user)):
         "access_token": access_token,
         "token_type": "bearer"
     }
+
