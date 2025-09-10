@@ -124,12 +124,17 @@ export const usersService = {
   
   updateProfile: async (data) => {
     console.log('API: Sending updateProfile request with data:', data);
+    console.log('API: Current token:', localStorage.getItem('token')?.substring(0, 20) + '...');
+    console.log('API: Authorization header:', authAPI.defaults.headers.common['Authorization']?.substring(0, 30) + '...');
     try {
       const response = await authAPI.put('/users/profile', data);
       console.log('API: updateProfile response:', response);
       return response;
     } catch (error) {
       console.error('API: updateProfile error:', error);
+      console.error('API: Error response data:', error.response?.data);
+      console.error('API: Error response status:', error.response?.status);
+      console.error('API: Error response headers:', error.response?.headers);
       throw error;
     }
   },
