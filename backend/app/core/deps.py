@@ -100,6 +100,12 @@ def get_current_admin(
         allowed_roles = [UserRole.admin]
     
     if user_role not in allowed_roles:
+        print(f"=== ADMIN CHECK FAILED ===")
+        print(f"User role: {user_role} (type: {type(user_role)})")
+        print(f"Allowed roles: {allowed_roles}")
+        print(f"This is get_current_admin being called somewhere!")
+        import traceback
+        traceback.print_stack()
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Not enough permissions. Admin role required."
