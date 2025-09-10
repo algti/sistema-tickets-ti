@@ -185,8 +185,8 @@ async def update_user(
 @router.put("/profile")
 async def update_profile(
     profile_data: ProfileUpdate,
-    current_user: UserSchema = Depends(get_current_user),
-    db: Session = Depends(get_db)
+    db: Session = Depends(get_db),
+    current_user: UserSchema = Depends(get_current_user)
 ):
     """Update current user profile"""
     
