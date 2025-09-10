@@ -30,6 +30,15 @@ async def debug_requests(request: Request, call_next):
         print(f"Request method: {request.method}")
         print(f"Authorization header: {request.headers.get('authorization', 'MISSING')}")
         
+        # Check all registered routes
+        print(f"=== CHECKING ALL ROUTES ===")
+        for route in app.routes:
+            if hasattr(route, 'path') and hasattr(route, 'methods'):
+                if '/users/profile' in route.path or 'profile' in route.path:
+                    print(f"FOUND ROUTE: {route.path} - Methods: {route.methods}")
+                    if hasattr(route, 'dependant') and route.dependant:
+                        print(f"  Dependencies: {route.dependant.dependencies}")
+        
         # Call the endpoint
         response = await call_next(request)
         
