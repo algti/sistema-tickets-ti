@@ -16,6 +16,8 @@ def get_current_user(
     db: Session = Depends(get_db)
 ) -> UserModel:
     """Get current authenticated user"""
+    print(f"=== GET_CURRENT_USER CALLED ===")
+    
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
@@ -23,28 +25,37 @@ def get_current_user(
     )
     
     try:
+        print(f"Token received: {credentials.credentials[:20]}...")
         payload = jwt.decode(
             credentials.credentials, 
             settings.SECRET_KEY, 
             algorithms=[settings.ALGORITHM]
         )
         username: str = payload.get("sub")
+        print(f"Username from token: {username}")
         if username is None:
+            print("✗ Username is None in token payload")
             raise credentials_exception
         token_data = TokenData(username=username)
-    except JWTError:
+    except JWTError as e:
+        print(f"✗ JWT Error: {str(e)}")
         raise credentials_exception
     
     user = db.query(UserModel).filter(UserModel.username == token_data.username).first()
     if user is None:
+        print(f"✗ User not found in database: {token_data.username}")
         raise credentials_exception
     
+    print(f"User found: {user.username}, active: {user.is_active}, role: {user.role}")
+    
     if not user.is_active:
+        print(f"✗ User is inactive: {user.username}")
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN,
             detail="Inactive user"
         )
     
+    print(f"✓ User authenticated successfully: {user.username}")
     return user
 
 def get_current_active_user(
