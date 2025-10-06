@@ -79,24 +79,24 @@ function Tickets() {
 
   const getStatusColor = (status) => {
     const colors = {
-      'open': 'bg-blue-100 text-blue-800',
-      'in_progress': 'bg-yellow-100 text-yellow-800',
-      'waiting_user': 'bg-purple-100 text-purple-800',
-      'resolved': 'bg-green-100 text-green-800',
-      'closed': 'bg-gray-100 text-gray-800',
-      'reopened': 'bg-orange-100 text-orange-800'
+      'open': 'badge-blue',
+      'in_progress': 'badge-yellow',
+      'waiting_user': 'badge-purple',
+      'resolved': 'badge-green',
+      'closed': 'badge-gray',
+      'reopened': 'badge-red'
     };
-    return colors[status] || 'bg-gray-100 text-gray-800';
+    return colors[status] || 'badge-gray';
   };
 
   const getPriorityColor = (priority) => {
     const colors = {
-      'low': 'bg-green-100 text-green-800',
-      'medium': 'bg-yellow-100 text-yellow-800',
-      'high': 'bg-orange-100 text-orange-800',
-      'urgent': 'bg-red-100 text-red-800'
+      'low': 'badge-green',
+      'medium': 'badge-yellow',
+      'high': 'badge-red',
+      'urgent': 'badge-red'
     };
-    return colors[priority] || 'bg-gray-100 text-gray-800';
+    return colors[priority] || 'badge-gray';
   };
 
     const formatDate = (dateString) => {
@@ -148,17 +148,17 @@ function Tickets() {
     <div className="space-y-6">
       {/* Header */}
       <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-900">Tickets</h1>
+        <h1 className="text-2xl font-bold text-primary">Tickets</h1>
         <button
           onClick={() => navigate('/tickets/new')}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium"
+          className="btn-primary"
         >
           + Novo Ticket
         </button>
       </div>
 
       {/* Filters */}
-      <div className="bg-white shadow rounded-lg p-4">
+      <div className="card p-4">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div>
             <input
@@ -166,14 +166,14 @@ function Tickets() {
               placeholder="Buscar tickets..."
               value={filters.search}
               onChange={(e) => setFilters({...filters, search: e.target.value})}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="input-field"
             />
           </div>
           <div>
             <select
               value={filters.status}
               onChange={(e) => setFilters({...filters, status: e.target.value})}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="input-field"
             >
               <option value="">Todos os Status</option>
               <option value="open">Aberto</option>
@@ -188,7 +188,7 @@ function Tickets() {
             <select
               value={filters.priority}
               onChange={(e) => setFilters({...filters, priority: e.target.value})}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="input-field"
             >
               <option value="">Todas as Prioridades</option>
               <option value="low">Baixa</option>
@@ -200,7 +200,7 @@ function Tickets() {
           <div>
             <button
               onClick={() => setFilters({status: '', priority: '', search: ''})}
-              className="w-full px-3 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
+              className="btn-secondary w-full"
             >
               Limpar Filtros
             </button>
@@ -209,19 +209,19 @@ function Tickets() {
       </div>
 
       {/* Tickets List */}
-      <div className="bg-white shadow rounded-lg overflow-hidden">
+      <div className="card overflow-hidden">
         {tickets.length === 0 ? (
           <div className="p-8 text-center">
-            <div className="text-gray-500">
-              <svg className="mx-auto h-12 w-12 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <div className="text-muted">
+              <svg className="mx-auto h-12 w-12 text-muted" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v10a2 2 0 002 2h8a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2" />
               </svg>
-              <h3 className="mt-2 text-sm font-medium text-gray-900">Nenhum ticket encontrado</h3>
-              <p className="mt-1 text-sm text-gray-500">Comece criando um novo ticket.</p>
+              <h3 className="mt-2 text-sm font-medium text-primary">Nenhum ticket encontrado</h3>
+              <p className="mt-1 text-sm text-secondary">Comece criando um novo ticket.</p>
               <div className="mt-6">
                 <button
                   onClick={() => navigate('/tickets/create')}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium"
+                  className="btn-primary"
                 >
                   + Criar Primeiro Ticket
                 </button>
@@ -230,69 +230,69 @@ function Tickets() {
           </div>
         ) : (
           <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
+            <table className="min-w-full table-dark">
+              <thead>
                 <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">
                     Ticket
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">
                     Status
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">
                     Prioridade
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">
                     Criado em
                   </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  <th className="px-6 py-3 text-left text-xs font-medium text-secondary uppercase tracking-wider">
                     Ações
                   </th>
                 </tr>
               </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
+              <tbody className="divide-y divide-border-subtle">
                 {tickets.map((ticket) => (
-                  <tr key={ticket.id} className="hover:bg-gray-50">
+                  <tr key={ticket.id} className="hover:bg-brand-hover transition-colors duration-200">
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div>
-                        <div className="text-sm font-medium text-gray-900">
+                        <div className="text-sm font-medium text-primary">
                           #{ticket.id} - {ticket.title}
                         </div>
-                        <div className="text-sm text-gray-500">
+                        <div className="text-sm text-secondary">
                           {ticket.description?.substring(0, 100)}...
                         </div>
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getStatusColor(ticket.status)}`}>
+                      <span className={`badge ${getStatusColor(ticket.status)}`}>
                         {getStatusLabel(ticket.status)}
                       </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                      <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${getPriorityColor(ticket.priority)}`}>
+                      <span className={`badge ${getPriorityColor(ticket.priority)}`}>
                         {getPriorityLabel(ticket.priority)}
                       </span>
                     </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                    <td className="px-6 py-4 whitespace-nowrap text-sm text-secondary">
                       {formatDate(ticket.created_at)}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                       <button
                         onClick={() => navigate(`/tickets/${ticket.id}`)}
-                        className="text-blue-600 hover:text-blue-900 mr-4"
+                        className="text-brand-primary hover:text-brand-active mr-4"
                       >
                         Ver
                       </button>
                       <button
                         onClick={() => navigate(`/tickets/${ticket.id}/edit`)}
-                        className="text-green-600 hover:text-green-900 mr-4"
+                        className="text-green-400 hover:text-green-300 mr-4"
                       >
                         Editar
                       </button>
                       {isAdmin() && (
                         <button
                           onClick={() => handleDeleteTicket(ticket.id, ticket.title)}
-                          className="text-red-600 hover:text-red-900 flex items-center"
+                          className="text-red-400 hover:text-red-300 flex items-center"
                           title="Excluir ticket"
                         >
                           <TrashIcon className="h-4 w-4 mr-1" />
