@@ -1,80 +1,227 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:ital,wght@0,100..800;1,100..800&display=swap');
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+:root {
+  --bg-primary: #000000;
+  --bg-secondary: #121212;
+  --bg-overlay: rgba(255, 255, 255, 0.1);
+  --text-primary: #ffffff;
+  --text-secondary: rgba(255, 255, 255, 0.85);
+  --text-muted: #4d4d4d;
+  --border-subtle: rgba(255, 255, 255, 0.25);
+  --border-medium: rgba(255, 255, 255, 0.4);
+  --brand-primary: #00ffd1;
+  --brand-hover: rgba(0, 255, 209, 0.1);
+  --brand-active: #6fd2c0;
+  --brand-purple: #6b46c1;
+  --brand-purple-light: rgba(107, 70, 193, 0.2);
+  
+  /* Badge colors for dark theme */
+  --bg-success: rgba(34, 197, 94, 0.2);
+  --bg-warning: rgba(251, 191, 36, 0.2);
+  --bg-danger: rgba(239, 68, 68, 0.2);
+  --bg-info: rgba(59, 130, 246, 0.2);
+  --bg-purple: rgba(147, 51, 234, 0.2);
+}
+
 @layer base {
   * {
     box-sizing: border-box;
+    margin: 0;
+    padding: 0;
   }
   
   body {
-    font-family: 'Inter', system-ui, -apple-system, sans-serif;
-    @apply bg-gray-50 text-gray-900;
+    font-family: 'JetBrains Mono', 'Inter', system-ui, -apple-system, sans-serif;
+    background: var(--bg-primary);
+    color: var(--text-primary);
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    overflow-x: hidden;
   }
   
   html, body, #root {
     height: 100%;
+    min-height: 100vh;
+  }
+
+  .App {
+    background: var(--bg-primary);
+    min-height: 100vh;
+    position: relative;
   }
 }
 
 @layer components {
+  /* Modern Dark Theme Buttons */
   .btn-primary {
-    @apply bg-primary-600 hover:bg-primary-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2;
+    background: var(--brand-primary);
+    color: var(--bg-primary);
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(0, 255, 209, 0.3);
+  }
+  
+  .btn-primary:hover {
+    background: var(--brand-active);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(0, 255, 209, 0.4);
   }
   
   .btn-secondary {
-    @apply bg-gray-200 hover:bg-gray-300 text-gray-900 font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2;
+    background: var(--bg-overlay);
+    color: var(--text-primary);
+    border: 1px solid var(--border-subtle);
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 500;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    backdrop-filter: blur(10px);
+  }
+  
+  .btn-secondary:hover {
+    background: var(--brand-hover);
+    border-color: var(--brand-primary);
+    transform: translateY(-1px);
   }
   
   .btn-danger {
-    @apply bg-red-600 hover:bg-red-700 text-white font-medium py-2 px-4 rounded-lg transition-colors duration-200 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2;
+    background: linear-gradient(135deg, #ff4757, #ff3742);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 8px;
+    font-weight: 600;
+    font-size: 14px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 12px rgba(255, 71, 87, 0.3);
   }
   
+  .btn-danger:hover {
+    background: linear-gradient(135deg, #ff3742, #ff2f3a);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 20px rgba(255, 71, 87, 0.4);
+  }
+  
+  /* Modern Input Fields */
   .input-field {
-    @apply block w-full rounded-lg border-gray-300 shadow-sm focus:border-primary-500 focus:ring-primary-500 sm:text-sm;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-subtle);
+    color: var(--text-primary);
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: all 0.3s ease;
+    width: 100%;
   }
   
+  .input-field:focus {
+    outline: none;
+    border-color: var(--brand-primary);
+    box-shadow: 0 0 0 3px rgba(0, 255, 209, 0.1);
+    background: var(--bg-primary);
+  }
+  
+  .input-field::placeholder {
+    color: var(--text-muted);
+  }
+  
+  /* Modern Cards */
   .card {
-    @apply bg-white rounded-lg shadow-sm border border-gray-200;
+    background: var(--bg-secondary);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    backdrop-filter: blur(10px);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+    transition: all 0.3s ease;
   }
   
+  .card:hover {
+    border-color: var(--border-medium);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+  }
+  
+  /* Modern Badges */
   .badge {
-    @apply inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium;
+    display: inline-flex;
+    align-items: center;
+    padding: 6px 12px;
+    border-radius: 20px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
   }
   
   .badge-green {
-    @apply bg-green-100 text-green-800;
+    background: linear-gradient(135deg, #2ed573, #1dd1a1);
+    color: white;
+    box-shadow: 0 2px 8px rgba(46, 213, 115, 0.3);
   }
   
   .badge-yellow {
-    @apply bg-yellow-100 text-yellow-800;
+    background: linear-gradient(135deg, #ffa502, #ff9500);
+    color: white;
+    box-shadow: 0 2px 8px rgba(255, 165, 2, 0.3);
   }
   
   .badge-red {
-    @apply bg-red-100 text-red-800;
+    background: linear-gradient(135deg, #ff4757, #ff3742);
+    color: white;
+    box-shadow: 0 2px 8px rgba(255, 71, 87, 0.3);
   }
   
   .badge-blue {
-    @apply bg-blue-100 text-blue-800;
+    background: linear-gradient(135deg, #3742fa, #2f3542);
+    color: white;
+    box-shadow: 0 2px 8px rgba(55, 66, 250, 0.3);
   }
   
   .badge-gray {
-    @apply bg-gray-100 text-gray-800;
+    background: var(--bg-overlay);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-subtle);
   }
   
   .badge-purple {
-    @apply bg-purple-100 text-purple-800;
+    background: linear-gradient(135deg, var(--brand-purple), #8b5cf6);
+    color: white;
+    box-shadow: 0 2px 8px var(--brand-purple-light);
+  }
+  
+  /* Glassmorphism Effect */
+  .glass {
+    background: var(--bg-overlay);
+    backdrop-filter: blur(10px);
+    border: 1px solid var(--border-subtle);
+  }
+  
+  /* Neon Glow Effect */
+  .neon-glow {
+    box-shadow: 0 0 20px var(--brand-primary), 0 0 40px var(--brand-primary), 0 0 60px var(--brand-primary);
   }
 }
 
-/* Loading spinner */
+/* Modern Loading Spinner */
 .spinner {
-  border: 2px solid #f3f3f3;
-  border-top: 2px solid #3b82f6;
+  border: 3px solid var(--bg-overlay);
+  border-top: 3px solid var(--brand-primary);
   border-radius: 50%;
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   animation: spin 1s linear infinite;
+  box-shadow: 0 0 10px rgba(0, 255, 209, 0.3);
 }
 
 @keyframes spin {
@@ -82,20 +229,710 @@
   100% { transform: rotate(360deg); }
 }
 
-/* Custom scrollbar */
+/* Dark Theme Scrollbar */
 ::-webkit-scrollbar {
-  width: 6px;
+  width: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f1f1;
+  background: var(--bg-secondary);
+  border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
-  border-radius: 3px;
+  background: var(--border-medium);
+  border-radius: 4px;
+  transition: all 0.3s ease;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
+  background: var(--brand-primary);
+  box-shadow: 0 0 8px rgba(0, 255, 209, 0.5);
+}
+
+/* Additional Dark Theme Utilities */
+.text-primary { color: var(--text-primary); }
+.text-secondary { color: var(--text-secondary); }
+.text-muted { color: var(--text-muted); }
+.bg-primary { background: var(--bg-primary); }
+.bg-secondary { background: var(--bg-secondary); }
+.border-subtle { border-color: var(--border-subtle); }
+
+/* Modern Form Elements */
+select.input-field {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+  cursor: pointer;
+}
+
+select.input-field option {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+textarea.input-field {
+  resize: vertical;
+  min-height: 100px;
+}
+
+/* Navigation and Layout */
+.nav-dark {
+  background: var(--bg-secondary);
+  border-bottom: 1px solid var(--border-subtle);
+  backdrop-filter: blur(10px);
+}
+
+.sidebar-dark {
+  background: var(--bg-secondary);
+  border-right: 1px solid var(--border-subtle);
+}
+
+/* Table Styles */
+.table-dark {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.table-dark th {
+  background: var(--bg-primary);
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-secondary);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-size: 12px;
+}
+
+.table-dark td {
+  border-bottom: 1px solid var(--border-subtle);
+  color: var(--text-primary);
+}
+
+.table-dark tr:hover {
+  background: var(--bg-overlay);
+}
+
+/* Modal Styles */
+.modal-dark {
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(5px);
+}
+
+.modal-content-dark {
+  background: var(--bg-secondary);
+  border: 1px solid var(--border-subtle);
+  border-radius: 12px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+}
+
+/* Override any white backgrounds in modals and forms */
+.modal-content,
+.modal-body,
+.modal-header,
+.modal-footer,
+.form-container,
+.bg-white {
+  background: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Ensure all text in forms is visible */
+.modal-content *,
+.modal-body *,
+.form-container *,
+.bg-white * {
+  color: var(--text-primary) !important;
+}
+
+/* Override specific form elements */
+.modal-content label,
+.form-container label,
+.bg-white label {
+  color: var(--text-secondary) !important;
+}
+
+.modal-content .text-gray-900,
+.form-container .text-gray-900,
+.bg-white .text-gray-900 {
+  color: var(--text-primary) !important;
+}
+
+.modal-content .text-gray-600,
+.form-container .text-gray-600,
+.bg-white .text-gray-600 {
+  color: var(--text-secondary) !important;
+}
+
+.modal-content .text-gray-500,
+.form-container .text-gray-500,
+.bg-white .text-gray-500 {
+  color: var(--text-muted) !important;
+}
+
+/* Notification Styles */
+.notification-success {
+  background: linear-gradient(135deg, #2ed573, #1dd1a1);
+  color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(46, 213, 115, 0.3);
+}
+
+.notification-error {
+  background: linear-gradient(135deg, #ff4757, #ff3742);
+  color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(255, 71, 87, 0.3);
+}
+
+.notification-warning {
+  background: linear-gradient(135deg, #ffa502, #ff9500);
+  color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(255, 165, 2, 0.3);
+}
+
+.notification-info {
+  background: linear-gradient(135deg, #3742fa, #2f3542);
+  color: white;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(55, 66, 250, 0.3);
+}
+
+/* TARGETED DARK THEME OVERRIDES */
+
+/* Specific components with white backgrounds */
+.card.bg-white,
+.modal-content.bg-white,
+.form-container.bg-white {
+  background: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Table styling for dark theme */
+.table-dark {
+  background: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+}
+
+.table-dark tr:hover {
+  background: var(--brand-hover) !important;
+}
+
+.table-dark th {
+  background: var(--bg-primary) !important;
+  color: var(--text-secondary) !important;
+  border-bottom: 1px solid var(--border-subtle) !important;
+}
+
+.table-dark td {
+  border-bottom: 1px solid var(--border-subtle) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Modal overrides */
+.modal-content,
+.modal-body,
+.modal-header,
+.modal-footer {
+  background: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Ensure buttons in modals use correct styling */
+.modal-content button:not(.btn-primary):not(.btn-secondary):not(.btn-danger),
+.bg-white button:not(.btn-primary):not(.btn-secondary):not(.btn-danger) {
+  background: var(--bg-overlay) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-subtle) !important;
+}
+
+.modal-content button:not(.btn-primary):not(.btn-secondary):not(.btn-danger):hover,
+.bg-white button:not(.btn-primary):not(.btn-secondary):not(.btn-danger):hover {
+  background: var(--brand-hover) !important;
+  border-color: var(--brand-primary) !important;
+}
+
+/* Fix any remaining text color issues */
+.text-black {
+  color: var(--text-primary) !important;
+}
+
+/* Ensure dropdowns and selects work properly */
+.modal-content select,
+.bg-white select,
+.form-container select {
+  background: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-subtle) !important;
+}
+
+.modal-content select option,
+.bg-white select option,
+.form-container select option {
+  background: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+}
+
+/* ADDITIONAL COMPREHENSIVE OVERRIDES */
+
+/* Text color overrides - more specific */
+.card .text-gray-900,
+.modal-content .text-gray-900,
+.form-container .text-gray-900 {
+  color: var(--text-primary) !important;
+}
+
+.card .text-gray-600,
+.card .text-gray-500,
+.modal-content .text-gray-600,
+.modal-content .text-gray-500 {
+  color: var(--text-secondary) !important;
+}
+
+/* Specific component overrides */
+.shadow,
+.shadow-sm,
+.shadow-md,
+.shadow-lg {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Border overrides */
+.border-gray-200,
+.border-gray-300,
+.border-gray-400 {
+  border-color: var(--border-subtle) !important;
+}
+
+/* Remove this override as it's too broad */
+
+/* Specific Tailwind utility overrides */
+.hover\:bg-gray-50:hover,
+.hover\:bg-gray-100:hover,
+.hover\:bg-gray-200:hover {
+  background: var(--brand-hover) !important;
+}
+
+/* Remove broad table overrides - use .table-dark class instead */
+
+/* Form elements - more specific targeting */
+.input-field,
+.form-container input,
+.form-container textarea,
+.form-container select {
+  background: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-subtle) !important;
+}
+
+.input-field::placeholder,
+.form-container input::placeholder,
+.form-container textarea::placeholder {
+  color: var(--text-muted) !important;
+}
+
+/* COMPREHENSIVE DARK THEME APPLICATION */
+
+/* All white and light backgrounds */
+.bg-white,
+.bg-gray-50,
+.bg-gray-100,
+.bg-gray-200 {
+  background: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+}
+
+/* All elements with shadow (usually cards/modals) */
+.shadow,
+.shadow-sm,
+.shadow-md,
+.shadow-lg,
+.shadow-xl {
+  background: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* All rounded elements that are likely cards */
+.rounded-lg.bg-white,
+.rounded.bg-white,
+.rounded-md.bg-white {
+  background: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Modal and dialog comprehensive overrides */
+[role="dialog"],
+[role="modal"],
+.modal,
+.modal-content,
+.modal-body,
+.modal-header,
+.modal-footer,
+.dialog,
+.popup {
+  background: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Form containers and panels */
+.panel,
+.form-panel,
+.content-panel,
+.main-content,
+.page-content {
+  background: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Ensure main app container has correct background */
+.App {
+  background: var(--bg-primary) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Override any inline styles that might set white backgrounds */
+*[style*="background-color: white"],
+*[style*="background-color: #fff"],
+*[style*="background-color: #ffffff"],
+*[style*="background: white"],
+*[style*="background: #fff"],
+*[style*="background: #ffffff"] {
+  background: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Text color overrides for dark theme */
+.text-gray-900,
+.text-gray-800,
+.text-gray-700,
+.text-black {
+  color: var(--text-primary) !important;
+}
+
+.text-gray-600,
+.text-gray-500 {
+  color: var(--text-secondary) !important;
+}
+
+.text-gray-400,
+.text-gray-300 {
+  color: var(--text-muted) !important;
+}
+
+/* Ensure all labels are visible */
+label {
+  color: var(--text-secondary) !important;
+}
+
+/* Ensure all headings are visible */
+h1, h2, h3, h4, h5, h6 {
+  color: var(--text-primary) !important;
+}
+
+/* Ensure all paragraphs are visible */
+p {
+  color: var(--text-primary) !important;
+}
+
+/* Hover states for interactive elements */
+.hover\:bg-gray-50:hover,
+.hover\:bg-gray-100:hover,
+.hover\:bg-gray-200:hover,
+.hover\:bg-white:hover {
+  background: var(--brand-hover) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Focus states */
+input:focus,
+select:focus,
+textarea:focus,
+button:focus {
+  outline: none !important;
+  box-shadow: 0 0 0 2px var(--brand-primary) !important;
+}
+
+/* Table overrides for all tables */
+table {
+  background: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+}
+
+table th {
+  background: var(--bg-primary) !important;
+  color: var(--text-secondary) !important;
+  border-bottom: 1px solid var(--border-subtle) !important;
+}
+
+table td {
+  border-bottom: 1px solid var(--border-subtle) !important;
+  color: var(--text-primary) !important;
+}
+
+table tr:hover {
+  background: var(--brand-hover) !important;
+}
+
+/* Form elements */
+input,
+textarea,
+select {
+  background: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-subtle) !important;
+}
+
+input::placeholder,
+textarea::placeholder {
+  color: var(--text-muted) !important;
+}
+
+/* Button overrides */
+button:not(.btn-primary):not(.btn-secondary):not(.btn-danger) {
+  background: var(--bg-overlay) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-subtle) !important;
+}
+
+button:not(.btn-primary):not(.btn-secondary):not(.btn-danger):hover {
+  background: var(--brand-hover) !important;
+  border-color: var(--brand-primary) !important;
+}
+
+/* ADDITIONAL COMPREHENSIVE OVERRIDES FOR ALL PAGES */
+
+/* React component overrides */
+div[class*="modal"],
+div[class*="Modal"],
+div[class*="dialog"],
+div[class*="Dialog"],
+div[class*="popup"],
+div[class*="Popup"],
+div[class*="panel"],
+div[class*="Panel"],
+div[class*="card"],
+div[class*="Card"] {
+  background: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Specific class overrides for common patterns */
+.container,
+.content,
+.main,
+.wrapper,
+.section {
+  background: inherit !important;
+  color: var(--text-primary) !important;
+}
+
+/* Override any remaining border colors */
+.border-gray-200,
+.border-gray-300,
+.border-gray-400 {
+  border-color: var(--border-subtle) !important;
+}
+
+/* Ensure dividers are visible */
+.divide-gray-200 > * + *,
+.divide-gray-300 > * + * {
+  border-color: var(--border-subtle) !important;
+}
+
+/* List items */
+li {
+  color: var(--text-primary) !important;
+}
+
+/* Links */
+a:not(.btn-primary):not(.btn-secondary):not(.btn-danger) {
+  color: var(--brand-primary) !important;
+}
+
+a:not(.btn-primary):not(.btn-secondary):not(.btn-danger):hover {
+  color: var(--brand-active) !important;
+}
+
+/* Root level text color */
+body, #root {
+  color: var(--text-primary) !important;
+}
+
+/* TICKET DETAIL PAGE SPECIFIC OVERRIDES */
+
+/* Status cards in ticket detail */
+.ticket-status-cards > div,
+.status-card,
+.info-card {
+  background: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-subtle) !important;
+}
+
+/* Specific overrides for colored background cards */
+.bg-blue-50,
+.bg-green-50,
+.bg-yellow-50,
+.bg-purple-50,
+.bg-red-50,
+.bg-orange-50 {
+  background: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-subtle) !important;
+}
+
+/* Override text colors in these cards */
+.bg-blue-50 .text-blue-900,
+.bg-green-50 .text-green-900,
+.bg-yellow-50 .text-yellow-900,
+.bg-purple-50 .text-purple-900,
+.bg-red-50 .text-red-900,
+.bg-orange-50 .text-orange-900 {
+  color: var(--text-primary) !important;
+}
+
+/* Force all rounded cards to dark theme */
+.rounded-lg.p-4,
+.rounded-lg.p-6,
+div.rounded-lg.p-4,
+div.rounded-lg.p-6 {
+  background: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+}
+
+/* More specific overrides for ticket detail cards */
+.grid .card,
+.grid div.card,
+.grid > div {
+  background: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Ensure all cards in ticket detail are dark */
+[class*="grid"] [class*="card"],
+[class*="grid"] > div[class*="rounded-lg"] {
+  background: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-subtle) !important;
+}
+
+/* Override any remaining light backgrounds in ticket detail */
+.bg-gray-50 {
+  background: var(--bg-overlay) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-subtle) !important;
+}
+
+.text-gray-800 {
+  color: var(--text-primary) !important;
+}
+
+/* Universal overrides for ALL ticket detail elements */
+.max-w-7xl .grid > div,
+.max-w-7xl .grid .card,
+.max-w-7xl div[class*="rounded-lg"],
+.max-w-7xl div[class*="p-4"],
+.max-w-7xl div[class*="p-6"] {
+  background: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Force override for any remaining colored backgrounds */
+div[class*="bg-"][class*="-50"] {
+  background: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-subtle) !important;
+}
+
+/* Ensure text visibility in all scenarios */
+div[class*="bg-"][class*="-50"] * {
+  color: var(--text-primary) !important;
+}
+
+div[class*="bg-"][class*="-50"] h1,
+div[class*="bg-"][class*="-50"] h2,
+div[class*="bg-"][class*="-50"] h3,
+div[class*="bg-"][class*="-50"] h4,
+div[class*="bg-"][class*="-50"] h5,
+div[class*="bg-"][class*="-50"] h6,
+div[class*="bg-"][class*="-50"] p,
+div[class*="bg-"][class*="-50"] span {
+  color: var(--text-primary) !important;
+}
+
+/* Badge overrides for better visibility */
+.bg-yellow-100 {
+  background: var(--bg-warning) !important;
+  color: var(--text-primary) !important;
+}
+
+.text-yellow-800 {
+  color: var(--text-primary) !important;
+}
+
+.bg-blue-100 {
+  background: var(--bg-info) !important;
+  color: var(--text-primary) !important;
+}
+
+.text-blue-800 {
+  color: var(--text-primary) !important;
+}
+
+.bg-green-100 {
+  background: var(--bg-success) !important;
+  color: var(--text-primary) !important;
+}
+
+.text-green-800 {
+  color: var(--text-primary) !important;
+}
+
+.bg-red-100 {
+  background: var(--bg-danger) !important;
+  color: var(--text-primary) !important;
+}
+
+.text-red-800 {
+  color: var(--text-primary) !important;
+}
+
+.bg-purple-100 {
+  background: var(--bg-purple) !important;
+  color: var(--text-primary) !important;
+}
+
+.text-purple-800 {
+  color: var(--text-primary) !important;
+}
+
+.bg-orange-100 {
+  background: var(--bg-warning) !important;
+  color: var(--text-primary) !important;
+}
+
+.text-orange-800 {
+  color: var(--text-primary) !important;
+}
+
+/* Specific overrides for inline-flex badges */
+.inline-flex.rounded-full {
+  background: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-subtle) !important;
+}
+
+/* Override all light colored badges */
+.bg-gray-100.text-gray-800,
+.bg-yellow-100.text-yellow-800,
+.bg-blue-100.text-blue-800,
+.bg-green-100.text-green-800,
+.bg-red-100.text-red-800,
+.bg-purple-100.text-purple-800,
+.bg-orange-100.text-orange-800 {
+  background: var(--bg-secondary) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid var(--border-subtle) !important;
 }
