@@ -175,7 +175,7 @@ function App() {
     <ThemeProvider>
       <AuthProvider>
         <WebSocketProvider>
-          <div className="min-h-screen bg-gray-50">
+          <div className="App min-h-screen bg-primary">
             <AppRoutes />
           </div>
         </WebSocketProvider>
