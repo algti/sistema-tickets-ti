@@ -77,10 +77,10 @@ const Dashboard = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">
+          <h1 className="text-2xl font-bold text-primary">
             Olá, {user?.full_name?.split(' ')[0]}! 👋
           </h1>
-          <p className="text-gray-600">
+          <p className="text-secondary">
             Bem-vindo ao sistema de tickets. Aqui está um resumo das atividades.
           </p>
         </div>
@@ -102,7 +102,7 @@ const Dashboard = () => {
                 <stat.icon className="h-6 w-6 text-white" />
               </div>
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">{stat.name}</p>
+                <p className="text-sm font-medium text-secondary">{stat.name}</p>
                 <p className={`text-2xl font-bold ${stat.textColor}`}>
                   {stat.value}
                 </p>
@@ -122,8 +122,8 @@ const Dashboard = () => {
                   <CheckCircleIcon className="h-6 w-6 text-white" />
                 </div>
                 <div className="ml-4">
-                  <h3 className="text-lg font-medium text-gray-900">Tempo Médio de Resolução</h3>
-                  <p className="text-sm text-gray-600">Tickets fechados</p>
+                  <h3 className="text-lg font-medium text-primary">Tempo Médio de Resolução</h3>
+                  <p className="text-sm text-secondary">Tickets fechados</p>
                 </div>
               </div>
               <div className="text-3xl font-bold text-green-600">
@@ -142,8 +142,8 @@ const Dashboard = () => {
                   <ClockIcon className="h-6 w-6 text-white" />
                 </div>
                 <div className="ml-4">
-                  <h3 className="text-lg font-medium text-gray-900">Tempo Médio Aberto</h3>
-                  <p className="text-sm text-gray-600">Tickets ativos</p>
+                  <h3 className="text-lg font-medium text-primary">Tempo Médio Aberto</h3>
+                  <p className="text-sm text-secondary">Tickets ativos</p>
                 </div>
               </div>
               <div className="text-3xl font-bold text-orange-600">
@@ -160,7 +160,7 @@ const Dashboard = () => {
       {/* Priority Distribution */}
       {stats?.tickets_by_priority && (
         <div className="card p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">
+          <h3 className="text-lg font-medium text-primary mb-4">
             Distribuição por Prioridade
           </h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -184,7 +184,7 @@ const Dashboard = () => {
                   <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${priorityColors[priority]}`}>
                     {priorityLabels[priority]}
                   </div>
-                  <p className="mt-2 text-2xl font-bold text-gray-900">{count}</p>
+                  <p className="mt-2 text-2xl font-bold text-primary">{count}</p>
                 </div>
               );
             })}
@@ -202,31 +202,31 @@ const Dashboard = () => {
                 <FaceSmileIcon className="h-6 w-6 text-white" />
               </div>
               <div className="ml-4">
-                <h3 className="text-lg font-medium text-gray-900">Satisfação Geral</h3>
-                <p className="text-sm text-gray-600">Últimos 30 dias</p>
+                <h3 className="text-lg font-medium text-primary">Satisfação Geral</h3>
+                <p className="text-sm text-secondary">Últimos 30 dias</p>
               </div>
             </div>
             
             <div className="space-y-4">
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Avaliação Média</span>
+                <span className="text-sm text-secondary">Avaliação Média</span>
                 <div className="flex items-center">
                   <StarIcon className="h-5 w-5 text-yellow-400 fill-current" />
-                  <span className="ml-1 text-lg font-semibold text-gray-900">
+                  <span className="ml-1 text-lg font-semibold text-primary">
                     {satisfactionMetrics.average_rating ? satisfactionMetrics.average_rating.toFixed(1) : 'N/A'}
                   </span>
                 </div>
               </div>
               
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Total de Avaliações</span>
-                <span className="text-lg font-semibold text-gray-900">
+                <span className="text-sm text-secondary">Total de Avaliações</span>
+                <span className="text-lg font-semibold text-primary">
                   {satisfactionMetrics.total_evaluations || 0}
                 </span>
               </div>
               
               <div className="flex items-center justify-between">
-                <span className="text-sm text-gray-600">Taxa de Satisfação</span>
+                <span className="text-sm text-secondary">Taxa de Satisfação</span>
                 <span className="text-lg font-semibold text-green-600">
                   {satisfactionMetrics.satisfaction_percentage ? `${satisfactionMetrics.satisfaction_percentage.toFixed(1)}%` : '0%'}
                 </span>
@@ -236,7 +236,7 @@ const Dashboard = () => {
 
           {/* Rating Distribution */}
           <div className="card p-6">
-            <h3 className="text-lg font-medium text-gray-900 mb-4">
+            <h3 className="text-lg font-medium text-primary mb-4">
               Distribuição de Avaliações
             </h3>
             
@@ -251,19 +251,19 @@ const Dashboard = () => {
                   return (
                     <div key={rating} className="flex items-center">
                       <div className="flex items-center w-16">
-                        <span className="text-sm text-gray-600 mr-1">{rating}</span>
+                        <span className="text-sm text-secondary mr-1">{rating}</span>
                         <StarIcon className="h-4 w-4 text-yellow-400 fill-current" />
                       </div>
                       <div className="flex-1 mx-3">
-                        <div className="bg-gray-200 rounded-full h-2">
+                        <div className="bg-bg-overlay rounded-full h-2">
                           <div 
-                            className="bg-yellow-400 h-2 rounded-full transition-all duration-300"
+                            className="bg-brand-primary h-2 rounded-full transition-all duration-300 neon-glow"
                             style={{ width: `${percentage}%` }}
                           ></div>
                         </div>
                       </div>
                       <div className="w-12 text-right">
-                        <span className="text-sm text-gray-900">{count}</span>
+                        <span className="text-sm text-primary">{count}</span>
                       </div>
                     </div>
                   );
@@ -273,8 +273,8 @@ const Dashboard = () => {
             
             {(!satisfactionMetrics.rating_distribution || satisfactionMetrics.total_evaluations === 0) && (
               <div className="text-center py-8">
-                <FaceSmileIcon className="h-12 w-12 text-gray-300 mx-auto mb-2" />
-                <p className="text-gray-500">Nenhuma avaliação ainda</p>
+                <FaceSmileIcon className="h-12 w-12 text-muted mx-auto mb-2" />
+                <p className="text-muted">Nenhuma avaliação ainda</p>
               </div>
             )}
           </div>
@@ -284,7 +284,7 @@ const Dashboard = () => {
       {/* Category Distribution */}
       {stats?.tickets_by_category && Object.keys(stats.tickets_by_category).length > 0 && (
         <div className="card p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">
+          <h3 className="text-lg font-medium text-primary mb-4">
             Tickets por Categoria
           </h3>
           <div className="space-y-3">
@@ -293,8 +293,8 @@ const Dashboard = () => {
               .slice(0, 5)
               .map(([category, count]) => (
                 <div key={category} className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">{category}</span>
-                  <span className="text-sm font-medium text-gray-900">{count}</span>
+                  <span className="text-sm text-secondary">{category}</span>
+                  <span className="text-sm font-medium text-primary">{count}</span>
                 </div>
               ))}
           </div>
@@ -304,25 +304,25 @@ const Dashboard = () => {
       {/* Recent Activities */}
       {isTechnician && stats?.recent_activities && stats.recent_activities.length > 0 && (
         <div className="card p-6">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">
+          <h3 className="text-lg font-medium text-primary mb-4">
             Atividades Recentes
           </h3>
           <div className="space-y-3">
             {stats.recent_activities.slice(0, 5).map((activity) => (
               <div key={activity.id} className="flex items-center space-x-3">
                 <div className="flex-shrink-0">
-                  <div className="h-8 w-8 rounded-full bg-gray-200 flex items-center justify-center">
-                    <span className="text-xs font-medium text-gray-600">
+                  <div className="h-8 w-8 rounded-full bg-bg-overlay flex items-center justify-center">
+                    <span className="text-xs font-medium text-primary">
                       {activity.user?.full_name?.charAt(0)?.toUpperCase() || 'U'}
                     </span>
                   </div>
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm text-gray-900">
+                  <p className="text-sm text-primary">
                     <span className="font-medium">{activity.user?.full_name}</span>
                     {' '}{activity.description}
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-muted">
                     {new Date(activity.created_at).toLocaleString('pt-BR')}
                   </p>
                 </div>
@@ -334,40 +334,40 @@ const Dashboard = () => {
 
       {/* Quick Actions */}
       <div className="card p-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">
+        <h3 className="text-lg font-medium text-primary mb-4">
           Ações Rápidas
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Link
             to="/tickets/new"
-            className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            className="flex items-center p-4 border border-subtle rounded-lg hover:bg-brand-hover transition-colors"
           >
-            <PlusIcon className="h-8 w-8 text-primary-600 mr-3" />
+            <PlusIcon className="h-8 w-8 text-brand-primary mr-3" />
             <div>
-              <p className="font-medium text-gray-900">Criar Ticket</p>
-              <p className="text-sm text-gray-600">Abrir um novo chamado</p>
+              <p className="font-medium text-primary">Criar Ticket</p>
+              <p className="text-sm text-secondary">Abrir um novo chamado</p>
             </div>
           </Link>
           
           <Link
             to="/tickets?status=open"
-            className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            className="flex items-center p-4 border border-subtle rounded-lg hover:bg-brand-hover transition-colors"
           >
-            <TicketIcon className="h-8 w-8 text-yellow-600 mr-3" />
+            <TicketIcon className="h-8 w-8 text-yellow-400 mr-3" />
             <div>
-              <p className="font-medium text-gray-900">Tickets Abertos</p>
-              <p className="text-sm text-gray-600">Ver chamados pendentes</p>
+              <p className="font-medium text-primary">Tickets Abertos</p>
+              <p className="text-sm text-secondary">Ver chamados pendentes</p>
             </div>
           </Link>
           
           <Link
             to="/tickets"
-            className="flex items-center p-4 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors"
+            className="flex items-center p-4 border border-subtle rounded-lg hover:bg-brand-hover transition-colors"
           >
-            <ClockIcon className="h-8 w-8 text-blue-600 mr-3" />
+            <ClockIcon className="h-8 w-8 text-blue-400 mr-3" />
             <div>
-              <p className="font-medium text-gray-900">Meus Tickets</p>
-              <p className="text-sm text-gray-600">Ver todos os chamados</p>
+              <p className="font-medium text-primary">Meus Tickets</p>
+              <p className="text-sm text-secondary">Ver todos os chamados</p>
             </div>
           </Link>
         </div>
