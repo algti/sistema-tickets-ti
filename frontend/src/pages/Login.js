@@ -33,7 +33,7 @@ const Login = () => {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen flex items-center justify-center bg-primary py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <img
@@ -42,22 +42,22 @@ const Login = () => {
             alt="ALG Soluções em Tecnologia"
           />
           <div className="mt-6">
-            <h2 className="text-3xl font-bold tracking-tight text-gray-900">
+            <h2 className="text-3xl font-bold tracking-tight text-primary neon-glow">
               SISTEMA DE TICKETS
             </h2>
-            <h3 className="mt-2 text-xl font-semibold text-gray-800">
+            <h3 className="mt-2 text-xl font-semibold text-secondary">
               ALG Soluções em Tecnologia
             </h3>
-            <p className="mt-2 text-sm text-gray-600">
+            <p className="mt-2 text-sm text-secondary">
               Faça login com suas credenciais
             </p>
           </div>
         </div>
         
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        <form className="mt-8 space-y-6 card p-8" onSubmit={handleSubmit}>
           <div className="space-y-4">
             <div>
-              <label htmlFor="username" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="username" className="block text-sm font-medium text-secondary">
                 Usuário
               </label>
               <input
@@ -75,7 +75,7 @@ const Login = () => {
             </div>
             
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+              <label htmlFor="password" className="block text-sm font-medium text-secondary">
                 Senha
               </label>
               <input
@@ -97,7 +97,7 @@ const Login = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn-primary w-full disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <div className="flex items-center">
@@ -111,7 +111,7 @@ const Login = () => {
           </div>
 
           <div className="text-center">
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-muted">
               <p>Desenvolvido por:</p>
               <p className="font-mono text-xs mt-1">
                 <strong></strong> ALG Soluções em Tecnologia
