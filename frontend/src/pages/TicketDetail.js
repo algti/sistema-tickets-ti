@@ -206,7 +206,7 @@ const canUpdateStatus = () => {
   if (!ticket) {
     return (
       <div className="text-center py-12">
-        <h2 className="text-2xl font-bold text-gray-900">Ticket não encontrado</h2>
+        <h2 className="text-2xl font-bold text-primary">Ticket não encontrado</h2>
         <button
           onClick={() => navigate('/tickets')}
           className="mt-4 text-blue-600 hover:text-blue-800"
@@ -220,13 +220,13 @@ const canUpdateStatus = () => {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       {/* Compact Header */}
-      <div className="bg-white shadow rounded-lg mb-6">
+      <div className="card mb-6">
         <div className="px-6 py-4">
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center space-x-4">
               <button
                 onClick={() => navigate('/tickets')}
-                className="flex items-center text-gray-600 hover:text-gray-900 transition-colors"
+                className="flex items-center text-secondary hover:text-primary transition-colors"
               >
                 <svg className="w-5 h-5 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
@@ -234,10 +234,10 @@ const canUpdateStatus = () => {
                 Voltar
               </button>
               <div>
-                <h1 className="text-2xl font-bold text-gray-900">
+                <h1 className="text-2xl font-bold text-primary">
                   Ticket #{ticket.id}
                 </h1>
-                <p className="text-gray-600 mt-1">{ticket.title}</p>
+                <p className="text-secondary mt-1">{ticket.title}</p>
               </div>
             </div>
             <div className="flex items-center space-x-2">
@@ -252,32 +252,32 @@ const canUpdateStatus = () => {
           {/* Compact Information Grid - Similar to Image 1 */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             {/* Solicitante */}
-            <div className="bg-blue-50 rounded-lg p-4">
+            <div className="card rounded-lg p-4">
               <div className="flex items-center mb-2">
                 <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center mr-2">
                   <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
                   </svg>
                 </div>
-                <h3 className="text-sm font-semibold text-blue-900">Solicitante</h3>
+                <h3 className="text-sm font-semibold text-primary">Solicitante</h3>
               </div>
               <div className="space-y-1">
-                <p className="text-sm font-semibold text-gray-900">
+                <p className="text-sm font-semibold text-primary">
                   {ticket.created_by?.full_name || 'Usuário Comum'}
                 </p>
-                <p className="text-xs text-gray-600">
+                <p className="text-xs text-secondary">
                   @{ticket.created_by?.username || 'usuario'}
                 </p>
                 <p className="text-xs text-blue-600">
                   📧 {ticket.created_by?.email || 'usuario@empresa.local'}
                 </p>
                 {ticket.created_by?.department && (
-                  <p className="text-xs text-gray-600">
+                  <p className="text-xs text-secondary">
                     🏢 {ticket.created_by.department}
                   </p>
                 )}
                 {ticket.created_by?.phone && (
-                  <p className="text-xs text-gray-600">
+                  <p className="text-xs text-secondary">
                     📞 {ticket.created_by.phone}
                   </p>
                 )}
@@ -285,7 +285,7 @@ const canUpdateStatus = () => {
             </div>
 
             {/* Técnico Responsável */}
-            <div className="bg-green-50 rounded-lg p-4">
+            <div className="card rounded-lg p-4">
               <div className="flex items-center mb-2">
                 <div className="w-8 h-8 bg-green-600 rounded-full flex items-center justify-center mr-2">
                   <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -293,47 +293,47 @@ const canUpdateStatus = () => {
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                   </svg>
                 </div>
-                <h3 className="text-sm font-semibold text-green-900">Técnico Responsável</h3>
+                <h3 className="text-sm font-semibold text-primary">Técnico Responsável</h3>
               </div>
               <div className="space-y-1">
                 {ticket.assigned_to ? (
                   <>
-                    <p className="text-sm font-semibold text-gray-900">
+                    <p className="text-sm font-semibold text-primary">
                       {ticket.assigned_to.full_name || ticket.assigned_to.username}
                     </p>
-                    <p className="text-xs text-gray-600">
+                    <p className="text-xs text-secondary">
                       @{ticket.assigned_to.username}
                     </p>
                     <p className="text-xs text-green-600">
                       📧 {ticket.assigned_to.email || 'N/A'}
                     </p>
                     {ticket.assigned_to.department && (
-                      <p className="text-xs text-gray-600">
+                      <p className="text-xs text-secondary">
                         🏢 {ticket.assigned_to.department}
                       </p>
                     )}
                   </>
                 ) : (
-                  <p className="text-sm text-gray-500 italic">Não atribuído</p>
+                  <p className="text-sm text-muted italic">Não atribuído</p>
                 )}
               </div>
             </div>
 {/* Categoria & Datas */}
-            <div className="bg-yellow-50 rounded-lg p-4">
+            <div className="card rounded-lg p-4">
               <div className="flex items-center mb-2">
                 <div className="w-8 h-8 bg-yellow-600 rounded-full flex items-center justify-center mr-2">
                   <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
                   </svg>
                 </div>
-                <h3 className="text-sm font-semibold text-yellow-900">Categoria & Datas</h3>
+                <h3 className="text-sm font-semibold text-primary">Categoria & Datas</h3>
               </div>
               <div className="space-y-2">
                 <div>
-                  <p className="text-sm font-semibold text-gray-900">
+                  <p className="text-sm font-semibold text-primary">
                     {ticket.category?.name || 'Hardware'}
                   </p>
-                  <p className="text-xs text-gray-500">
+                  <p className="text-xs text-muted">
                     {ticket.category?.description || 'Problemas com equipamentos físicos'}
                   </p>
                 </div>
@@ -342,7 +342,7 @@ const canUpdateStatus = () => {
                     📅 Criado: {formatDate(ticket.created_at)}, {new Date(ticket.created_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                   </p>
                   {ticket.updated_at && (
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-muted">
                       🔄 Atualizado: {formatDate(ticket.updated_at)}, {new Date(ticket.updated_at).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
                     </p>
                   )}
@@ -351,24 +351,24 @@ const canUpdateStatus = () => {
             </div>
 
             {/* Estatísticas */}
-            <div className="bg-purple-50 rounded-lg p-4">
+            <div className="card rounded-lg p-4">
               <div className="flex items-center mb-2">
                 <div className="w-8 h-8 bg-purple-600 rounded-full flex items-center justify-center mr-2">
                   <svg className="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
                   </svg>
                 </div>
-                <h3 className="text-sm font-semibold text-purple-900">Estatísticas</h3>
+                <h3 className="text-sm font-semibold text-primary">Estatísticas</h3>
               </div>
               <div className="space-y-2">
                 <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-500">💬 {comments.length} comentário(s)</span>
+                  <span className="text-xs text-muted">💬 {comments.length} comentário(s)</span>
                 </div>
                 <div className="flex justify-between items-center">
-                  <span className="text-xs text-gray-500">📎 {attachments.length} anexo(s)</span>
+                  <span className="text-xs text-muted">📎 {attachments.length} anexo(s)</span>
                 </div>
                 <div className="pt-1">
-                  <span className="text-xs text-gray-500">⏱️ Tempo aberto:</span>
+                  <span className="text-xs text-muted">⏱️ Tempo aberto:</span>
                   <p className="text-sm font-semibold text-purple-600">
                     {calculateTimeOpen(ticket.created_at)}
                   </p>
@@ -384,14 +384,14 @@ const canUpdateStatus = () => {
         {/* Left Column - Description and Comments */}
         <div className="lg:col-span-2 space-y-6">
           {/* Description - Compact Style */}
-          <div className="bg-white shadow rounded-lg p-6">
+          <div className="card p-6">
             <div className="flex items-center mb-4">
               <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center mr-3">
                 <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold text-gray-900">Descrição Completa do Problema</h3>
+              <h3 className="text-lg font-semibold text-primary">Descrição Completa do Problema</h3>
             </div>
             <div className="bg-gray-50 rounded-lg p-4 border-l-4 border-blue-500">
               <p className="text-gray-800 whitespace-pre-wrap leading-relaxed">
@@ -409,8 +409,8 @@ const canUpdateStatus = () => {
                   </div>
                   <h4 className="text-lg font-semibold text-green-700">Solução Aplicada</h4>
                 </div>
-                <div className="bg-green-50 rounded-lg p-4 border-l-4 border-green-500">
-                  <p className="text-gray-800 whitespace-pre-wrap leading-relaxed">
+                <div className="card rounded-lg p-4 border-l-4 border-green-500">
+                  <p className="text-primary whitespace-pre-wrap leading-relaxed">
                     {ticket.solution}
                   </p>
                 </div>
@@ -420,16 +420,16 @@ const canUpdateStatus = () => {
             {/* User Resolution Actions */}
             {ticket.status === 'resolved' && user && ticket.created_by && user.id === ticket.created_by.id && (
               <div className="mt-6">
-                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+                <div className="card border border-yellow-200 rounded-lg p-6">
                   <div className="flex items-center mb-4">
                     <div className="w-8 h-8 bg-yellow-600 rounded-lg flex items-center justify-center mr-3">
                       <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                     </div>
-                    <h4 className="text-lg font-semibold text-yellow-800">Ticket Resolvido - Sua Confirmação</h4>
+                    <h4 className="text-lg font-semibold text-primary">Ticket Resolvido - Sua Confirmação</h4>
                   </div>
-                  <p className="text-yellow-700 mb-4">
+                  <p className="text-secondary mb-4">
                     O técnico marcou este ticket como resolvido. Por favor, confirme se o problema foi realmente solucionado:
                   </p>
                   <div className="flex space-x-3">
@@ -455,9 +455,9 @@ const canUpdateStatus = () => {
             {/* Ticket Evaluation Section */}
             {ticket.status === 'closed' && user && ticket.created_by && user.id === ticket.created_by.id && (
               <div className="mt-6">
-                <div className="bg-white shadow rounded-lg p-6">
+                <div className="card p-6">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-gray-900">Avaliação do Ticket</h3>
+                    <h3 className="text-lg font-semibold text-primary">Avaliação do Ticket</h3>
                     <button
                       onClick={() => setShowEvaluationModal(true)}
                       className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -466,7 +466,7 @@ const canUpdateStatus = () => {
                       Avaliar Ticket
                     </button>
                   </div>
-                  <p className="text-gray-600">
+                  <p className="text-secondary">
                     Avalie a qualidade do atendimento e resolução do seu ticket.
                   </p>
                 </div>
@@ -476,14 +476,14 @@ const canUpdateStatus = () => {
 
           {/* Simplified Attachments Section */}
           {attachments && attachments.length > 0 && (
-            <div className="bg-white shadow rounded-lg p-6">
+            <div className="card p-6">
               <div className="flex items-center mb-4">
                 <div className="w-8 h-8 bg-purple-600 rounded-lg flex items-center justify-center mr-3">
                   <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15.172 7l-6.586 6.586a2 2 0 102.828 2.828l6.414-6.586a4 4 0 00-5.656-5.656l-6.415 6.585a6 6 0 108.486 8.486L20.5 13" />
                   </svg>
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900">Anexos ({attachments.length})</h3>
+                <h3 className="text-lg font-semibold text-primary">Anexos ({attachments.length})</h3>
               </div>
                 
               {/* All Attachments as Download Links */}
@@ -510,11 +510,11 @@ const canUpdateStatus = () => {
                           >
                             📎 {attachment.original_filename}
                           </button>
-                          <div className="text-xs text-gray-500 mt-1">
+                          <div className="text-xs text-muted mt-1">
                             {fileSize} • {attachment.content_type || 'Tipo desconhecido'}
                           </div>
                         </div>
-                        <div className="text-xs text-gray-400">
+                        <div className="text-xs text-muted">
                           Clique para baixar
                         </div>
                       </div>
@@ -526,14 +526,14 @@ const canUpdateStatus = () => {
           )}
 
           {/* Comments Section - Compact Style */}
-          <div className="bg-white shadow rounded-lg p-6">
+          <div className="card p-6">
             <div className="flex items-center mb-4">
               <div className="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center mr-3">
                 <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold text-gray-900">
+              <h3 className="text-lg font-semibold text-primary">
                 Histórico de Comunicação ({comments.length})
               </h3>
             </div>
@@ -563,11 +563,11 @@ const canUpdateStatus = () => {
             <div className="space-y-4">
               {comments.length === 0 ? (
                 <div className="text-center py-8">
-                  <svg className="mx-auto h-8 w-8 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <svg className="mx-auto h-8 w-8 text-muted" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
                   </svg>
-                  <p className="mt-2 text-sm text-gray-500">Nenhum comentário ainda</p>
-                  <p className="text-xs text-gray-400">Seja o primeiro a comentar neste ticket!</p>
+                  <p className="mt-2 text-sm text-muted">Nenhum comentário ainda</p>
+                  <p className="text-xs text-muted">Seja o primeiro a comentar neste ticket!</p>
                 </div>
               ) : (
                 comments.map((comment) => (
@@ -577,7 +577,7 @@ const canUpdateStatus = () => {
                         <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center text-white text-xs font-medium">
                           {comment.user?.username?.charAt(0).toUpperCase() || 'U'}
                         </div>
-                        <span className="text-sm font-medium text-gray-900">
+                        <span className="text-sm font-medium text-primary">
                           {comment.user?.full_name || comment.user?.username || 'Usuário'}
                         </span>
                         {comment.user?.role && (
@@ -592,11 +592,11 @@ const canUpdateStatus = () => {
                           </span>
                         )}
                       </div>
-                                            <span className="text-xs text-gray-500">
+                                            <span className="text-xs text-muted">
                         {new Date(comment.created_at).toLocaleString('pt-BR')}
                       </span>
                     </div>
-                    <p className="text-sm text-gray-700 ml-8 whitespace-pre-wrap">{comment.content}</p>
+                    <p className="text-sm text-primary ml-8 whitespace-pre-wrap">{comment.content}</p>
                   </div>
                 ))
               )}
@@ -608,8 +608,8 @@ const canUpdateStatus = () => {
         <div className="space-y-6">
           {/* Status Actions */}
           {canUpdateStatus() && (
-            <div className="bg-white shadow rounded-lg p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Ações</h3>
+            <div className="card p-6">
+              <h3 className="text-lg font-medium text-primary mb-4">Ações</h3>
               <div className="space-y-3">
                 {ticket.status === 'open' && (
                   <button
@@ -671,8 +671,8 @@ const canUpdateStatus = () => {
 
           {/* Assign Technician */}
           {(user?.role === 'admin' || user?.role === 'technician') && (
-            <div className="bg-white shadow rounded-lg p-6">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Atribuir Técnico</h3>
+            <div className="card p-6">
+              <h3 className="text-lg font-medium text-primary mb-4">Atribuir Técnico</h3>
               <button
                 onClick={() => setShowAssignModal(true)}
                 className="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
@@ -687,9 +687,9 @@ const canUpdateStatus = () => {
       {/* Assign Modal */}
       {showAssignModal && (
         <div className="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
-          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+          <div className="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md card">
             <div className="mt-3">
-              <h3 className="text-lg font-medium text-gray-900 mb-4">Atribuir Técnico</h3>
+              <h3 className="text-lg font-medium text-primary mb-4">Atribuir Técnico</h3>
               <div className="space-y-2 max-h-60 overflow-y-auto">
                 {technicians.map((tech) => (
                   <button
@@ -699,14 +699,14 @@ const canUpdateStatus = () => {
                     className="w-full text-left p-3 border rounded-lg hover:bg-gray-50 disabled:opacity-50"
                   >
                     <div className="font-medium">{tech.full_name || tech.username}</div>
-                    <div className="text-sm text-gray-500">@{tech.username}</div>
+                    <div className="text-sm text-muted">@{tech.username}</div>
                   </button>
                 ))}
               </div>
               <div className="flex justify-end space-x-3 mt-4">
                 <button
                   onClick={() => setShowAssignModal(false)}
-                  className="px-4 py-2 text-gray-600 border rounded-lg hover:bg-gray-50"
+                  className="px-4 py-2 text-secondary border rounded-lg hover:bg-gray-50"
                 >
                   Cancelar
                 </button>
