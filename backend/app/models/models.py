@@ -38,8 +38,8 @@ class User(Base):
     is_active = Column(Boolean, default=True)
     is_ldap_user = Column(Boolean, default=True)
     hashed_password = Column(String(255))  # For non-LDAP users
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
-    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    created_at = Column(DateTime, server_default=func.now())
+    updated_at = Column(DateTime, onupdate=func.now())
     
     # Relationships
     created_tickets = relationship("Ticket", foreign_keys="Ticket.created_by_id", back_populates="created_by")
