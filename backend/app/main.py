@@ -21,39 +21,6 @@ app = FastAPI(
 
 # Middleware removed - was consuming request body and preventing endpoint execution
 
-# Debug middleware to trace requests
-@app.middleware("http")
-async def debug_requests(request: Request, call_next):
-    if "/users/profile" in str(request.url) and request.method == "PUT":
-        print(f"=== MIDDLEWARE DEBUG: PUT /users/profile ===")
-        print(f"Request URL: {request.url}")
-        print(f"Request method: {request.method}")
-        print(f"Authorization header: {request.headers.get('authorization', 'MISSING')}")
-        
-        # Check all registered routes
-        print(f"=== CHECKING ALL ROUTES ===")
-        for route in app.routes:
-            if hasattr(route, 'path') and hasattr(route, 'methods'):
-                if '/users/profile' in route.path or 'profile' in route.path:
-                    print(f"FOUND ROUTE: {route.path} - Methods: {route.methods}")
-                    if hasattr(route, 'dependant') and route.dependant:
-                        print(f"  Dependencies count: {len(route.dependant.dependencies)}")
-                        for i, dep in enumerate(route.dependant.dependencies):
-                            print(f"    Dep {i}: {dep.call}")
-                            if hasattr(dep, 'call') and hasattr(dep.call, '__name__'):
-                                print(f"      Function name: {dep.call.__name__}")
-                            if hasattr(dep, 'call') and hasattr(dep.call, '__module__'):
-                                print(f"      Module: {dep.call.__module__}")
-        
-        # Call the endpoint
-        response = await call_next(request)
-        
-        print(f"Response status: {response.status_code}")
-        print(f"=== END MIDDLEWARE DEBUG ===")
-        return response
-    
-    return await call_next(request)
-
 # CORS middleware - Explicit configuration
 app.add_middleware(
     CORSMiddleware,
