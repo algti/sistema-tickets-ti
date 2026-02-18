@@ -220,7 +220,7 @@ function Tickets() {
               <p className="mt-1 text-sm text-secondary">Comece criando um novo ticket.</p>
               <div className="mt-6">
                 <button
-                  onClick={() => navigate('/tickets/create')}
+                  onClick={() => navigate('/tickets/new')}
                   className="btn-primary"
                 >
                   + Criar Primeiro Ticket

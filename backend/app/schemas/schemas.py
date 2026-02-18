@@ -31,6 +31,10 @@ class ProfileUpdate(BaseModel):
     department: Optional[str] = None
     phone: Optional[str] = None
 
+class PasswordChange(BaseModel):
+    current_password: str
+    new_password: str
+
 class User(UserBase):
     id: int
     role: UserRole
