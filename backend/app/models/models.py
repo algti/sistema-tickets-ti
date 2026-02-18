@@ -22,7 +22,6 @@ class TicketPriority(str, enum.Enum):
     MEDIUM = "medium"
     HIGH = "high"
     URGENT = "urgent"
-    CRITICAL = "critical"
 
 
 class User(Base):
