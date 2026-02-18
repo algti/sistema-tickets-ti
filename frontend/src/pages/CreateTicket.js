@@ -216,7 +216,12 @@ function CreateTicket() {
               value={formData.description}
               onChange={(e) => setFormData({...formData, description: e.target.value})}
               className="input-field"
-              placeholder="Descreva o problema detalhadamente:\n\n- O que aconteceu?\n- Quando começou?\n- Quais passos já foram tentados?\n- Mensagens de erro (se houver)"
+              placeholder="Descreva o problema detalhadamente:
+
+- O que aconteceu?
+- Quando começou?
+- Quais passos já foram tentados?
+- Mensagens de erro (se houver)"
             />
           </div>
 

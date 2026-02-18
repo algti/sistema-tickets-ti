@@ -14,61 +14,10 @@ function Notifications() {
 
   const fetchNotifications = async () => {
     try {
-      // Simulando notificações para demonstração
-      const mockNotifications = [
-        {
-          id: 1,
-          type: 'ticket_created',
-          title: 'Novo ticket criado',
-          message: 'Ticket #123 "Problema com impressora" foi criado por João Silva',
-          is_read: false,
-          created_at: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(), // 2 horas atrás
-          ticket_id: 123,
-          user_avatar: 'JS'
-        },
-        {
-          id: 2,
-          type: 'ticket_assigned',
-          title: 'Ticket atribuído',
-          message: 'Ticket #122 foi atribuído para você',
-          is_read: false,
-          created_at: new Date(Date.now() - 4 * 60 * 60 * 1000).toISOString(), // 4 horas atrás
-          ticket_id: 122,
-          user_avatar: 'AD'
-        },
-        {
-          id: 3,
-          type: 'comment_added',
-          title: 'Novo comentário',
-          message: 'Maria Santos adicionou um comentário no ticket #121',
-          is_read: true,
-          created_at: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(), // 1 dia atrás
-          ticket_id: 121,
-          user_avatar: 'MS'
-        },
-        {
-          id: 4,
-          type: 'ticket_resolved',
-          title: 'Ticket resolvido',
-          message: 'Ticket #120 "Acesso ao sistema" foi marcado como resolvido',
-          is_read: true,
-          created_at: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000).toISOString(), // 2 dias atrás
-          ticket_id: 120,
-          user_avatar: 'TC'
-        },
-        {
-          id: 5,
-          type: 'ticket_closed',
-          title: 'Ticket fechado',
-          message: 'Ticket #119 foi fechado após confirmação do usuário',
-          is_read: true,
-          created_at: new Date(Date.now() - 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 dias atrás
-          ticket_id: 119,
-          user_avatar: 'US'
-        }
-      ];
-      
-      setNotifications(mockNotifications);
+      // As notificações são recebidas via WebSocket em tempo real
+      // Aqui você pode implementar uma chamada à API se quiser persistir notificações
+      // Por enquanto, iniciamos com lista vazia
+      setNotifications([]);
     } catch (error) {
       console.error('Erro ao buscar notificações:', error);
     } finally {

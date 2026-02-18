@@ -3,9 +3,9 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from app.core.database import get_db
 from app.core.deps import get_current_user, get_current_admin, get_current_technician
-from app.core.security import get_password_hash
+from app.core.security import get_password_hash, verify_password
 from app.models.models import User as UserModel, UserRole
-from app.schemas.schemas import UserCreate, UserUpdate, User as UserSchema, ProfileUpdate
+from app.schemas.schemas import UserCreate, UserUpdate, User as UserSchema, ProfileUpdate, PasswordChange
 
 router = APIRouter()
 
@@ -258,6 +258,49 @@ async def update_profile(
         print(f"✗ Exception occurred: {str(e)}")
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
+
+@router.put("/profile/password")
+async def change_password(
+    password_data: PasswordChange,
+    current_user: UserSchema = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Change current user's password"""
+    
+    # Get user from database
+    user = db.query(UserModel).filter(UserModel.id == current_user.id).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
+    # Check if user is LDAP user
+    if user.is_ldap_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Cannot change password for LDAP users. Please contact your system administrator."
+        )
+    
+    # Verify current password
+    if not user.hashed_password or not verify_password(password_data.current_password, user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Current password is incorrect"
+        )
+    
+    # Validate new password
+    if len(password_data.new_password) < 6:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="New password must be at least 6 characters long"
+        )
+    
+    # Update password
+    user.hashed_password = get_password_hash(password_data.new_password)
+    db.commit()
+    
+    return {"message": "Password changed successfully"}
 
 @router.delete("/{user_id}")
 async def deactivate_user(

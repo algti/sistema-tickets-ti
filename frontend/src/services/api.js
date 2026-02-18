@@ -139,6 +139,9 @@ export const usersService = {
     }
   },
   
+  changePassword: (data) => 
+    authAPI.put('/users/profile/password', data),
+  
   deactivateUser: (id) => 
     authAPI.delete(`/users/${id}`),
   

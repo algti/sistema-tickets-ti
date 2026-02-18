@@ -23,6 +23,12 @@ const Profile = () => {
     department: ''
   });
   const [originalData, setOriginalData] = useState({});
+  const [changingPassword, setChangingPassword] = useState(false);
+  const [passwordData, setPasswordData] = useState({
+    current_password: '',
+    new_password: '',
+    confirm_password: ''
+  });
 
   useEffect(() => {
     if (user) {
@@ -103,6 +109,47 @@ const Profile = () => {
   const handleCancel = () => {
     setFormData(originalData);
     setEditing(false);
+  };
+
+  const handlePasswordChange = async () => {
+    try {
+      // Validate passwords
+      if (!passwordData.current_password || !passwordData.new_password || !passwordData.confirm_password) {
+        alert('Por favor, preencha todos os campos de senha.');
+        return;
+      }
+
+      if (passwordData.new_password !== passwordData.confirm_password) {
+        alert('A nova senha e a confirmação não coincidem.');
+        return;
+      }
+
+      if (passwordData.new_password.length < 6) {
+        alert('A nova senha deve ter pelo menos 6 caracteres.');
+        return;
+      }
+
+      setLoading(true);
+      
+      await usersService.changePassword({
+        current_password: passwordData.current_password,
+        new_password: passwordData.new_password
+      });
+
+      alert('Senha alterada com sucesso!');
+      setPasswordData({
+        current_password: '',
+        new_password: '',
+        confirm_password: ''
+      });
+      setChangingPassword(false);
+    } catch (error) {
+      console.error('Erro ao alterar senha:', error);
+      const errorMessage = error.response?.data?.detail || 'Erro ao alterar senha. Tente novamente.';
+      alert(errorMessage);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const getRoleLabel = (role) => {
@@ -312,6 +359,95 @@ const Profile = () => {
         </div>
       </div>
 
+      {/* Change Password Section */}
+      {!user.is_ldap_user && (
+        <div className="bg-white shadow rounded-lg overflow-hidden">
+          <div className="px-6 py-4 bg-gray-50 border-b border-gray-200">
+            <h2 className="text-lg font-medium text-gray-900">Alterar Senha</h2>
+            <p className="text-sm text-gray-600">Atualize sua senha de acesso</p>
+          </div>
+
+          <div className="px-6 py-6">
+            {!changingPassword ? (
+              <button
+                onClick={() => setChangingPassword(true)}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium flex items-center"
+              >
+                <LockClosedIcon className="h-4 w-4 mr-2" />
+                Alterar Senha
+              </button>
+            ) : (
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Senha Atual *
+                  </label>
+                  <input
+                    type="password"
+                    value={passwordData.current_password}
+                    onChange={(e) => setPasswordData({...passwordData, current_password: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Digite sua senha atual"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Nova Senha *
+                  </label>
+                  <input
+                    type="password"
+                    value={passwordData.new_password}
+                    onChange={(e) => setPasswordData({...passwordData, new_password: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Digite a nova senha (mínimo 6 caracteres)"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Confirmar Nova Senha *
+                  </label>
+                  <input
+                    type="password"
+                    value={passwordData.confirm_password}
+                    onChange={(e) => setPasswordData({...passwordData, confirm_password: e.target.value})}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Confirme a nova senha"
+                  />
+                </div>
+
+                <div className="flex space-x-2 pt-4">
+                  <button
+                    onClick={handlePasswordChange}
+                    disabled={loading}
+                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md font-medium flex items-center disabled:opacity-50"
+                  >
+                    <CheckIcon className="h-4 w-4 mr-1" />
+                    {loading ? 'Salvando...' : 'Salvar Nova Senha'}
+                  </button>
+                  <button
+                    onClick={() => {
+                      setChangingPassword(false);
+                      setPasswordData({
+                        current_password: '',
+                        new_password: '',
+                        confirm_password: ''
+                      });
+                    }}
+                    disabled={loading}
+                    className="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md font-medium flex items-center"
+                  >
+                    <XMarkIcon className="h-4 w-4 mr-1" />
+                    Cancelar
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Security Notice */}
       <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
         <div className="flex">
@@ -321,8 +457,11 @@ const Profile = () => {
               Informações de Segurança
             </h3>
             <p className="text-sm text-yellow-700 mt-1">
-              O nome de usuário e senha são controlados pelo servidor Active Directory (LDAP). 
-              Para alterações nessas informações, entre em contato com o administrador do sistema.
+              {user.is_ldap_user ? (
+                'O nome de usuário e senha são controlados pelo servidor Active Directory (LDAP). Para alterações nessas informações, entre em contato com o administrador do sistema.'
+              ) : (
+                'Mantenha sua senha segura e não a compartilhe com outras pessoas. Recomendamos usar uma senha forte com pelo menos 6 caracteres.'
+              )}
             </p>
           </div>
         </div>
