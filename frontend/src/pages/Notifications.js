@@ -1,40 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
+import { useWebSocket } from '../contexts/WebSocketContext';
 import LoadingSpinner from '../components/LoadingSpinner';
 
 function Notifications() {
   const { user } = useAuth();
-  const [notifications, setNotifications] = useState([]);
+  const { notifications: wsNotifications, markAsRead: wsMarkAsRead, markAllAsRead: wsMarkAllAsRead } = useWebSocket();
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all'); // all, unread, read
 
   useEffect(() => {
-    fetchNotifications();
+    // Simular carregamento inicial
+    const timer = setTimeout(() => {
+      setLoading(false);
+    }, 500);
+    return () => clearTimeout(timer);
   }, []);
 
-  const fetchNotifications = async () => {
-    try {
-      // As notificações são recebidas via WebSocket em tempo real
-      // Aqui você pode implementar uma chamada à API se quiser persistir notificações
-      // Por enquanto, iniciamos com lista vazia
-      setNotifications([]);
-    } catch (error) {
-      console.error('Erro ao buscar notificações:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+  // Use WebSocket notifications
+  const notifications = wsNotifications || [];
 
   const markAsRead = async (notificationId) => {
     try {
-      // Aqui faria a chamada para a API
-      setNotifications(prev => 
-        prev.map(notif => 
-          notif.id === notificationId 
-            ? { ...notif, is_read: true }
-            : notif
-        )
-      );
+      wsMarkAsRead(notificationId);
     } catch (error) {
       console.error('Erro ao marcar como lida:', error);
     }
@@ -42,10 +30,7 @@ function Notifications() {
 
   const markAllAsRead = async () => {
     try {
-      // Aqui faria a chamada para a API
-      setNotifications(prev => 
-        prev.map(notif => ({ ...notif, is_read: true }))
-      );
+      wsMarkAllAsRead();
     } catch (error) {
       console.error('Erro ao marcar todas como lidas:', error);
     }
@@ -91,12 +76,12 @@ function Notifications() {
   };
 
   const filteredNotifications = notifications.filter(notif => {
-    if (filter === 'unread') return !notif.is_read;
-    if (filter === 'read') return notif.is_read;
+    if (filter === 'unread') return !notif.read;
+    if (filter === 'read') return notif.read;
     return true;
   });
 
-  const unreadCount = notifications.filter(n => !n.is_read).length;
+  const unreadCount = notifications.filter(n => !n.read).length;
 
   if (loading) {
     return <LoadingSpinner />;
@@ -181,10 +166,10 @@ function Notifications() {
               <div
                 key={notification.id}
                 className={`p-4 hover:bg-gray-50 cursor-pointer transition-colors ${
-                  !notification.is_read ? 'bg-blue-50 border-l-4 border-blue-500' : ''
+                  !notification.read ? 'bg-blue-50 border-l-4 border-blue-500' : ''
                 }`}
                 onClick={() => {
-                  if (!notification.is_read) {
+                  if (!notification.read) {
                     markAsRead(notification.id);
                   }
                   // Navegar para o ticket se aplicável
@@ -202,19 +187,24 @@ function Notifications() {
                   {/* Content */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
-                      <p className={`text-sm font-medium ${!notification.is_read ? 'text-gray-900' : 'text-gray-700'}`}>
-                        {notification.title}
+                      <p className={`text-sm font-medium ${!notification.read ? 'text-gray-900' : 'text-gray-700'}`}>
+                        {notification.type === 'ticket_created' ? 'Novo ticket criado' :
+                         notification.type === 'ticket_assigned' ? 'Ticket atribuído' :
+                         notification.type === 'ticket_status_changed' ? 'Status alterado' :
+                         notification.type === 'new_comment' ? 'Novo comentário' :
+                         notification.type === 'ticket_resolved' ? 'Ticket resolvido' :
+                         'Notificação'}
                       </p>
                       <div className="flex items-center space-x-2">
                         <span className="text-xs text-gray-500">
-                          {formatDate(notification.created_at)}
+                          {formatDate(notification.timestamp)}
                         </span>
-                        {!notification.is_read && (
+                        {!notification.read && (
                           <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
                         )}
                       </div>
                     </div>
-                    <p className={`text-sm mt-1 ${!notification.is_read ? 'text-gray-800' : 'text-gray-600'}`}>
+                    <p className={`text-sm mt-1 ${!notification.read ? 'text-gray-800' : 'text-gray-600'}`}>
                       {notification.message}
                     </p>
                     {notification.ticket_id && (

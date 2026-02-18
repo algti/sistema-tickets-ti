@@ -78,7 +78,7 @@ async def get_dashboard_stats(
         Ticket.status == TicketStatus.CLOSED
     ).count()
     
-    # Average resolution time (in hours) for closed tickets
+    # Average resolution time (in hours) for resolved/closed tickets
     if date_filter is not True:
         resolved_tickets_with_time = base_query.filter(
             date_filter,
@@ -102,11 +102,20 @@ async def get_dashboard_stats(
     
     avg_resolution_time = None
     if resolved_tickets_with_time:
-        total_time = sum([
-            (ticket.resolved_at - ticket.created_at).total_seconds() / 3600
-            for ticket in resolved_tickets_with_time
-        ])
-        avg_resolution_time = total_time / len(resolved_tickets_with_time)
+        total_time = 0
+        valid_tickets = 0
+        for ticket in resolved_tickets_with_time:
+            if ticket.resolved_at and ticket.created_at:
+                # Remove timezone info for calculation
+                resolved_at = ticket.resolved_at.replace(tzinfo=None) if ticket.resolved_at.tzinfo else ticket.resolved_at
+                created_at = ticket.created_at.replace(tzinfo=None) if ticket.created_at.tzinfo else ticket.created_at
+                time_diff = (resolved_at - created_at).total_seconds() / 3600
+                if time_diff >= 0:  # Only count positive time differences
+                    total_time += time_diff
+                    valid_tickets += 1
+        
+        if valid_tickets > 0:
+            avg_resolution_time = total_time / valid_tickets
     
     # Average time open for all active tickets (open, in_progress, waiting_user, reopened)
     avg_time_open = None

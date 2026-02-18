@@ -157,37 +157,39 @@ const Dashboard = () => {
         </div>
       )}
 
-      {/* Priority Distribution */}
-      {stats?.tickets_by_priority && (
+      {/* Priority Distribution - Only for technicians and admins */}
+      {(isTechnician || user?.role === 'admin') && stats?.tickets_by_priority && (
         <div className="card p-6">
           <h3 className="text-lg font-medium text-primary mb-4">
             Distribuição por Prioridade
           </h3>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            {Object.entries(stats.tickets_by_priority).map(([priority, count]) => {
-              const priorityColors = {
-                low: 'bg-green-100 text-green-800',
-                medium: 'bg-yellow-100 text-yellow-800',
-                high: 'bg-orange-100 text-orange-800',
-                urgent: 'bg-red-100 text-red-800'
-              };
-              
-              const priorityLabels = {
-                low: 'Baixa',
-                medium: 'Média',
-                high: 'Alta',
-                urgent: 'Urgente'
-              };
+            {Object.entries(stats.tickets_by_priority)
+              .filter(([priority]) => ['low', 'medium', 'high', 'urgent'].includes(priority))
+              .map(([priority, count]) => {
+                const priorityColors = {
+                  low: 'bg-green-100 text-green-800',
+                  medium: 'bg-yellow-100 text-yellow-800',
+                  high: 'bg-orange-100 text-orange-800',
+                  urgent: 'bg-red-100 text-red-800'
+                };
+                
+                const priorityLabels = {
+                  low: 'Baixa',
+                  medium: 'Média',
+                  high: 'Alta',
+                  urgent: 'Urgente'
+                };
 
-              return (
-                <div key={priority} className="text-center">
-                  <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${priorityColors[priority]}`}>
-                    {priorityLabels[priority]}
+                return (
+                  <div key={priority} className="text-center">
+                    <div className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${priorityColors[priority]}`}>
+                      {priorityLabels[priority]}
+                    </div>
+                    <p className="mt-2 text-2xl font-bold text-primary">{count}</p>
                   </div>
-                  <p className="mt-2 text-2xl font-bold text-primary">{count}</p>
-                </div>
-              );
-            })}
+                );
+              })}
           </div>
         </div>
       )}
