@@ -65,7 +65,7 @@ const Dashboard = () => {
     },
     {
       name: 'Resolvidos',
-      value: stats?.resolved_tickets || 0,
+      value: (stats?.resolved_tickets || 0) + (stats?.closed_tickets || 0),
       icon: CheckCircleIcon,
       color: 'bg-green-500',
       textColor: 'text-green-600'
