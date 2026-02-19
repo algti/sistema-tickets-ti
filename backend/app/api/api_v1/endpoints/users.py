@@ -259,6 +259,26 @@ async def update_profile(
         db.rollback()
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
+@router.put("/profile/tutorial-viewed")
+async def mark_tutorial_viewed(
+    current_user: UserModel = Depends(get_current_user),
+    db: Session = Depends(get_db)
+):
+    """Mark tutorial as viewed for current user"""
+    
+    user = db.query(UserModel).filter(UserModel.id == current_user.id).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
+    user.tutorial_viewed = True
+    db.commit()
+    db.refresh(user)
+    
+    return {"message": "Tutorial marked as viewed", "tutorial_viewed": True}
+
 @router.put("/profile/password")
 async def change_password(
     password_data: PasswordChange,

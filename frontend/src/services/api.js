@@ -142,6 +142,9 @@ export const usersService = {
   changePassword: (data) => 
     authAPI.put('/users/profile/password', data),
   
+  markTutorialViewed: () => 
+    authAPI.put('/users/profile/tutorial-viewed'),
+  
   deactivateUser: (id) => 
     authAPI.delete(`/users/${id}`),
   

@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { useQuery } from 'react-query';
 import { Link } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import { dashboardService, evaluationsAPI } from '../services/api';
+import { dashboardService, evaluationsAPI, usersService } from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
+import TutorialModal from '../components/TutorialModal';
 import {
   TicketIcon,
   ClockIcon,
@@ -11,11 +12,22 @@ import {
   ExclamationTriangleIcon,
   PlusIcon,
   StarIcon,
-  FaceSmileIcon
+  FaceSmileIcon,
+  AcademicCapIcon
 } from '@heroicons/react/24/outline';
 
 const Dashboard = () => {
   const { user, isTechnician } = useAuth();
+  const [showTutorial, setShowTutorial] = useState(false);
+  const [tutorialMode, setTutorialMode] = useState('video'); // 'video' or 'options'
+  
+  // Check if user should see tutorial on first login
+  useEffect(() => {
+    if (user && user.tutorial_viewed === false) {
+      setShowTutorial(true);
+      setTutorialMode('video');
+    }
+  }, [user]);
   
   const { data: stats, isLoading } = useQuery(
     ['dashboard-stats'],
@@ -36,6 +48,28 @@ const Dashboard = () => {
       refetchInterval: 60000, // Refresh every minute
     }
   );
+
+  const handleCloseTutorial = async () => {
+    setShowTutorial(false);
+    
+    // Mark tutorial as viewed if it's first login
+    if (user && user.tutorial_viewed === false) {
+      try {
+        await usersService.markTutorialViewed();
+        // Update user context
+        if (window.location) {
+          window.location.reload();
+        }
+      } catch (error) {
+        console.error('Error marking tutorial as viewed:', error);
+      }
+    }
+  };
+
+  const handleOpenTutorial = () => {
+    setShowTutorial(true);
+    setTutorialMode('options');
+  };
 
   if (isLoading) {
     return <LoadingSpinner text="Carregando dashboard..." />;
@@ -84,13 +118,22 @@ const Dashboard = () => {
             Bem-vindo ao sistema de tickets. Aqui está um resumo das atividades.
           </p>
         </div>
-        <Link
-          to="/tickets/new"
-          className="btn-primary flex items-center"
-        >
-          <PlusIcon className="h-5 w-5 mr-2" />
-          Novo Ticket
-        </Link>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={handleOpenTutorial}
+            className="btn-secondary flex items-center"
+          >
+            <AcademicCapIcon className="h-5 w-5 mr-2" />
+            Tutorial do Sistema
+          </button>
+          <Link
+            to="/tickets/new"
+            className="btn-primary flex items-center"
+          >
+            <PlusIcon className="h-5 w-5 mr-2" />
+            Novo Ticket
+          </Link>
+        </div>
       </div>
 
       {/* Stats Cards */}
@@ -374,6 +417,13 @@ const Dashboard = () => {
           </Link>
         </div>
       </div>
+
+      {/* Tutorial Modal */}
+      <TutorialModal
+        isOpen={showTutorial}
+        onClose={handleCloseTutorial}
+        showVideo={tutorialMode === 'video'}
+      />
     </div>
   );
 };
