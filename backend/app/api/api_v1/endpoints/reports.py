@@ -6,7 +6,7 @@ from typing import List, Optional, Dict, Any
 import calendar
 
 from app.core.deps import get_db, get_current_user, get_current_technician
-from app.models.models import User, Ticket, TicketStatus, TicketPriority, TicketEvaluation
+from app.models.models import User, Ticket, TicketStatus, TicketPriority, TicketEvaluation, Company
 from app.schemas.schemas import User as UserSchema
 
 router = APIRouter()
@@ -313,4 +313,113 @@ async def get_export_data(
         'format': format,
         'generated_at': datetime.now().isoformat(),
         'data': data
+    }
+
+@router.get("/financial/company/{company_id}")
+async def get_company_financial_report(
+    company_id: int,
+    year: int = Query(..., description="Year for the report"),
+    month: int = Query(..., ge=1, le=12, description="Month for the report (1-12)"),
+    current_user: User = Depends(get_current_technician),
+    db: Session = Depends(get_db)
+):
+    """Get financial report for a specific company"""
+    
+    # Get company
+    company = db.query(Company).filter(Company.id == company_id).first()
+    if not company:
+        raise HTTPException(status_code=404, detail="Company not found")
+    
+    # Calculate date range for the month
+    start_date = datetime(year, month, 1)
+    if month == 12:
+        end_date = datetime(year + 1, 1, 1)
+    else:
+        end_date = datetime(year, month + 1, 1)
+    
+    # Get tickets for this company in the specified month
+    tickets = db.query(Ticket).filter(
+        Ticket.company_id == company_id,
+        Ticket.created_at >= start_date,
+        Ticket.created_at < end_date
+    ).all()
+    
+    # Calculate metrics
+    total_tickets = len(tickets)
+    closed_tickets = len([t for t in tickets if t.status in [TicketStatus.RESOLVED, TicketStatus.CLOSED]])
+    
+    # Calculate total hours spent
+    total_hours = sum([t.time_spent_hours or 0 for t in tickets])
+    
+    # Calculate financial value
+    if company.has_contract:
+        # Fixed monthly value from contract
+        monthly_value = company.contract_value or 0
+        billing_type = "contract"
+    else:
+        # Calculate based on hours worked
+        monthly_value = total_hours * (company.hourly_rate or 0)
+        billing_type = "hourly"
+    
+    # Get tickets by priority
+    tickets_by_priority = {
+        'low': len([t for t in tickets if t.priority == TicketPriority.LOW]),
+        'medium': len([t for t in tickets if t.priority == TicketPriority.MEDIUM]),
+        'high': len([t for t in tickets if t.priority == TicketPriority.HIGH]),
+        'urgent': len([t for t in tickets if t.priority == TicketPriority.URGENT])
+    }
+    
+    # Get tickets by status
+    tickets_by_status = {
+        'open': len([t for t in tickets if t.status == TicketStatus.OPEN]),
+        'in_progress': len([t for t in tickets if t.status == TicketStatus.IN_PROGRESS]),
+        'waiting_user': len([t for t in tickets if t.status == TicketStatus.WAITING_USER]),
+        'resolved': len([t for t in tickets if t.status == TicketStatus.RESOLVED]),
+        'closed': len([t for t in tickets if t.status == TicketStatus.CLOSED]),
+        'reopened': len([t for t in tickets if t.status == TicketStatus.REOPENED])
+    }
+    
+    # Calculate average resolution time for closed tickets
+    closed_tickets_with_time = [t for t in tickets if t.status in [TicketStatus.RESOLVED, TicketStatus.CLOSED] and t.resolved_at]
+    avg_resolution_hours = None
+    if closed_tickets_with_time:
+        total_resolution_time = sum([
+            (t.resolved_at.replace(tzinfo=None) - t.created_at.replace(tzinfo=None)).total_seconds() / 3600
+            for t in closed_tickets_with_time
+        ])
+        avg_resolution_hours = total_resolution_time / len(closed_tickets_with_time)
+    
+    return {
+        'company': {
+            'id': company.id,
+            'name': company.name,
+            'legal_name': company.legal_name,
+            'cnpj': company.cnpj,
+            'has_contract': company.has_contract,
+            'contract_value': company.contract_value,
+            'hourly_rate': company.hourly_rate,
+            'contract_status': company.contract_status.value if company.contract_status else None
+        },
+        'period': {
+            'year': year,
+            'month': month,
+            'month_name': calendar.month_name[month],
+            'start_date': start_date.isoformat(),
+            'end_date': end_date.isoformat()
+        },
+        'metrics': {
+            'total_tickets': total_tickets,
+            'closed_tickets': closed_tickets,
+            'total_hours_spent': round(total_hours, 2),
+            'avg_resolution_hours': round(avg_resolution_hours, 2) if avg_resolution_hours else None
+        },
+        'financial': {
+            'billing_type': billing_type,
+            'monthly_value': round(monthly_value, 2),
+            'hourly_rate': company.hourly_rate if not company.has_contract else None,
+            'hours_worked': round(total_hours, 2) if not company.has_contract else None
+        },
+        'tickets_by_priority': tickets_by_priority,
+        'tickets_by_status': tickets_by_status,
+        'generated_at': datetime.now().isoformat()
     }

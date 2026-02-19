@@ -23,6 +23,53 @@ class TicketPriority(str, enum.Enum):
     HIGH = "high"
     URGENT = "urgent"
 
+class ContractStatus(str, enum.Enum):
+    ACTIVE = "active"
+    EXPIRED = "expired"
+    PENDING_RENEWAL = "pending_renewal"
+
+class Company(Base):
+    __tablename__ = "companies"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    
+    # Basic Information
+    name = Column(String(255), nullable=False, index=True)
+    legal_name = Column(String(255), nullable=False)  # Razão Social
+    cnpj = Column(String(18), unique=True, nullable=False, index=True)
+    email = Column(String(255), nullable=False)
+    phone = Column(String(20), nullable=False)
+    
+    # Address
+    street = Column(String(255), nullable=False)
+    number = Column(String(20), nullable=False)
+    neighborhood = Column(String(100), nullable=False)  # Bairro
+    complement = Column(String(255))
+    zip_code = Column(String(10), nullable=False)  # CEP
+    
+    # Contract Information
+    has_contract = Column(Boolean, default=False)
+    contract_start_date = Column(DateTime(timezone=True))
+    contract_end_date = Column(DateTime(timezone=True))
+    contract_value = Column(Float)  # Valor mensal do contrato
+    hourly_rate = Column(Float)  # Valor hora (para empresas sem contrato)
+    contract_status = Column(Enum(ContractStatus))
+    
+    # Additional Information
+    commercial_responsible = Column(String(255))  # Responsável comercial
+    service_type = Column(String(100))  # Tipo de serviço
+    notes = Column(Text)  # Observações
+    
+    # Status
+    is_active = Column(Boolean, default=True)
+    
+    # Timestamps
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    # Relationships
+    users = relationship("User", back_populates="company")
+    tickets = relationship("Ticket", back_populates="company")
 
 class User(Base):
     __tablename__ = "users"
@@ -38,10 +85,16 @@ class User(Base):
     is_ldap_user = Column(Boolean, default=True)
     hashed_password = Column(String(255))  # For non-LDAP users
     tutorial_viewed = Column(Boolean, default=False)  # Tutorial system
+    
+    # Foreign Keys
+    company_id = Column(Integer, ForeignKey("companies.id"))
+    
+    # Timestamps
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, onupdate=func.now())
     
     # Relationships
+    company = relationship("Company", back_populates="users")
     created_tickets = relationship("Ticket", foreign_keys="Ticket.created_by_id", back_populates="created_by")
     assigned_tickets = relationship("Ticket", foreign_keys="Ticket.assigned_to_id", back_populates="assigned_to")
     comments = relationship("TicketComment", back_populates="user")
@@ -69,10 +122,14 @@ class Ticket(Base):
     status = Column(Enum(TicketStatus), default=TicketStatus.OPEN)
     priority = Column(Enum(TicketPriority), default=TicketPriority.MEDIUM)
     
+    # Time tracking for billing
+    time_spent_hours = Column(Float, default=0.0)  # Horas gastas no atendimento
+    
     # Foreign Keys
     created_by_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     assigned_to_id = Column(Integer, ForeignKey("users.id"))
     category_id = Column(Integer, ForeignKey("categories.id"))
+    company_id = Column(Integer, ForeignKey("companies.id"))
     
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -87,6 +144,7 @@ class Ticket(Base):
     created_by = relationship("User", foreign_keys=[created_by_id], back_populates="created_tickets")
     assigned_to = relationship("User", foreign_keys=[assigned_to_id], back_populates="assigned_tickets")
     category = relationship("Category", back_populates="tickets")
+    company = relationship("Company", back_populates="tickets")
     comments = relationship("TicketComment", back_populates="ticket", cascade="all, delete-orphan")
     attachments = relationship("TicketAttachment", back_populates="ticket", cascade="all, delete-orphan")
     activities = relationship("TicketActivity", back_populates="ticket", cascade="all, delete-orphan")
