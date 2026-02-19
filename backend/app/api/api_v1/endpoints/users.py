@@ -92,102 +92,7 @@ async def get_technicians(
             detail=f"Error fetching technicians: {str(e)}"
         )
 
-@router.get("/{user_id}", response_model=UserSchema)
-async def get_user(
-    user_id: int,
-    current_user: UserSchema = Depends(get_current_technician),
-    db: Session = Depends(get_db)
-):
-    """Get specific user"""
-    
-    user = db.query(UserModel).filter(UserModel.id == user_id).first()
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
-    
-    return user
-
-@router.post("/", response_model=UserSchema)
-async def create_user(
-    user: UserCreate,
-    current_user: UserSchema = Depends(get_current_admin),
-    db: Session = Depends(get_db)
-):
-    """Create new user (admin only)"""
-    
-    # Check if username already exists
-    existing_user = db.query(UserModel).filter(UserModel.username == user.username).first()
-    if existing_user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Username already registered"
-        )
-    
-    # Check if email already exists
-    existing_email = db.query(UserModel).filter(UserModel.email == user.email).first()
-    if existing_email:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Email already registered"
-        )
-    
-    # Create user
-    hashed_password = None
-    if user.password:
-        hashed_password = get_password_hash(user.password)
-    
-    db_user = UserModel(
-        username=user.username,
-        email=user.email,
-        full_name=user.full_name,
-        department=user.department,
-        phone=user.phone,
-        role=user.role,
-        hashed_password=hashed_password,
-        is_ldap_user=False if user.password else True,
-        is_active=True
-    )
-    
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
-    
-    return db_user
-
-@router.put("/{user_id}", response_model=UserSchema)
-async def update_user(
-    user_id: int,
-    user_update: UserUpdate,
-    current_user: UserSchema = Depends(get_current_admin),
-    db: Session = Depends(get_db)
-):
-    """Update user (admin only)"""
-    
-    user = db.query(UserModel).filter(UserModel.id == user_id).first()
-    if not user:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="User not found"
-        )
-    
-    # Update user fields
-    update_data = user_update.dict(exclude_unset=True)
-    
-    # Handle password hashing if provided
-    if 'password' in update_data and update_data['password']:
-        update_data['hashed_password'] = get_password_hash(update_data['password'])
-        del update_data['password']  # Remove plain password
-    
-    for field, value in update_data.items():
-        setattr(user, field, value)
-    
-    db.commit()
-    db.refresh(user)
-    
-    return user
-
+# Profile routes - MUST come before /{user_id} routes
 @router.put("/profile")
 async def update_profile(
     profile_data: ProfileUpdate,
@@ -321,6 +226,103 @@ async def change_password(
     db.commit()
     
     return {"message": "Password changed successfully"}
+
+# Dynamic routes with parameters - MUST come after specific routes
+@router.get("/{user_id}", response_model=UserSchema)
+async def get_user(
+    user_id: int,
+    current_user: UserSchema = Depends(get_current_technician),
+    db: Session = Depends(get_db)
+):
+    """Get specific user"""
+    
+    user = db.query(UserModel).filter(UserModel.id == user_id).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
+    return user
+
+@router.post("/", response_model=UserSchema)
+async def create_user(
+    user: UserCreate,
+    current_user: UserSchema = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    """Create new user (admin only)"""
+    
+    # Check if username already exists
+    existing_user = db.query(UserModel).filter(UserModel.username == user.username).first()
+    if existing_user:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Username already registered"
+        )
+    
+    # Check if email already exists
+    existing_email = db.query(UserModel).filter(UserModel.email == user.email).first()
+    if existing_email:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Email already registered"
+        )
+    
+    # Create user
+    hashed_password = None
+    if user.password:
+        hashed_password = get_password_hash(user.password)
+    
+    db_user = UserModel(
+        username=user.username,
+        email=user.email,
+        full_name=user.full_name,
+        department=user.department,
+        phone=user.phone,
+        role=user.role,
+        hashed_password=hashed_password,
+        is_ldap_user=False if user.password else True,
+        is_active=True
+    )
+    
+    db.add(db_user)
+    db.commit()
+    db.refresh(db_user)
+    
+    return db_user
+
+@router.put("/{user_id}", response_model=UserSchema)
+async def update_user(
+    user_id: int,
+    user_update: UserUpdate,
+    current_user: UserSchema = Depends(get_current_admin),
+    db: Session = Depends(get_db)
+):
+    """Update user (admin only)"""
+    
+    user = db.query(UserModel).filter(UserModel.id == user_id).first()
+    if not user:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
+    
+    # Update user fields
+    update_data = user_update.dict(exclude_unset=True)
+    
+    # Handle password hashing if provided
+    if 'password' in update_data and update_data['password']:
+        update_data['hashed_password'] = get_password_hash(update_data['password'])
+        del update_data['password']  # Remove plain password
+    
+    for field, value in update_data.items():
+        setattr(user, field, value)
+    
+    db.commit()
+    db.refresh(user)
+    
+    return user
 
 @router.delete("/{user_id}")
 async def deactivate_user(
