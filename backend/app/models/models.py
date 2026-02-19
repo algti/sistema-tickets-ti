@@ -37,6 +37,7 @@ class User(Base):
     is_active = Column(Boolean, default=True)
     is_ldap_user = Column(Boolean, default=True)
     hashed_password = Column(String(255))  # For non-LDAP users
+    tutorial_viewed = Column(Boolean, default=False)  # Tutorial system
     created_at = Column(DateTime, server_default=func.now())
     updated_at = Column(DateTime, onupdate=func.now())
     

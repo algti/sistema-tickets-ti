@@ -40,6 +40,7 @@ class User(UserBase):
     role: UserRole
     is_active: bool
     is_ldap_user: bool
+    tutorial_viewed: bool = False
     created_at: datetime
     
     class Config:
