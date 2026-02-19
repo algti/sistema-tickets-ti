@@ -117,15 +117,26 @@ async def get_dashboard_stats(
         if valid_tickets > 0:
             avg_resolution_time = total_time / valid_tickets
     
-    # Average time open for all active tickets (open, in_progress, waiting_user, reopened)
+    # Average time open - calculate from creation to resolution/closure for closed tickets
     avg_time_open = None
-    if active_tickets:
-        current_time = datetime.utcnow()
-        total_open_time = sum([
-            (current_time - ticket.created_at.replace(tzinfo=None)).total_seconds() / 3600
-            for ticket in active_tickets
-        ])
-        avg_time_open = total_open_time / len(active_tickets)
+    if resolved_tickets_with_time:
+        total_open_time = 0
+        valid_open_tickets = 0
+        for ticket in resolved_tickets_with_time:
+            if ticket.created_at:
+                # Use closed_at if available, otherwise use resolved_at
+                end_time = ticket.closed_at if ticket.closed_at else ticket.resolved_at
+                if end_time:
+                    # Remove timezone info for calculation
+                    end_time_clean = end_time.replace(tzinfo=None) if end_time.tzinfo else end_time
+                    created_at = ticket.created_at.replace(tzinfo=None) if ticket.created_at.tzinfo else ticket.created_at
+                    time_diff = (end_time_clean - created_at).total_seconds() / 3600
+                    if time_diff >= 0:
+                        total_open_time += time_diff
+                        valid_open_tickets += 1
+        
+        if valid_open_tickets > 0:
+            avg_time_open = total_open_time / valid_open_tickets
     
     # Tickets by priority (apply same role-based filtering)
     if date_filter is not True:

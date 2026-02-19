@@ -185,8 +185,8 @@ const Dashboard = () => {
                   <ClockIcon className="h-6 w-6 text-white" />
                 </div>
                 <div className="ml-4">
-                  <h3 className="text-lg font-medium text-primary">Tempo Médio Aberto</h3>
-                  <p className="text-sm text-secondary">Tickets ativos</p>
+                  <h3 className="text-lg font-medium text-primary">Tempo Médio de Atendimento</h3>
+                  <p className="text-sm text-secondary">Da abertura ao fechamento</p>
                 </div>
               </div>
               <div className="text-3xl font-bold text-orange-600">
