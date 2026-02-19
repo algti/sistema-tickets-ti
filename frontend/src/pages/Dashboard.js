@@ -28,6 +28,15 @@ const Dashboard = () => {
       setTutorialMode('video');
     }
   }, [user]);
+
+  // Get current month name in PT-BR
+  const getCurrentMonthName = () => {
+    const months = [
+      'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+      'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+    ];
+    return months[new Date().getMonth()];
+  };
   
   const { data: stats, isLoading } = useQuery(
     ['dashboard-stats'],
@@ -157,42 +166,40 @@ const Dashboard = () => {
 
       {/* Time Metrics */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        {stats?.avg_time_open !== null && stats?.avg_time_open !== undefined && (
-          <div className="card p-6">
-            <div className="flex items-center mb-4">
-              <div className="p-3 rounded-lg bg-orange-500">
-                <ClockIcon className="h-6 w-6 text-white" />
-              </div>
-              <div className="ml-4">
-                <h3 className="text-lg font-medium text-primary">Tempo Médio de Atendimento</h3>
-                <p className="text-sm text-secondary">Da abertura ao fechamento</p>
-              </div>
+        <div className="card p-6">
+          <div className="flex items-center mb-4">
+            <div className="p-3 rounded-lg bg-orange-500">
+              <ClockIcon className="h-6 w-6 text-white" />
             </div>
-            <div className="text-3xl font-bold text-orange-600">
-              {stats.avg_time_open < 24 
-                ? `${stats.avg_time_open.toFixed(1)}h`
-                : `${(stats.avg_time_open / 24).toFixed(1)}d`
-              }
+            <div className="ml-4">
+              <h3 className="text-lg font-medium text-primary">Tempo Médio de Atendimento</h3>
+              <p className="text-sm text-secondary">Da abertura ao fechamento</p>
             </div>
           </div>
-        )}
+          <div className="text-3xl font-bold text-orange-600">
+            {stats?.avg_time_open !== null && stats?.avg_time_open !== undefined
+              ? (stats.avg_time_open < 24 
+                  ? `${stats.avg_time_open.toFixed(1)}h`
+                  : `${(stats.avg_time_open / 24).toFixed(1)}d`)
+              : '0.0h'
+            }
+          </div>
+        </div>
         
-        {stats?.closed_this_month !== null && stats?.closed_this_month !== undefined && (
-          <div className="card p-6">
-            <div className="flex items-center mb-4">
-              <div className="p-3 rounded-lg bg-green-500">
-                <CheckCircleIcon className="h-6 w-6 text-white" />
-              </div>
-              <div className="ml-4">
-                <h3 className="text-lg font-medium text-primary">Fechados no Mês</h3>
-                <p className="text-sm text-secondary">Mês vigente</p>
-              </div>
+        <div className="card p-6">
+          <div className="flex items-center mb-4">
+            <div className="p-3 rounded-lg bg-green-500">
+              <CheckCircleIcon className="h-6 w-6 text-white" />
             </div>
-            <div className="text-3xl font-bold text-green-600">
-              {stats.closed_this_month}
+            <div className="ml-4">
+              <h3 className="text-lg font-medium text-primary">Fechados no Mês</h3>
+              <p className="text-sm text-secondary">{getCurrentMonthName()}</p>
             </div>
           </div>
-        )}
+          <div className="text-3xl font-bold text-green-600">
+            {stats?.closed_this_month ?? 0}
+          </div>
+        </div>
       </div>
 
       {/* Priority Distribution - Only for technicians and admins */}
