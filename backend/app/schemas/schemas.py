@@ -2,7 +2,7 @@ from pydantic import BaseModel, Field, validator
 from typing import List, Optional, Dict
 from datetime import datetime
 from enum import Enum
-from app.models.models import UserRole, TicketStatus, TicketPriority
+from app.models.models import UserRole, TicketStatus, TicketPriority, ContractStatus
 
 # User Schemas
 class UserBase(BaseModel):
@@ -11,6 +11,7 @@ class UserBase(BaseModel):
     full_name: str
     department: Optional[str] = None
     phone: Optional[str] = None
+    company_id: Optional[int] = None
 
 class UserCreate(UserBase):
     password: Optional[str] = None
@@ -24,6 +25,7 @@ class UserUpdate(BaseModel):
     role: Optional[UserRole] = None
     password: Optional[str] = None
     is_active: Optional[bool] = None
+    company_id: Optional[int] = None
 
 class ProfileUpdate(BaseModel):
     email: Optional[str] = None
@@ -81,6 +83,62 @@ class Category(CategoryBase):
     class Config:
         from_attributes = True
 
+# Company Schemas
+class CompanyBase(BaseModel):
+    name: str
+    legal_name: str
+    cnpj: str
+    email: str
+    phone: str
+    street: str
+    number: str
+    neighborhood: str
+    complement: Optional[str] = None
+    zip_code: str
+    has_contract: bool = False
+    contract_start_date: Optional[datetime] = None
+    contract_end_date: Optional[datetime] = None
+    contract_value: Optional[float] = None
+    hourly_rate: Optional[float] = None
+    contract_status: Optional[ContractStatus] = None
+    commercial_responsible: Optional[str] = None
+    service_type: Optional[str] = None
+    notes: Optional[str] = None
+
+class CompanyCreate(CompanyBase):
+    pass
+
+class CompanyUpdate(BaseModel):
+    name: Optional[str] = None
+    legal_name: Optional[str] = None
+    cnpj: Optional[str] = None
+    email: Optional[str] = None
+    phone: Optional[str] = None
+    street: Optional[str] = None
+    number: Optional[str] = None
+    neighborhood: Optional[str] = None
+    complement: Optional[str] = None
+    zip_code: Optional[str] = None
+    has_contract: Optional[bool] = None
+    contract_start_date: Optional[datetime] = None
+    contract_end_date: Optional[datetime] = None
+    contract_value: Optional[float] = None
+    hourly_rate: Optional[float] = None
+    contract_status: Optional[ContractStatus] = None
+    commercial_responsible: Optional[str] = None
+    service_type: Optional[str] = None
+    notes: Optional[str] = None
+    is_active: Optional[bool] = None
+
+class Company(CompanyBase):
+    id: int
+    is_active: bool
+    created_at: datetime
+    updated_at: Optional[datetime]
+    
+    class Config:
+        from_attributes = True
+
 # Ticket Schemas
 class TicketBase(BaseModel):
     title: str
@@ -99,6 +157,7 @@ class TicketUpdate(BaseModel):
     assigned_to_id: Optional[int] = None
     category_id: Optional[int] = None
     solution: Optional[str] = None
+    time_spent_hours: Optional[float] = None
 
 class TicketComment(BaseModel):
     id: int
