@@ -138,6 +138,13 @@ async def get_dashboard_stats(
         if valid_open_tickets > 0:
             avg_time_open = total_open_time / valid_open_tickets
     
+    # Tickets closed this month
+    current_month_start = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    closed_this_month = base_query.filter(
+        Ticket.status.in_([TicketStatus.RESOLVED, TicketStatus.CLOSED]),
+        Ticket.resolved_at >= current_month_start
+    ).count()
+    
     # Tickets by priority (apply same role-based filtering)
     if date_filter is not True:
         priority_stats = base_query.filter(date_filter).with_entities(
@@ -205,6 +212,7 @@ async def get_dashboard_stats(
         closed_tickets=closed_tickets,
         avg_resolution_time=avg_resolution_time,
         avg_time_open=avg_time_open,
+        closed_this_month=closed_this_month,
         tickets_by_priority=tickets_by_priority,
         tickets_by_category=tickets_by_category,
         recent_activities=recent_activities
