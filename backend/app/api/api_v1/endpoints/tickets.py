@@ -455,7 +455,10 @@ async def update_ticket(
         if update_data['status'] == TicketStatus.RESOLVED:
             ticket.resolved_at = datetime.utcnow()
         elif update_data['status'] == TicketStatus.CLOSED:
+            # When closing a ticket, set both closed_at and resolved_at (if not already set)
             ticket.closed_at = datetime.utcnow()
+            if not ticket.resolved_at:
+                ticket.resolved_at = datetime.utcnow()
     
     ticket.updated_at = datetime.utcnow()
     
