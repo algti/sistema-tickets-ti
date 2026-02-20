@@ -10,6 +10,9 @@ import Tickets from './pages/Tickets';
 import TicketDetail from './pages/TicketDetail';
 import CreateTicket from './pages/CreateTicket';
 import Users from './pages/Users';
+import Companies from './pages/Companies';
+import CompanyForm from './pages/CompanyForm';
+import CompanyFinancialReport from './pages/CompanyFinancialReport';
 import Categories from './pages/Categories';
 import Profile from './pages/Profile';
 import Notifications from './pages/Notifications';
@@ -101,6 +104,38 @@ function AppRoutes() {
           element={
             <TechnicianRoute>
               <Users />
+            </TechnicianRoute>
+          } 
+        />
+        <Route 
+          path="companies" 
+          element={
+            <TechnicianRoute>
+              <Companies />
+            </TechnicianRoute>
+          } 
+        />
+        <Route 
+          path="companies/new" 
+          element={
+            <AdminRoute>
+              <CompanyForm />
+            </AdminRoute>
+          } 
+        />
+        <Route 
+          path="companies/:id/edit" 
+          element={
+            <AdminRoute>
+              <CompanyForm />
+            </AdminRoute>
+          } 
+        />
+        <Route 
+          path="companies/:id/report" 
+          element={
+            <TechnicianRoute>
+              <CompanyFinancialReport />
             </TechnicianRoute>
           } 
         />

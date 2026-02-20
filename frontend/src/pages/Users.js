@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { usersAPI, settingsService } from '../services/api';
+import { usersAPI, settingsService, companiesService } from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { useAuth } from '../contexts/AuthContext';
 import { 
@@ -29,6 +29,9 @@ function Users() {
   const [editingUser, setEditingUser] = useState(null);
   const [modalLoading, setModalLoading] = useState(false);
 
+  // Companies list
+  const [companies, setCompanies] = useState([]);
+
     // User form data
   const [userForm, setUserForm] = useState({
     username: '',
@@ -38,7 +41,8 @@ function Users() {
     phone: '',
     role: 'user',
     password: '',
-    is_active: true
+    is_active: true,
+    company_id: null
   });
   
   // LDAP configuration
@@ -56,6 +60,7 @@ function Users() {
 
   useEffect(() => {
     fetchUsers();
+    fetchCompanies();
   }, [filters]);
 
   const fetchUsers = async () => {
@@ -67,6 +72,15 @@ function Users() {
       console.error('Erro ao buscar usuários:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchCompanies = async () => {
+    try {
+      const response = await companiesService.getCompanies({ is_active: true });
+      setCompanies(response.data);
+    } catch (error) {
+      console.error('Erro ao buscar empresas:', error);
     }
   };
 
@@ -121,7 +135,8 @@ function Users() {
         phone: userToEdit.phone || '',
         role: userToEdit.role || 'user',
         password: '',
-        is_active: userToEdit.is_active !== undefined ? userToEdit.is_active : true
+        is_active: userToEdit.is_active !== undefined ? userToEdit.is_active : true,
+        company_id: userToEdit.company_id || null
       });
     } else {
       setEditingUser(null);
@@ -133,7 +148,8 @@ function Users() {
         phone: '',
         role: 'user',
         password: '',
-        is_active: true
+        is_active: true,
+        company_id: null
       });
     }
     setShowUserModal(true);
@@ -150,7 +166,8 @@ function Users() {
       phone: '',
       role: 'user',
       password: '',
-      is_active: true
+      is_active: true,
+      company_id: null
     });
   };
 
@@ -548,6 +565,24 @@ function Users() {
                       <option value="user">Usuário</option>
                       <option value="technician">Técnico</option>
                       <option value="admin">Administrador</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-1">
+                      Empresa
+                    </label>
+                    <select
+                      value={userForm.company_id || ''}
+                      onChange={(e) => setUserForm({...userForm, company_id: e.target.value ? parseInt(e.target.value) : null})}
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="">Selecione uma empresa</option>
+                      {companies.map(company => (
+                        <option key={company.id} value={company.id}>
+                          {company.name}
+                        </option>
+                      ))}
                     </select>
                   </div>
                 </div>
