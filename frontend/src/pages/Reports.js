@@ -32,53 +32,53 @@ function Reports() {
   const fetchReportData = async () => {
     setLoading(true);
     try {
-      // Dados simulados para demonstração
-      const mockData = {
+      // Buscar dados reais da API
+      const response = await dashboardService.getStats({ days: 365 });
+      const stats = response.data;
+      
+      // Calcular totais e percentuais
+      const total = stats.total_tickets || 0;
+      const open = stats.open_tickets || 0;
+      const inProgress = stats.in_progress_tickets || 0;
+      const resolved = stats.resolved_tickets || 0;
+      const closed = stats.closed_tickets || 0;
+      
+      // Converter dados da API para formato do relatório
+      const reportStats = {
         summary: {
-          total_tickets: 156,
-          open_tickets: 23,
-          in_progress_tickets: 18,
-          resolved_tickets: 98,
-          closed_tickets: 17,
-          avg_resolution_time: '2.3 dias',
-          satisfaction_rate: '94%'
+          total_tickets: total,
+          open_tickets: open,
+          in_progress_tickets: inProgress,
+          resolved_tickets: resolved,
+          closed_tickets: closed,
+          avg_resolution_time: stats.avg_time_open 
+            ? (stats.avg_time_open < 24 
+                ? `${stats.avg_time_open.toFixed(1)}h`
+                : `${(stats.avg_time_open / 24).toFixed(1)} dias`)
+            : '0h',
+          satisfaction_rate: stats.satisfaction_rate || '0%'
         },
         ticketsByStatus: [
-          { status: 'OPEN', count: 23, percentage: 14.7 },
-          { status: 'IN_PROGRESS', count: 18, percentage: 11.5 },
-          { status: 'RESOLVED', count: 98, percentage: 62.8 },
-          { status: 'CLOSED', count: 17, percentage: 10.9 }
+          { status: 'OPEN', count: open, percentage: total > 0 ? (open / total * 100).toFixed(1) : 0 },
+          { status: 'IN_PROGRESS', count: inProgress, percentage: total > 0 ? (inProgress / total * 100).toFixed(1) : 0 },
+          { status: 'RESOLVED', count: resolved, percentage: total > 0 ? (resolved / total * 100).toFixed(1) : 0 },
+          { status: 'CLOSED', count: closed, percentage: total > 0 ? (closed / total * 100).toFixed(1) : 0 }
         ],
-        ticketsByPriority: [
-          { priority: 'LOW', count: 45, percentage: 28.8 },
-          { priority: 'MEDIUM', count: 67, percentage: 42.9 },
-          { priority: 'HIGH', count: 32, percentage: 20.5 },
-          { priority: 'URGENT', count: 12, percentage: 7.7 }
-        ],
-        ticketsByCategory: [
-          { category: 'Hardware', count: 42, percentage: 26.9 },
-          { category: 'Software', count: 38, percentage: 24.4 },
-          { category: 'Rede', count: 28, percentage: 17.9 },
-          { category: 'Acesso', count: 25, percentage: 16.0 },
-          { category: 'Email', count: 23, percentage: 14.7 }
-        ],
-        technicianPerformance: [
-          { name: 'João Silva', tickets_resolved: 34, avg_time: '1.8 dias', satisfaction: '96%' },
-          { name: 'Maria Santos', tickets_resolved: 28, avg_time: '2.1 dias', satisfaction: '94%' },
-          { name: 'Pedro Costa', tickets_resolved: 25, avg_time: '2.5 dias', satisfaction: '92%' },
-          { name: 'Ana Oliveira', tickets_resolved: 11, avg_time: '3.2 dias', satisfaction: '89%' }
-        ],
-        monthlyTrends: [
-          { month: 'Jan', created: 45, resolved: 42 },
-          { month: 'Fev', created: 52, resolved: 48 },
-          { month: 'Mar', created: 38, resolved: 41 },
-          { month: 'Abr', created: 61, resolved: 58 },
-          { month: 'Mai', created: 47, resolved: 44 },
-          { month: 'Jun', created: 39, resolved: 43 }
-        ]
+        ticketsByPriority: Object.entries(stats.tickets_by_priority || {}).map(([priority, count]) => ({
+          priority: priority.toUpperCase(),
+          count,
+          percentage: total > 0 ? (count / total * 100).toFixed(1) : 0
+        })),
+        ticketsByCategory: Object.entries(stats.tickets_by_category || {}).map(([category, count]) => ({
+          category,
+          count,
+          percentage: total > 0 ? (count / total * 100).toFixed(1) : 0
+        })),
+        technicianPerformance: stats.technician_performance || [],
+        monthlyTrends: stats.monthly_trends || []
       };
 
-      setReportData(mockData);
+      setReportData(reportStats);
     } catch (error) {
       console.error('Erro ao buscar dados do relatório:', error);
     } finally {
