@@ -179,6 +179,35 @@ export const categoriesService = {
     authAPI.put(`/categories/${id}/activate`),
 };
 
+// Companies API
+export const companiesService = {
+  getCompanies: (params = {}) => 
+    authAPI.get('/companies/', { params }),
+  
+  getCompany: (id) => 
+    authAPI.get(`/companies/${id}`),
+  
+  createCompany: (data) => 
+    authAPI.post('/companies/', data),
+  
+  updateCompany: (id, data) => 
+    authAPI.put(`/companies/${id}`, data),
+  
+  deactivateCompany: (id) => 
+    authAPI.delete(`/companies/${id}`),
+  
+  activateCompany: (id) => 
+    authAPI.put(`/companies/${id}/activate`),
+  
+  getCompanyUsers: (id) => 
+    authAPI.get(`/companies/${id}/users`),
+  
+  getFinancialReport: (companyId, year, month) => 
+    authAPI.get(`/reports/financial/company/${companyId}`, { 
+      params: { year, month } 
+    }),
+};
+
 // Dashboard API
 export const dashboardService = {
   getStats: (params = {}) => 

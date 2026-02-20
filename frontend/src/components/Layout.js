@@ -16,7 +16,8 @@ import {
   UserIcon,
   ArrowRightOnRectangleIcon,
   Bars3Icon,
-  XMarkIcon
+  XMarkIcon,
+  BuildingOfficeIcon
 } from '@heroicons/react/24/outline';
 
 const Layout = () => {
@@ -35,6 +36,7 @@ const Layout = () => {
   if (isTechnician) {
     navigation.push(
       { name: 'Usuários', href: '/users', icon: UsersIcon, current: location.pathname === '/users' },
+      { name: 'Empresas', href: '/companies', icon: BuildingOfficeIcon, current: location.pathname.startsWith('/companies') },
       { name: 'Relatórios', href: '/reports', icon: ChartBarIcon, current: location.pathname === '/reports' }
     );
   }
