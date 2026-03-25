@@ -34,6 +34,10 @@ class Settings(BaseSettings):
     SMTP_USERNAME: Optional[str] = None
     SMTP_PASSWORD: Optional[str] = None
     SMTP_USE_TLS: bool = True
+    SMTP_FROM_EMAIL: str = "noreply@algti.com"
+    SMTP_FROM_NAME: str = "Sistema de Tickets ALG TI"
+    ADMIN_NOTIFICATION_EMAIL: str = "admin@algti.com"  # Email do admin para receber todas as notificações
+    EMAIL_ENABLED: bool = True  # Habilitar/desabilitar envio de emails
     
     # File Upload
     MAX_FILE_SIZE: int = 10485760  # 10MB

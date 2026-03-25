@@ -19,6 +19,7 @@ from app.schemas.schemas import (
 )
 from app.core.config import settings
 from app.websocket.notifications import notification_service
+from app.services.email_service import email_service
 
 
 router = APIRouter()
@@ -347,11 +348,43 @@ async def create_ticket(
     # Send notification for new ticket
     await notification_service.notify_ticket_created(db_ticket, current_user)
     
+    # Send email notification for new ticket
+    try:
+        ticket_url = f"https://ticket.algti.com/tickets/{db_ticket.id}"
+        category_name = category.name if category else "Sem categoria"
+        email_service.send_ticket_created_notification(
+            ticket_id=db_ticket.id,
+            ticket_title=db_ticket.title,
+            ticket_description=db_ticket.description,
+            ticket_priority=db_ticket.priority.value if hasattr(db_ticket.priority, 'value') else str(db_ticket.priority),
+            ticket_category=category_name,
+            created_by_name=current_user.full_name or current_user.username,
+            created_by_email=current_user.email,
+            ticket_url=ticket_url
+        )
+    except Exception as e:
+        logger.error(f"Failed to send email notification: {e}")
+    
     # If ticket is assigned, send assignment notification
     if db_ticket.assigned_to_id:
         assigned_user = db.query(User).filter(User.id == db_ticket.assigned_to_id).first()
         if assigned_user:
             await notification_service.notify_ticket_assigned(db_ticket, assigned_user, current_user)
+            
+            # Send email notification for assignment
+            try:
+                ticket_url = f"https://ticket.algti.com/tickets/{db_ticket.id}"
+                email_service.send_ticket_assigned_notification(
+                    ticket_id=db_ticket.id,
+                    ticket_title=db_ticket.title,
+                    assigned_to_name=assigned_user.full_name or assigned_user.username,
+                    assigned_to_email=assigned_user.email,
+                    assigned_by_name=current_user.full_name or current_user.username,
+                    ticket_owner_email=current_user.email,
+                    ticket_url=ticket_url
+                )
+            except Exception as e:
+                logger.error(f"Failed to send assignment email notification: {e}")
     
     # Reload with relationships
     ticket_with_relations = db.query(Ticket).options(
@@ -488,15 +521,68 @@ async def update_ticket(
     if old_status != ticket.status:
         await notification_service.notify_ticket_status_changed(ticket, old_status, current_user)
         
+        # Send email notification for status change
+        try:
+            ticket_url = f"https://ticket.algti.com/tickets/{ticket.id}"
+            ticket_owner = db.query(User).filter(User.id == ticket.created_by_id).first()
+            if ticket_owner:
+                old_status_str = old_status.value if hasattr(old_status, 'value') else str(old_status)
+                new_status_str = ticket.status.value if hasattr(ticket.status, 'value') else str(ticket.status)
+                email_service.send_ticket_status_changed_notification(
+                    ticket_id=ticket.id,
+                    ticket_title=ticket.title,
+                    old_status=old_status_str,
+                    new_status=new_status_str,
+                    changed_by_name=current_user.full_name or current_user.username,
+                    ticket_owner_email=ticket_owner.email,
+                    ticket_url=ticket_url
+                )
+        except Exception as e:
+            logger.error(f"Failed to send status change email notification: {e}")
+        
         # Special notification for resolution
         if ticket.status == TicketStatus.RESOLVED:
             await notification_service.notify_ticket_resolved(ticket, current_user)
+    
+    # Send email notification for general updates if there were changes
+    if changes and old_status == ticket.status:
+        try:
+            ticket_url = f"https://ticket.algti.com/tickets/{ticket.id}"
+            ticket_owner = db.query(User).filter(User.id == ticket.created_by_id).first()
+            if ticket_owner:
+                email_service.send_ticket_updated_notification(
+                    ticket_id=ticket.id,
+                    ticket_title=ticket.title,
+                    changes=changes,
+                    updated_by_name=current_user.full_name or current_user.username,
+                    ticket_owner_email=ticket_owner.email,
+                    ticket_url=ticket_url
+                )
+        except Exception as e:
+            logger.error(f"Failed to send update email notification: {e}")
     
     # Send notification for assignment changes
     if old_assigned_to_id != ticket.assigned_to_id and ticket.assigned_to_id:
         assigned_user = db.query(User).filter(User.id == ticket.assigned_to_id).first()
         if assigned_user:
             await notification_service.notify_ticket_assigned(ticket, assigned_user, current_user)
+            
+            # Send email notification for assignment
+            try:
+                ticket_url = f"https://ticket.algti.com/tickets/{ticket.id}"
+                ticket_owner = db.query(User).filter(User.id == ticket.created_by_id).first()
+                if ticket_owner:
+                    email_service.send_ticket_assigned_notification(
+                        ticket_id=ticket.id,
+                        ticket_title=ticket.title,
+                        assigned_to_name=assigned_user.full_name or assigned_user.username,
+                        assigned_to_email=assigned_user.email,
+                        assigned_by_name=current_user.full_name or current_user.username,
+                        ticket_owner_email=ticket_owner.email,
+                        ticket_url=ticket_url
+                    )
+            except Exception as e:
+                logger.error(f"Failed to send assignment email notification: {e}")
     
     # Reload with relationships
     ticket_with_relations = db.query(Ticket).options(
@@ -570,7 +656,24 @@ async def add_comment(
         )
         db.commit()
         
-        # Send notification for new comment (only for non-internal comments or to technicians)
+        # Send notification for new comment (only for non-internal comments)
+        if not comment.is_internal:
+            # Send email notification for comment
+            try:
+                ticket_url = f"https://ticket.algti.com/tickets/{ticket.id}"
+                ticket_owner = db.query(User).filter(User.id == ticket.created_by_id).first()
+                if ticket_owner and ticket_owner.id != current_user.id:
+                    email_service.send_ticket_comment_notification(
+                        ticket_id=ticket.id,
+                        ticket_title=ticket.title,
+                        comment_text=comment.content,
+                        comment_by_name=current_user.full_name or current_user.username,
+                        ticket_owner_email=ticket_owner.email,
+                        ticket_url=ticket_url
+                    )
+            except Exception as e:
+                logger.error(f"Failed to send comment email notification: {e}")
+        
         if not comment.is_internal:
             await notification_service.notify_new_comment(ticket, comment.content, current_user)
         
