@@ -8,6 +8,7 @@ from typing import List, Optional
 from datetime import datetime, timedelta
 
 from app.core.database import get_db
+from app.core.timezone import get_brazil_now
 from app.core.deps import get_current_user, get_current_admin, get_current_technician
 from app.models.models import (
     TicketEvaluation, Ticket, User, UserRole, TicketStatus
@@ -71,7 +72,7 @@ async def create_ticket_evaluation(
         resolution_quality=evaluation_data.resolution_quality,
         response_time_rating=evaluation_data.response_time_rating,
         technician_rating=evaluation_data.technician_rating,
-        created_at=datetime.utcnow()
+        created_at=get_brazil_now()
     )
     
     db.add(evaluation)
@@ -165,7 +166,7 @@ async def update_ticket_evaluation(
     for field, value in update_data.items():
         setattr(evaluation, field, value)
     
-    evaluation.updated_at = datetime.utcnow()
+    evaluation.updated_at = get_brazil_now()
     
     db.commit()
     db.refresh(evaluation)
@@ -240,7 +241,7 @@ async def get_satisfaction_metrics(
     """Get satisfaction metrics"""
     
     # Calculate date range
-    date_from = datetime.utcnow() - timedelta(days=days)
+    date_from = get_brazil_now() - timedelta(days=days)
     
     query = db.query(TicketEvaluation).filter(
         TicketEvaluation.created_at >= date_from
@@ -313,7 +314,7 @@ async def get_technician_satisfaction_metrics(
     """Get satisfaction metrics by technician"""
     
     # Calculate date range
-    date_from = datetime.utcnow() - timedelta(days=days)
+    date_from = get_brazil_now() - timedelta(days=days)
     
     # Get evaluations with technician info
     evaluations = db.query(TicketEvaluation).join(Ticket).join(
