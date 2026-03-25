@@ -32,27 +32,35 @@ O sistema agora possui **notificações por e-mail transacional** que enviam men
 
 ## 🔧 Configuração
 
-### Opção 1: Gmail (Recomendado para Testes)
+### Opção 1: Brevo (Configuração Atual - RECOMENDADO) ⭐
 
-1. **Criar Senha de App no Gmail:**
-   - Acesse: https://myaccount.google.com/apppasswords
-   - Crie uma senha de app para "Mail"
-   - Copie a senha gerada (16 caracteres)
+**Plano Gratuito: 300 emails/dia**
+
+1. **Credenciais já configuradas:**
+   - Servidor: `smtp-relay.brevo.com`
+   - Porta: `587`
+   - Login: `a6066d001@smtp-brevo.com`
+   - Senha: `0v7TVbOfEkF283Ap`
 
 2. **Configurar .env:**
 ```bash
-SMTP_SERVER=smtp.gmail.com
+SMTP_SERVER=smtp-relay.brevo.com
 SMTP_PORT=587
-SMTP_USERNAME=seu-email@gmail.com
-SMTP_PASSWORD=xxxx-xxxx-xxxx-xxxx  # Senha de app gerada
+SMTP_USERNAME=a6066d001@smtp-brevo.com
+SMTP_PASSWORD=0v7TVbOfEkF283Ap
 SMTP_USE_TLS=true
-SMTP_FROM_EMAIL=noreply@algti.com
+SMTP_FROM_EMAIL=tickets@algti.com
 SMTP_FROM_NAME=Sistema de Tickets ALG TI
-ADMIN_NOTIFICATION_EMAIL=seu-email-admin@gmail.com
+ADMIN_NOTIFICATION_EMAIL=contato@algti.com
 EMAIL_ENABLED=true
 ```
 
-### Opção 2: SendGrid (Recomendado para Produção)
+**Observação:** Para enviar emails como `tickets@algti.com`, você precisa verificar o domínio no Brevo:
+- Acesse: **Transacional → Configurações → Remetentes**
+- Adicione e verifique `tickets@algti.com`
+- Configure registros DNS (SPF, DKIM) conforme instruções do Brevo
+
+### Opção 2: Gmail (Alternativa)
 
 1. **Criar conta no SendGrid:**
    - Acesse: https://sendgrid.com
