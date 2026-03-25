@@ -32,22 +32,31 @@ O sistema agora possui **notificações por e-mail transacional** que enviam men
 
 ## 🔧 Configuração
 
-### Opção 1: Brevo (Configuração Atual - RECOMENDADO) ⭐
+### Opção 1: Gmail Workspace (RECOMENDADO) ⭐
 
-**Plano Gratuito: 300 emails/dia**
+**Melhor opção se você tem Google Workspace com domínio próprio**
 
-1. **Credenciais já configuradas:**
-   - Servidor: `smtp-relay.brevo.com`
-   - Porta: `587`
-   - Login: `a6066d001@smtp-brevo.com`
-   - Senha: `0v7TVbOfEkF283Ap`
+**Vantagens:**
+- ✅ **2.000 emails/dia** (muito mais que serviços gratuitos)
+- ✅ Domínio próprio já configurado (`@algti.com`)
+- ✅ Excelente deliverability (não vai para spam)
+- ✅ Sem custo adicional (já incluído no Workspace)
+- ✅ Confiável e profissional
+
+1. **Criar Senha de App no Gmail Workspace:**
+   - Acesse: https://myaccount.google.com/apppasswords
+   - Faça login com `tickets@algti.com`
+   - Selecione **App**: Mail
+   - Selecione **Dispositivo**: Outro (nome personalizado) → "Sistema de Tickets"
+   - Clique em **Gerar**
+   - Copie a senha de 16 caracteres (ex: `xxxx xxxx xxxx xxxx`)
 
 2. **Configurar .env:**
 ```bash
-SMTP_SERVER=smtp-relay.brevo.com
+SMTP_SERVER=smtp.gmail.com
 SMTP_PORT=587
-SMTP_USERNAME=a6066d001@smtp-brevo.com
-SMTP_PASSWORD=0v7TVbOfEkF283Ap
+SMTP_USERNAME=tickets@algti.com
+SMTP_PASSWORD=xxxx-xxxx-xxxx-xxxx  # Senha de app gerada (16 caracteres)
 SMTP_USE_TLS=true
 SMTP_FROM_EMAIL=tickets@algti.com
 SMTP_FROM_NAME=Sistema de Tickets ALG TI
@@ -55,16 +64,49 @@ ADMIN_NOTIFICATION_EMAIL=contato@algti.com
 EMAIL_ENABLED=true
 ```
 
-**Observação:** Para enviar emails como `tickets@algti.com`, você precisa verificar o domínio no Brevo:
-- Acesse: **Transacional → Configurações → Remetentes**
-- Adicione e verifique `tickets@algti.com`
-- Configure registros DNS (SPF, DKIM) conforme instruções do Brevo
+**Observações importantes:**
+- ⚠️ **NÃO use sua senha normal do Gmail**, use apenas senha de app
+- ⚠️ Você precisa ter **2FA (verificação em duas etapas)** ativada para gerar senhas de app
+- ✅ A senha de app tem 16 caracteres sem espaços (ex: `abcdabcdabcdabcd`)
 
-### Opção 2: Gmail (Alternativa)
+### Opção 2: Brevo (ex-Sendinblue) - Alternativa Gratuita
+
+**Boa opção se você NÃO tem Google Workspace**
+
+**Vantagens:**
+- ✅ **300 emails/dia grátis**
+- ✅ SMTP profissional
+- ✅ Painel com estatísticas de envio
+- ✅ Fácil configuração
+
+1. **Criar conta no Brevo:**
+   - Acesse: https://www.brevo.com
+   - Crie conta gratuita
+
+2. **Obter credenciais SMTP:**
+   - Vá em **Transacional** → **Configurações** → **SMTP & API**
+   - Copie as credenciais SMTP
+
+3. **Configurar .env:**
+```bash
+SMTP_SERVER=smtp-relay.brevo.com
+SMTP_PORT=587
+SMTP_USERNAME=seu-login@smtp-brevo.com
+SMTP_PASSWORD=sua-chave-smtp
+SMTP_USE_TLS=true
+SMTP_FROM_EMAIL=tickets@algti.com
+SMTP_FROM_NAME=Sistema de Tickets ALG TI
+ADMIN_NOTIFICATION_EMAIL=contato@algti.com
+EMAIL_ENABLED=true
+```
+
+### Opção 3: SendGrid
+
+**Observação:** SendGrid agora é pago. Não recomendado para novos projetos.
 
 1. **Criar conta no SendGrid:**
    - Acesse: https://sendgrid.com
-   - Crie uma conta gratuita (100 emails/dia)
+   - Planos pagos disponíveis
 
 2. **Criar API Key:**
    - Settings → API Keys → Create API Key
@@ -120,7 +162,17 @@ ADMIN_NOTIFICATION_EMAIL=admin@algti.com
 EMAIL_ENABLED=true
 ```
 
-## 🚀 Aplicar na VPS
+## � Comparação de Serviços
+
+| Serviço | Emails Grátis | Deliverability | Domínio Próprio | Recomendado? |
+|---------|---------------|----------------|------------------|-------------|
+| **Gmail Workspace** | 2.000/dia | ✅ Excelente | ✅ Sim | ✅ **SIM** (melhor opção) |
+| **Brevo** | 300/dia | ✅ Boa | ⚠️ Precisa configurar | ✅ SIM (alternativa) |
+| **Mailgun** | 1.000/mês | ✅ Boa | ⚠️ Precisa configurar | ⚠️ OK |
+| **SendGrid** | Pago | ✅ Boa | ⚠️ Precisa configurar | ❌ Não (pago) |
+| **Gmail Pessoal** | 500/dia | ✅ Boa | ❌ Não | ⚠️ Só para testes |
+
+## �🚀 Aplicar na VPS
 
 ### 1. Fazer Pull das Alterações
 
@@ -136,7 +188,20 @@ cd /var/www/sistema-tickets-ti/backend
 nano .env
 ```
 
-Adicione as configurações de e-mail conforme uma das opções acima.
+**Para Gmail Workspace (Recomendado):**
+```bash
+SMTP_SERVER=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USERNAME=tickets@algti.com
+SMTP_PASSWORD=sua-senha-de-app-16-caracteres
+SMTP_USE_TLS=true
+SMTP_FROM_EMAIL=tickets@algti.com
+SMTP_FROM_NAME=Sistema de Tickets ALG TI
+ADMIN_NOTIFICATION_EMAIL=contato@algti.com
+EMAIL_ENABLED=true
+```
+
+Salvar: `Ctrl+O`, `Enter`, `Ctrl+X`
 
 ### 3. Instalar Dependências (se necessário)
 
@@ -275,8 +340,8 @@ sudo journalctl -u tickets-backend -n 50
 ## 📝 Exemplo de Email Recebido
 
 ```
-De: Sistema de Tickets ALG TI <noreply@algti.com>
-Para: admin@algti.com
+De: Sistema de Tickets ALG TI <tickets@algti.com>
+Para: contato@algti.com
 Assunto: [Novo Ticket #123] Problema com impressora
 
 Novo Ticket Criado

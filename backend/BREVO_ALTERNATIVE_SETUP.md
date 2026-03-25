@@ -1,13 +1,22 @@
-# 📧 Configurar Domínio @algti.com no Brevo
+# 📧 Brevo - Alternativa ao Gmail Workspace
 
-## 🎯 Objetivo
+## 🎯 Quando Usar
 
-Configurar o domínio `algti.com` no Brevo para enviar emails como `tickets@algti.com` em vez de usar o domínio do Brevo.
+Use o Brevo se você **NÃO tem Google Workspace** ou prefere um serviço de email transacional dedicado.
+
+**Recomendação:** Se você tem Gmail Workspace (`tickets@algti.com`), use-o em vez do Brevo. É mais simples e tem melhor deliverability.
+
+## 📋 Vantagens do Brevo
+
+- ✅ **300 emails/dia grátis**
+- ✅ Painel com estatísticas de envio
+- ✅ SMTP profissional
+- ✅ Fácil configuração
 
 ## ⚠️ Importante
 
-Atualmente, os emails serão enviados usando as credenciais do Brevo, mas o remetente pode aparecer como:
-- **Sem configuração de domínio**: Emails podem ser marcados como spam ou mostrar "via brevo.com"
+Os emails serão enviados usando as credenciais do Brevo. Para melhor deliverability:
+- **Sem configuração de domínio**: Emails podem mostrar "via brevo.com"
 - **Com configuração de domínio**: Emails aparecem como vindos diretamente de `tickets@algti.com`
 
 ## 📋 Passo a Passo
