@@ -7,6 +7,7 @@ import os
 import uuid
 from datetime import datetime
 from app.core.database import get_db
+from app.core.timezone import get_brazil_now
 from app.core.deps import get_current_user, get_current_technician, get_user_from_token_param
 from app.models.models import (
     Ticket, TicketComment, TicketAttachment, TicketActivity, 
@@ -453,14 +454,14 @@ async def update_ticket(
     # Handle status changes
     if 'status' in update_data:
         if update_data['status'] == TicketStatus.RESOLVED:
-            ticket.resolved_at = datetime.utcnow()
+            ticket.resolved_at = get_brazil_now()
         elif update_data['status'] == TicketStatus.CLOSED:
             # When closing a ticket, set both closed_at and resolved_at (if not already set)
-            ticket.closed_at = datetime.utcnow()
+            ticket.closed_at = get_brazil_now()
             if not ticket.resolved_at:
-                ticket.resolved_at = datetime.utcnow()
+                ticket.resolved_at = get_brazil_now()
     
-    ticket.updated_at = datetime.utcnow()
+    ticket.updated_at = get_brazil_now()
     
     # Create activity logs for changes
     for change in changes:

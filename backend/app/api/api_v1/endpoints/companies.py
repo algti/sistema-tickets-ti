@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 from datetime import datetime
 from app.core.database import get_db
+from app.core.timezone import get_brazil_now
 from app.core.deps import get_current_user, get_current_admin, get_current_technician
 from app.models.models import Company as CompanyModel, User as UserModel, ContractStatus
 from app.schemas.schemas import Company, CompanyCreate, CompanyUpdate, User as UserSchema
@@ -154,7 +155,7 @@ async def update_company(
     for field, value in update_data.items():
         setattr(company, field, value)
     
-    company.updated_at = datetime.utcnow()
+    company.updated_at = get_brazil_now()
     db.commit()
     db.refresh(company)
     
@@ -176,7 +177,7 @@ async def deactivate_company(
         )
     
     company.is_active = False
-    company.updated_at = datetime.utcnow()
+    company.updated_at = get_brazil_now()
     db.commit()
     
     return {"message": "Company deactivated successfully"}
@@ -197,7 +198,7 @@ async def activate_company(
         )
     
     company.is_active = True
-    company.updated_at = datetime.utcnow()
+    company.updated_at = get_brazil_now()
     db.commit()
     
     return {"message": "Company activated successfully"}

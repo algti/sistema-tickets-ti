@@ -5,6 +5,7 @@ from datetime import datetime, timedelta
 from typing import Optional
 
 from app.core.database import get_db
+from app.core.timezone import get_brazil_now
 from app.core.deps import get_current_active_user
 from app.models.models import Ticket, TicketStatus, TicketPriority, Category, User, UserRole, TicketActivity
 from app.schemas.schemas import DashboardStats
@@ -24,7 +25,7 @@ async def get_dashboard_stats(
     
     # Date range - only apply if days parameter is reasonable
     if days < 365:
-        end_date = datetime.utcnow()
+        end_date = get_brazil_now()
         start_date = end_date - timedelta(days=days)
         date_filter = Ticket.created_at >= start_date
     else:
@@ -139,7 +140,7 @@ async def get_dashboard_stats(
             avg_time_open = total_open_time / valid_open_tickets
     
     # Tickets closed this month
-    current_month_start = datetime.utcnow().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    current_month_start = get_brazil_now().replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     closed_this_month = base_query.filter(
         Ticket.status.in_([TicketStatus.RESOLVED, TicketStatus.CLOSED]),
         Ticket.resolved_at >= current_month_start
@@ -239,7 +240,7 @@ async def get_tickets_by_month(
         extract('month', Ticket.created_at).label('month'),
         func.count(Ticket.id).label('count')
     ).filter(
-        Ticket.created_at >= datetime.utcnow() - timedelta(days=months * 30)
+        Ticket.created_at >= get_brazil_now() - timedelta(days=months * 30)
     )
     
     # Apply role-based filtering
@@ -295,7 +296,7 @@ async def get_technician_performance(
         return []
     
     # Date range
-    end_date = datetime.utcnow()
+    end_date = get_brazil_now()
     start_date = end_date - timedelta(days=days)
     
     # Base query for technician statistics
@@ -353,7 +354,7 @@ async def get_priority_trends(
         user_role_str = user_role.value.lower()
     
     # Date range
-    end_date = datetime.utcnow()
+    end_date = get_brazil_now()
     start_date = end_date - timedelta(days=days)
     
     # Base query for priority trends by week

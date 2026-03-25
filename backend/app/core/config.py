@@ -9,6 +9,9 @@ class Settings(BaseSettings):
     API_V1_STR: str = "/api/v1"
     DEBUG: bool = False
     
+    # Timezone
+    TIMEZONE: str = "America/Sao_Paulo"  # Horário de Brasília (UTC-3)
+    
     # Database
     DATABASE_URL: str = "postgresql://tickets_user:tickets_password@localhost:5432/tickets_db"
     
