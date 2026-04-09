@@ -56,7 +56,7 @@ O sistema agora possui **notificações por e-mail transacional** que enviam men
 SMTP_SERVER=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USERNAME=tickets@algti.com
-SMTP_PASSWORD=xxxx-xxxx-xxxx-xxxx  # Senha de app gerada (16 caracteres)
+SMTP_PASSWORD=qidh cofx laiz xkfv  # Senha de app gerada (16 caracteres)
 SMTP_USE_TLS=true
 SMTP_FROM_EMAIL=tickets@algti.com
 SMTP_FROM_NAME=Sistema de Tickets ALG TI
