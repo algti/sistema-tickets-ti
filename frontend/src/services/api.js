@@ -318,8 +318,14 @@ export const settingsAPI = settingsService;
 // Reports API
 const reportsService = {
   // Performance reports
-  getTechnicianPerformance: (days = 30, technicianId = null) => {
-    const params = new URLSearchParams({ days: days.toString() });
+  getTechnicianPerformance: (days = 30, technicianId = null, startDate = null, endDate = null) => {
+    const params = new URLSearchParams();
+    if (startDate && endDate) {
+      params.append('start_date', startDate);
+      params.append('end_date', endDate);
+    } else {
+      params.append('days', days.toString());
+    }
     if (technicianId) params.append('technician_id', technicianId.toString());
     return authAPI.get(`/reports/performance/technicians?${params}`);
   },
@@ -338,7 +344,71 @@ const reportsService = {
   
   // Export data
   getExportData: (reportType, days = 30, format = 'json') => 
-    authAPI.get(`/reports/export/data?report_type=${reportType}&days=${days}&format=${format}`)
+    authAPI.get(`/reports/export/data?report_type=${reportType}&days=${days}&format=${format}`),
+  
+  // Novos relatórios customizados com filtros de data
+  getGeneralReport: (startDate, endDate) => {
+    const params = new URLSearchParams({ start_date: startDate, end_date: endDate });
+    return authAPI.get(`/reports/general?${params}`);
+  },
+  
+  getReportByCompany: (startDate, endDate, companyId = null) => {
+    const params = new URLSearchParams({ start_date: startDate, end_date: endDate });
+    if (companyId) params.append('company_id', companyId.toString());
+    return authAPI.get(`/reports/by-company?${params}`);
+  },
+  
+  getReportByUser: (startDate, endDate, userId = null) => {
+    const params = new URLSearchParams({ start_date: startDate, end_date: endDate });
+    if (userId) params.append('user_id', userId.toString());
+    return authAPI.get(`/reports/by-user?${params}`);
+  },
+  
+  getReportByUserCompany: (startDate, endDate, companyId = null, userId = null) => {
+    const params = new URLSearchParams({ start_date: startDate, end_date: endDate });
+    if (companyId) params.append('company_id', companyId.toString());
+    if (userId) params.append('user_id', userId.toString());
+    return authAPI.get(`/reports/by-user-company?${params}`);
+  },
+  
+  getReportByCategory: (startDate, endDate, categoryId = null) => {
+    const params = new URLSearchParams({ start_date: startDate, end_date: endDate });
+    if (categoryId) params.append('category_id', categoryId.toString());
+    return authAPI.get(`/reports/by-category?${params}`);
+  },
+  
+  getDetailedCompanyUserReport: (startDate, endDate, companyId = null, userId = null) => {
+    const params = new URLSearchParams({ start_date: startDate, end_date: endDate });
+    if (companyId) params.append('company_id', companyId.toString());
+    if (userId) params.append('user_id', userId.toString());
+    return authAPI.get(`/reports/detailed-company-user?${params}`);
+  },
+  
+  // Relatórios avançados adicionais
+  getSatisfactionAnalysis: (startDate, endDate) => {
+    const params = new URLSearchParams({ start_date: startDate, end_date: endDate });
+    return authAPI.get(`/reports/advanced/satisfaction-analysis?${params}`);
+  },
+  
+  getReopenedAnalysis: (startDate, endDate) => {
+    const params = new URLSearchParams({ start_date: startDate, end_date: endDate });
+    return authAPI.get(`/reports/advanced/reopened-analysis?${params}`);
+  },
+  
+  getProductivityAnalysis: (startDate, endDate) => {
+    const params = new URLSearchParams({ start_date: startDate, end_date: endDate });
+    return authAPI.get(`/reports/advanced/productivity-analysis?${params}`);
+  },
+  
+  getFinancialConsolidated: (startDate, endDate) => {
+    const params = new URLSearchParams({ start_date: startDate, end_date: endDate });
+    return authAPI.get(`/reports/advanced/financial-consolidated?${params}`);
+  },
+  
+  getWorkloadDistribution: (startDate, endDate) => {
+    const params = new URLSearchParams({ start_date: startDate, end_date: endDate });
+    return authAPI.get(`/reports/advanced/workload-distribution?${params}`);
+  }
 };
 
 export const evaluationsAPI = evaluationsService;

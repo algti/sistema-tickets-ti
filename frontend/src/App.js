@@ -22,6 +22,7 @@ import Templates from './pages/Templates';
 import KnowledgeBase from './pages/KnowledgeBase';
 import Assets from './pages/Assets';
 import AdvancedReports from './pages/AdvancedReports';
+import CustomReports from './pages/CustomReports';
 import WebSocketTest from './pages/WebSocketTest';
 import LoadingSpinner from './components/LoadingSpinner';
 
@@ -152,6 +153,14 @@ function AppRoutes() {
           element={
             <TechnicianRoute>
               <AdvancedReports />
+            </TechnicianRoute>
+          } 
+        />
+        <Route 
+          path="custom-reports" 
+          element={
+            <TechnicianRoute>
+              <CustomReports />
             </TechnicianRoute>
           } 
         />

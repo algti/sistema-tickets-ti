@@ -29,12 +29,26 @@ const AdvancedReports = () => {
   const [departmentData, setDepartmentData] = useState(null);
   const [timelineData, setTimelineData] = useState(null);
   const [slaData, setSlaData] = useState(null);
+  const [satisfactionData, setSatisfactionData] = useState(null);
+  const [reopenedData, setReopenedData] = useState(null);
+  const [productivityData, setProductivityData] = useState(null);
+  const [financialData, setFinancialData] = useState(null);
+  const [workloadData, setWorkloadData] = useState(null);
+
+  // Date range for advanced reports
+  const [startDate, setStartDate] = useState('');
+  const [endDate, setEndDate] = useState('');
 
   const tabs = [
     { id: 'performance', name: 'Performance', icon: ChartBarIcon },
     { id: 'department', name: 'Departamentos', icon: UserGroupIcon },
     { id: 'timeline', name: 'Timeline', icon: CalendarIcon },
-    { id: 'sla', name: 'SLA', icon: ClockIcon }
+    { id: 'sla', name: 'SLA', icon: ClockIcon },
+    { id: 'satisfaction', name: 'Satisfação', icon: CheckCircleIcon },
+    { id: 'reopened', name: 'Reincidência', icon: ChartBarIcon },
+    { id: 'productivity', name: 'Produtividade', icon: ClockIcon },
+    { id: 'financial', name: 'Financeiro', icon: ChartBarIcon },
+    { id: 'workload', name: 'Carga de Trabalho', icon: UserGroupIcon }
   ];
 
   const timeRanges = [
@@ -54,12 +68,20 @@ const AdvancedReports = () => {
   const colors = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#F97316'];
 
   useEffect(() => {
+    const today = new Date();
+    const firstDay = new Date(today.getFullYear(), today.getMonth(), 1);
+    setEndDate(today.toISOString().split('T')[0]);
+    setStartDate(firstDay.toISOString().split('T')[0]);
+  }, []);
+
+  useEffect(() => {
     loadData();
-  }, [timeRange, interval]);
+  }, [timeRange, interval, activeTab, startDate, endDate]);
 
   const loadData = async () => {
     setLoading(true);
     try {
+      // Carregar relatórios básicos
       const [performance, department, timeline, sla] = await Promise.all([
         reportsAPI.getTechnicianPerformance(timeRange),
         reportsAPI.getDepartmentMetrics(timeRange),
@@ -71,6 +93,23 @@ const AdvancedReports = () => {
       setDepartmentData(department.data);
       setTimelineData(timeline.data);
       setSlaData(sla.data);
+
+      // Carregar relatórios avançados se as datas estiverem definidas
+      if (startDate && endDate) {
+        const [satisfaction, reopened, productivity, financial, workload] = await Promise.all([
+          reportsAPI.getSatisfactionAnalysis(startDate, endDate),
+          reportsAPI.getReopenedAnalysis(startDate, endDate),
+          reportsAPI.getProductivityAnalysis(startDate, endDate),
+          reportsAPI.getFinancialConsolidated(startDate, endDate),
+          reportsAPI.getWorkloadDistribution(startDate, endDate)
+        ]);
+
+        setSatisfactionData(satisfaction.data);
+        setReopenedData(reopened.data);
+        setProductivityData(productivity.data);
+        setFinancialData(financial.data);
+        setWorkloadData(workload.data);
+      }
     } catch (error) {
       console.error('Error loading reports data:', error);
     } finally {
@@ -384,6 +423,315 @@ const AdvancedReports = () => {
     );
   };
 
+  const renderSatisfactionCharts = () => {
+    if (!satisfactionData || !satisfactionData.summary) return <div>Carregando dados de satisfação...</div>;
+
+    const ratingsData = Object.entries(satisfactionData.ratings_distribution || {}).map(([rating, count]) => ({
+      rating: `${rating} estrelas`,
+      count
+    }));
+
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-gradient-to-br from-yellow-500 to-yellow-600 text-white p-6 rounded-lg">
+            <p className="text-sm opacity-90">Avaliações Totais</p>
+            <p className="text-3xl font-bold">{satisfactionData.summary.total_evaluations}</p>
+          </div>
+          <div className="bg-gradient-to-br from-green-500 to-green-600 text-white p-6 rounded-lg">
+            <p className="text-sm opacity-90">Média Geral</p>
+            <p className="text-3xl font-bold">⭐ {satisfactionData.summary.avg_rating}</p>
+          </div>
+          <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-6 rounded-lg">
+            <p className="text-sm opacity-90">Taxa de Satisfação</p>
+            <p className="text-3xl font-bold">{satisfactionData.summary.satisfaction_rate}%</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-lg font-medium mb-4">Distribuição de Avaliações</h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={ratingsData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="rating" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="count" fill="#F59E0B" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-lg font-medium mb-4">Avaliações por Técnico</h3>
+            <div className="space-y-3">
+              {satisfactionData.by_technician?.map((tech, idx) => (
+                <div key={idx} className="flex justify-between items-center p-3 bg-gray-50 rounded">
+                  <span className="font-medium">{tech.technician_name}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm text-gray-600">{tech.total_evaluations} avaliações</span>
+                    <span className="px-3 py-1 bg-yellow-100 text-yellow-800 rounded font-bold">
+                      ⭐ {tech.avg_rating}
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderReopenedCharts = () => {
+    if (!reopenedData || !reopenedData.summary) return <div>Carregando dados de reincidência...</div>;
+
+    const categoryData = Object.entries(reopenedData.by_category || {}).map(([category, count]) => ({
+      category,
+      count
+    }));
+
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-6 rounded-lg">
+            <p className="text-sm opacity-90">Total de Tickets</p>
+            <p className="text-3xl font-bold">{reopenedData.summary.total_tickets}</p>
+          </div>
+          <div className="bg-gradient-to-br from-red-500 to-red-600 text-white p-6 rounded-lg">
+            <p className="text-sm opacity-90">Tickets Reabertos</p>
+            <p className="text-3xl font-bold">{reopenedData.summary.reopened_tickets}</p>
+          </div>
+          <div className="bg-gradient-to-br from-orange-500 to-orange-600 text-white p-6 rounded-lg">
+            <p className="text-sm opacity-90">Taxa de Reincidência</p>
+            <p className="text-3xl font-bold">{reopenedData.summary.reopened_rate}%</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-lg font-medium mb-4">Reincidência por Categoria</h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={categoryData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="category" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="count" fill="#EF4444" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-lg font-medium mb-4">Reincidência por Técnico</h3>
+            <div className="space-y-2">
+              {Object.entries(reopenedData.by_technician || {}).map(([tech, count], idx) => (
+                <div key={idx} className="flex justify-between items-center p-2 bg-gray-50 rounded">
+                  <span>{tech}</span>
+                  <span className="px-3 py-1 bg-red-100 text-red-800 rounded font-bold">{count}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderProductivityCharts = () => {
+    if (!productivityData) return <div>Carregando dados de produtividade...</div>;
+
+    const hourData = Object.entries(productivityData.by_hour || {}).map(([hour, count]) => ({
+      hour: `${hour}h`,
+      tickets: count
+    }));
+
+    const weekdayData = Object.entries(productivityData.by_weekday || {}).map(([day, count]) => ({
+      day,
+      tickets: count
+    }));
+
+    return (
+      <div className="space-y-6">
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-lg font-medium mb-4">Tickets por Hora do Dia</h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <AreaChart data={hourData}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="hour" />
+              <YAxis />
+              <Tooltip />
+              <Area type="monotone" dataKey="tickets" stroke="#3B82F6" fill="#3B82F6" fillOpacity={0.6} />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-lg font-medium mb-4">Tickets por Dia da Semana</h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={weekdayData}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="day" />
+                <YAxis />
+                <Tooltip />
+                <Bar dataKey="tickets" fill="#10B981" />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+
+          <div className="bg-white p-6 rounded-lg shadow">
+            <h3 className="text-lg font-medium mb-4">Horários de Pico</h3>
+            <div className="space-y-3">
+              {productivityData.peak_hours?.map((peak, idx) => (
+                <div key={idx} className="flex justify-between items-center p-4 bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg">
+                  <span className="font-bold text-lg">#{idx + 1} - {peak.hour}</span>
+                  <span className="px-4 py-2 bg-blue-600 text-white rounded-lg font-bold">{peak.tickets} tickets</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderFinancialCharts = () => {
+    if (!financialData || !financialData.summary) return <div>Carregando dados financeiros...</div>;
+
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="bg-gradient-to-br from-green-500 to-green-600 text-white p-6 rounded-lg">
+            <p className="text-sm opacity-90">Receita Total</p>
+            <p className="text-3xl font-bold">R$ {financialData.summary.total_revenue.toLocaleString('pt-BR')}</p>
+          </div>
+          <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-6 rounded-lg">
+            <p className="text-sm opacity-90">Contratos</p>
+            <p className="text-3xl font-bold">R$ {financialData.summary.contract_revenue.toLocaleString('pt-BR')}</p>
+          </div>
+          <div className="bg-gradient-to-br from-purple-500 to-purple-600 text-white p-6 rounded-lg">
+            <p className="text-sm opacity-90">Por Hora</p>
+            <p className="text-3xl font-bold">R$ {financialData.summary.hourly_revenue.toLocaleString('pt-BR')}</p>
+          </div>
+          <div className="bg-gradient-to-br from-orange-500 to-orange-600 text-white p-6 rounded-lg">
+            <p className="text-sm opacity-90">Empresas</p>
+            <p className="text-3xl font-bold">{financialData.summary.total_companies}</p>
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-lg font-medium mb-4">Ranking de Empresas por Receita</h3>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Empresa</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tipo</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Tickets</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Horas</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Receita</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {financialData.companies?.map((company, idx) => (
+                  <tr key={idx}>
+                    <td className="px-6 py-4 whitespace-nowrap font-medium">{company.company_name}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className={`px-2 py-1 rounded text-xs ${
+                        company.billing_type === 'contract' ? 'bg-blue-100 text-blue-800' : 'bg-purple-100 text-purple-800'
+                      }`}>
+                        {company.billing_type === 'contract' ? 'Contrato' : 'Por Hora'}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">{company.total_tickets}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">{company.total_hours}h</td>
+                    <td className="px-6 py-4 whitespace-nowrap font-bold text-green-600">
+                      R$ {company.revenue.toLocaleString('pt-BR')}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const renderWorkloadCharts = () => {
+    if (!workloadData || !workloadData.summary) return <div>Carregando dados de carga de trabalho...</div>;
+
+    return (
+      <div className="space-y-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div className="bg-gradient-to-br from-blue-500 to-blue-600 text-white p-6 rounded-lg">
+            <p className="text-sm opacity-90">Total Técnicos</p>
+            <p className="text-3xl font-bold">{workloadData.summary.total_technicians}</p>
+          </div>
+          <div className="bg-gradient-to-br from-green-500 to-green-600 text-white p-6 rounded-lg">
+            <p className="text-sm opacity-90">Total Tickets</p>
+            <p className="text-3xl font-bold">{workloadData.summary.total_tickets}</p>
+          </div>
+          <div className="bg-gradient-to-br from-purple-500 to-purple-600 text-white p-6 rounded-lg">
+            <p className="text-sm opacity-90">Média por Técnico</p>
+            <p className="text-3xl font-bold">{workloadData.summary.avg_tickets_per_technician}</p>
+          </div>
+          <div className="bg-gradient-to-br from-red-500 to-red-600 text-white p-6 rounded-lg">
+            <p className="text-sm opacity-90">Sobrecarregados</p>
+            <p className="text-3xl font-bold">{workloadData.summary.overloaded_count}</p>
+          </div>
+        </div>
+
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-lg font-medium mb-4">Distribuição de Carga de Trabalho</h3>
+          <div className="overflow-x-auto">
+            <table className="min-w-full divide-y divide-gray-200">
+              <thead className="bg-gray-50">
+                <tr>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Técnico</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Total Atribuído</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Ativos</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Horas Totais</th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Média/Ticket</th>
+                </tr>
+              </thead>
+              <tbody className="bg-white divide-y divide-gray-200">
+                {workloadData.workload?.map((tech, idx) => (
+                  <tr key={idx}>
+                    <td className="px-6 py-4 whitespace-nowrap font-medium">{tech.technician_name}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">{tech.total_assigned}</td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <span className="px-2 py-1 bg-blue-100 text-blue-800 rounded">{tech.active_tickets}</span>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">{tech.total_hours}h</td>
+                    <td className="px-6 py-4 whitespace-nowrap">{tech.avg_hours_per_ticket}h</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {workloadData.overloaded_technicians?.length > 0 && (
+          <div className="bg-red-50 border border-red-200 p-6 rounded-lg">
+            <h3 className="text-lg font-medium text-red-800 mb-3">⚠️ Técnicos Sobrecarregados</h3>
+            <div className="space-y-2">
+              {workloadData.overloaded_technicians.map((tech, idx) => (
+                <div key={idx} className="flex justify-between items-center p-3 bg-white rounded">
+                  <span className="font-medium">{tech.technician_name}</span>
+                  <span className="px-3 py-1 bg-red-600 text-white rounded font-bold">
+                    {tech.total_assigned} tickets ({tech.active_tickets} ativos)
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
   const renderContent = () => {
     if (loading) {
       return (
@@ -402,6 +750,16 @@ const AdvancedReports = () => {
         return renderTimelineCharts();
       case 'sla':
         return renderSLACharts();
+      case 'satisfaction':
+        return renderSatisfactionCharts();
+      case 'reopened':
+        return renderReopenedCharts();
+      case 'productivity':
+        return renderProductivityCharts();
+      case 'financial':
+        return renderFinancialCharts();
+      case 'workload':
+        return renderWorkloadCharts();
       default:
         return null;
     }
@@ -420,32 +778,53 @@ const AdvancedReports = () => {
               </p>
             </div>
             <div className="flex items-center space-x-4">
-              {/* Time Range Selector */}
-              <select
-                value={timeRange}
-                onChange={(e) => setTimeRange(parseInt(e.target.value))}
-                className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-              >
-                {timeRanges.map(range => (
-                  <option key={range.value} value={range.value}>
-                    {range.label}
-                  </option>
-                ))}
-              </select>
+              {/* Date Range for Advanced Reports */}
+              {['satisfaction', 'reopened', 'productivity', 'financial', 'workload'].includes(activeTab) ? (
+                <>
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  />
+                  <span className="text-gray-500">até</span>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  />
+                </>
+              ) : (
+                <>
+                  {/* Time Range Selector */}
+                  <select
+                    value={timeRange}
+                    onChange={(e) => setTimeRange(parseInt(e.target.value))}
+                    className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  >
+                    {timeRanges.map(range => (
+                      <option key={range.value} value={range.value}>
+                        {range.label}
+                      </option>
+                    ))}
+                  </select>
 
-              {/* Interval Selector for Timeline */}
-              {activeTab === 'timeline' && (
-                <select
-                  value={interval}
-                  onChange={(e) => setInterval(e.target.value)}
-                  className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
-                >
-                  {intervals.map(int => (
-                    <option key={int.value} value={int.value}>
-                      {int.label}
-                    </option>
-                  ))}
-                </select>
+                  {/* Interval Selector for Timeline */}
+                  {activeTab === 'timeline' && (
+                    <select
+                      value={interval}
+                      onChange={(e) => setInterval(e.target.value)}
+                      className="rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    >
+                      {intervals.map(int => (
+                        <option key={int.value} value={int.value}>
+                          {int.label}
+                        </option>
+                      ))}
+                    </select>
+                  )}
+                </>
               )}
 
               {/* Export Buttons */}
