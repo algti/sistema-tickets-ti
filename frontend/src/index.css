@@ -936,3 +936,8 @@ div[class*="bg-"][class*="-50"] span {
   color: var(--text-primary) !important;
   border: 1px solid var(--border-subtle) !important;
 }
+
+/* Ensure dropdowns always appear above other content */
+.absolute.z-50 {
+  z-index: 9999 !important;
+}
