@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ticketsService, companiesService } from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -18,6 +18,8 @@ function Tickets() {
   });
   const [companies, setCompanies] = useState([]);
   const [showStatusDropdown, setShowStatusDropdown] = useState(false);
+  const statusButtonRef = useRef(null);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
   
   const statusOptions = [
     { value: 'open', label: 'Aberto' },
@@ -225,10 +227,21 @@ function Tickets() {
               ))}
             </select>
           </div>
-          <div className="relative" style={{ zIndex: 1000 }}>
+          <div className="relative">
             <button
+              ref={statusButtonRef}
               type="button"
-              onClick={() => setShowStatusDropdown(!showStatusDropdown)}
+              onClick={() => {
+                if (!showStatusDropdown && statusButtonRef.current) {
+                  const rect = statusButtonRef.current.getBoundingClientRect();
+                  setDropdownPosition({
+                    top: rect.bottom + window.scrollY,
+                    left: rect.left + window.scrollX,
+                    width: rect.width
+                  });
+                }
+                setShowStatusDropdown(!showStatusDropdown);
+              }}
               className="input-field w-full text-left flex items-center justify-between"
             >
               <span>
@@ -241,7 +254,15 @@ function Tickets() {
               </svg>
             </button>
             {showStatusDropdown && (
-              <div className="absolute mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto" style={{ zIndex: 9999 }}>
+              <div 
+                className="fixed bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto"
+                style={{ 
+                  zIndex: 9999,
+                  top: `${dropdownPosition.top + 4}px`,
+                  left: `${dropdownPosition.left}px`,
+                  width: `${dropdownPosition.width}px`
+                }}
+              >
                 {statusOptions.map(option => (
                   <label
                     key={option.value}
