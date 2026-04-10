@@ -32,88 +32,9 @@ function Assets() {
   // const [viewingAsset, setViewingAsset] = useState(null);
   const [formData, setFormData] = useState({});
 
-  // Mock data
-  const mockAssets = [
-    {
-      id: 1,
-      name: 'Notebook Dell Latitude 5520',
-      asset_tag: 'NB-001',
-      serial_number: 'DL5520-2023-001',
-      category_id: 1,
-      status: 'active',
-      location: 'TI - Sala 101',
-      assigned_to: 2,
-      purchase_date: '2023-01-15',
-      warranty_expiry: '2026-01-15',
-      purchase_cost: 3500.00,
-      notes: 'Notebook para desenvolvimento',
-      created_at: new Date().toISOString(),
-      category: { name: 'Notebooks' },
-      assigned_user: { full_name: 'João Silva' },
-      maintenance_records: [
-        {
-          id: 1,
-          maintenance_type: 'preventive',
-          description: 'Limpeza e atualização de drivers',
-          performed_date: '2024-01-15',
-          cost: 0,
-          technician: { full_name: 'Admin Sistema' }
-        }
-      ]
-    },
-    {
-      id: 2,
-      name: 'Impressora HP LaserJet Pro',
-      asset_tag: 'IMP-001',
-      serial_number: 'HP-LJ-2023-001',
-      category_id: 2,
-      status: 'maintenance',
-      location: 'Administrativo - Andar 2',
-      assigned_to: null,
-      purchase_date: '2023-03-20',
-      warranty_expiry: '2025-03-20',
-      purchase_cost: 1200.00,
-      notes: 'Impressora compartilhada do setor administrativo',
-      created_at: new Date().toISOString(),
-      category: { name: 'Impressoras' },
-      assigned_user: null,
-      maintenance_records: [
-        {
-          id: 2,
-          maintenance_type: 'corrective',
-          description: 'Troca do toner e limpeza interna',
-          performed_date: '2024-02-10',
-          cost: 150.00,
-          technician: { full_name: 'João Silva' }
-        }
-      ]
-    },
-    {
-      id: 3,
-      name: 'Monitor Samsung 24"',
-      asset_tag: 'MON-001',
-      serial_number: 'SM24-2023-001',
-      category_id: 3,
-      status: 'retired',
-      location: 'Estoque - Depósito',
-      assigned_to: null,
-      purchase_date: '2021-05-10',
-      warranty_expiry: '2023-05-10',
-      purchase_cost: 800.00,
-      notes: 'Monitor com defeito na tela, substituído',
-      created_at: new Date().toISOString(),
-      category: { name: 'Monitores' },
-      assigned_user: null,
-      maintenance_records: []
-    }
-  ];
-
-  const mockCategories = [
-    { id: 1, name: 'Notebooks', description: 'Computadores portáteis' },
-    { id: 2, name: 'Impressoras', description: 'Equipamentos de impressão' },
-    { id: 3, name: 'Monitores', description: 'Monitores e displays' },
-    { id: 4, name: 'Desktops', description: 'Computadores de mesa' }
-  ];
+  // Dados reais serão carregados da API
+  const mockAssets = [];
+  const mockCategories = [];
 
   useEffect(() => {
     loadData();
@@ -122,11 +43,16 @@ function Assets() {
   const loadData = async () => {
     try {
       setLoading(true);
-      setTimeout(() => {
-        setAssets(mockAssets);
-        setCategories(mockCategories);
-        setLoading(false);
-      }, 1000);
+      // TODO: Implementar chamadas reais à API quando os endpoints estiverem prontos
+      // const assetsResponse = await assetsAPI.getAssets();
+      // const categoriesResponse = await assetsAPI.getCategories();
+      // setAssets(assetsResponse.data);
+      // setCategories(categoriesResponse.data);
+      
+      // Por enquanto, carregar arrays vazios
+      setAssets([]);
+      setCategories([]);
+      setLoading(false);
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
       setLoading(false);

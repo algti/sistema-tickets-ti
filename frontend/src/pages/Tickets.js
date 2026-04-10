@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ticketsService } from '../services/api';
+import { ticketsService, companiesService } from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
 import { useAuth } from '../contexts/AuthContext';
 import { TrashIcon } from '@heroicons/react/24/outline';
@@ -11,21 +11,38 @@ function Tickets() {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({
-    status: '',
+    status: [],
     priority: '',
-    search: ''
+    search: '',
+    company_id: ''
   });
+  const [companies, setCompanies] = useState([]);
 
   useEffect(() => {
     fetchTickets();
+    fetchCompanies();
   }, [filters]);
+
+  const fetchCompanies = async () => {
+    try {
+      const response = await companiesService.getCompanies({ is_active: true });
+      setCompanies(response.data || []);
+    } catch (error) {
+      console.error('Erro ao buscar empresas:', error);
+    }
+  };
 
   const fetchTickets = async () => {
     try {
       setLoading(true);
-      // Add cache busting parameter
+      // Converter array de status para string separada por vírgula
+      const statusParam = filters.status.length > 0 ? filters.status.join(',') : '';
+      
       const filtersWithCacheBust = {
-        ...filters,
+        search: filters.search,
+        status: statusParam,
+        priority: filters.priority,
+        company_id: filters.company_id,
         _t: Date.now()
       };
       
@@ -159,7 +176,7 @@ function Tickets() {
 
       {/* Filters */}
       <div className="card p-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <div>
             <input
               type="text"
@@ -171,11 +188,27 @@ function Tickets() {
           </div>
           <div>
             <select
-              value={filters.status}
-              onChange={(e) => setFilters({...filters, status: e.target.value})}
+              value={filters.company_id}
+              onChange={(e) => setFilters({...filters, company_id: e.target.value})}
               className="input-field"
             >
-              <option value="">Todos os Status</option>
+              <option value="">Todas as Empresas</option>
+              {companies.map(company => (
+                <option key={company.id} value={company.id}>{company.name}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <select
+              multiple
+              value={filters.status}
+              onChange={(e) => {
+                const selected = Array.from(e.target.selectedOptions, option => option.value);
+                setFilters({...filters, status: selected});
+              }}
+              className="input-field"
+              style={{ height: '42px', overflow: 'auto' }}
+            >
               <option value="open">Aberto</option>
               <option value="in_progress">Em Andamento</option>
               <option value="waiting_user">Aguardando Usuário</option>
@@ -183,6 +216,7 @@ function Tickets() {
               <option value="closed">Fechado</option>
               <option value="reopened">Reaberto</option>
             </select>
+            <div className="text-xs text-secondary mt-1">Segure Ctrl para múltipla seleção</div>
           </div>
           <div>
             <select
@@ -199,7 +233,7 @@ function Tickets() {
           </div>
           <div>
             <button
-              onClick={() => setFilters({status: '', priority: '', search: ''})}
+              onClick={() => setFilters({status: [], priority: '', search: '', company_id: ''})}
               className="btn-secondary w-full"
             >
               Limpar Filtros

@@ -20,7 +20,8 @@ function Users() {
   const [filters, setFilters] = useState({
     role: '',
     is_active: '',
-    search: ''
+    search: '',
+    company_id: ''
   });
   
   // Modal states
@@ -67,7 +68,13 @@ function Users() {
     try {
       setLoading(true);
       const response = await usersAPI.getUsers(filters);
-      setUsers(response.data);
+      // Ordenar usuários por ordem alfabética (full_name ou username)
+      const sortedUsers = (response.data || []).sort((a, b) => {
+        const nameA = (a.full_name || a.username || '').toLowerCase();
+        const nameB = (b.full_name || b.username || '').toLowerCase();
+        return nameA.localeCompare(nameB);
+      });
+      setUsers(sortedUsers);
     } catch (error) {
       console.error('Erro ao buscar usuários:', error);
     } finally {
@@ -314,7 +321,7 @@ function Users() {
 
       {/* Filters */}
       <div className="bg-white shadow rounded-lg p-4">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <div>
             <input
               type="text"
@@ -323,6 +330,18 @@ function Users() {
               onChange={(e) => setFilters({...filters, search: e.target.value})}
               className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
+          </div>
+          <div>
+            <select
+              value={filters.company_id}
+              onChange={(e) => setFilters({...filters, company_id: e.target.value})}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            >
+              <option value="">Todas as Empresas</option>
+              {companies.map(company => (
+                <option key={company.id} value={company.id}>{company.name}</option>
+              ))}
+            </select>
           </div>
           <div>
             <select
@@ -349,7 +368,7 @@ function Users() {
           </div>
           <div>
             <button
-              onClick={() => setFilters({role: '', is_active: '', search: ''})}
+              onClick={() => setFilters({role: '', is_active: '', search: '', company_id: ''})}
               className="w-full px-3 py-2 bg-gray-100 text-gray-700 rounded-md hover:bg-gray-200"
             >
               Limpar Filtros
@@ -377,6 +396,9 @@ function Users() {
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Usuário
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    Empresa
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Perfil
@@ -412,6 +434,11 @@ function Users() {
                             {userItem.email}
                           </div>
                         </div>
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="text-sm text-gray-900">
+                        {userItem.company?.name || '-'}
                       </div>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
