@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { ticketsService, companiesService } from '../services/api';
 import LoadingSpinner from '../components/LoadingSpinner';
@@ -17,6 +17,9 @@ function Tickets() {
     company_id: ''
   });
   const [companies, setCompanies] = useState([]);
+  const [showStatusDropdown, setShowStatusDropdown] = useState(false);
+  const statusButtonRef = useRef(null);
+  const [dropdownPosition, setDropdownPosition] = useState({ top: 0, left: 0, width: 0 });
   
   const statusOptions = [
     { value: 'open', label: 'Aberto' },
@@ -31,6 +34,16 @@ function Tickets() {
     fetchTickets();
     fetchCompanies();
   }, [filters]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showStatusDropdown && !event.target.closest('.relative')) {
+        setShowStatusDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showStatusDropdown]);
 
   const fetchCompanies = async () => {
     try {
@@ -191,7 +204,7 @@ function Tickets() {
       </div>
 
       {/* Filters */}
-      <div className="card p-4">
+      <div className="card p-4" style={{ overflow: 'visible' }}>
         <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
           <div>
             <input
@@ -214,22 +227,64 @@ function Tickets() {
               ))}
             </select>
           </div>
-          <div>
-            <select
-              multiple
-              value={filters.status}
-              onChange={(e) => {
-                const selectedOptions = Array.from(e.target.selectedOptions, option => option.value);
-                setFilters({...filters, status: selectedOptions});
+          <div className="relative">
+            <button
+              ref={statusButtonRef}
+              type="button"
+              onClick={() => {
+                if (!showStatusDropdown && statusButtonRef.current) {
+                  const rect = statusButtonRef.current.getBoundingClientRect();
+                  setDropdownPosition({
+                    top: rect.bottom,
+                    left: rect.left,
+                    width: rect.width
+                  });
+                }
+                setShowStatusDropdown(!showStatusDropdown);
               }}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-              style={{ height: '42px' }}
+              className="input-field w-full text-left flex items-center justify-between"
             >
-              <option value="">Todos os Status</option>
-              {statusOptions.map(option => (
-                <option key={option.value} value={option.value}>{option.label}</option>
-              ))}
-            </select>
+              <span>
+                {filters.status.length === 0 
+                  ? 'Todos os Status' 
+                  : `${filters.status.length} selecionado(s)`}
+              </span>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            {showStatusDropdown && (
+              <div 
+                className="fixed bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto"
+                style={{ 
+                  zIndex: 9999,
+                  top: `${dropdownPosition.top + 4}px`,
+                  left: `${dropdownPosition.left}px`,
+                  width: `${dropdownPosition.width}px`
+                }}
+              >
+                {statusOptions.map(option => (
+                  <label
+                    key={option.value}
+                    className="flex items-center px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={filters.status.includes(option.value)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setFilters({...filters, status: [...filters.status, option.value]});
+                        } else {
+                          setFilters({...filters, status: filters.status.filter(s => s !== option.value)});
+                        }
+                      }}
+                      className="mr-2"
+                    />
+                    <span className="text-sm text-gray-900">{option.label}</span>
+                  </label>
+                ))}
+              </div>
+            )}
           </div>
           <div>
             <select
@@ -248,6 +303,7 @@ function Tickets() {
             <button
               onClick={() => {
                 setFilters({status: [], priority: '', search: '', company_id: ''});
+                setShowStatusDropdown(false);
               }}
               className="btn-secondary w-full"
             >
