@@ -244,3 +244,50 @@ class SystemSettings(Base):
     description = Column(Text)
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+
+class AssetStatus(str, enum.Enum):
+    active = "active"
+    maintenance = "maintenance"
+    retired = "retired"
+
+class AssetCategory(Base):
+    __tablename__ = "asset_categories"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(100), unique=True, nullable=False)
+    description = Column(Text)
+    is_active = Column(Boolean, default=True)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    # Relationships
+    assets = relationship("Asset", back_populates="category")
+
+class Asset(Base):
+    __tablename__ = "assets"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    name = Column(String(255), nullable=False)
+    asset_tag = Column(String(100), unique=True, nullable=False, index=True)
+    serial_number = Column(String(255))
+    status = Column(Enum(AssetStatus), default=AssetStatus.active)
+    location = Column(String(255))
+    purchase_date = Column(DateTime(timezone=True))
+    warranty_expiry = Column(DateTime(timezone=True))
+    purchase_cost = Column(Float)
+    notes = Column(Text)
+    in_maintenance = Column(Boolean, default=False)
+    
+    # Foreign Keys
+    category_id = Column(Integer, ForeignKey("asset_categories.id"))
+    assigned_to_id = Column(Integer, ForeignKey("users.id"))
+    company_id = Column(Integer, ForeignKey("companies.id"))
+    
+    # Timestamps
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    updated_at = Column(DateTime(timezone=True), onupdate=func.now())
+    
+    # Relationships
+    category = relationship("AssetCategory", back_populates="assets")
+    assigned_to = relationship("User")
+    company = relationship("Company")

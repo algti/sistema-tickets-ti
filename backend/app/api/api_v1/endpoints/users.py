@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request, Body, Query
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from typing import List, Optional
 from app.core.database import get_db
 from app.core.deps import get_current_user, get_current_admin, get_current_technician
@@ -22,12 +22,13 @@ async def get_users(
     role: Optional[str] = Query(None),
     is_active: Optional[str] = Query(None),
     search: Optional[str] = Query(None),
+    company_id: Optional[int] = Query(None),
     current_user: UserSchema = Depends(get_current_technician),
     db: Session = Depends(get_db)
 ):
     """Get users list (technicians and admins only)"""
     
-    query = db.query(UserModel)
+    query = db.query(UserModel).options(joinedload(UserModel.company))
     
     # Apply filters
     if role and role.strip():
@@ -45,6 +46,9 @@ async def get_users(
             query = query.filter(UserModel.is_active == True)
         elif is_active.lower() in ['false', '0', 'no']:
             query = query.filter(UserModel.is_active == False)
+    
+    if company_id:
+        query = query.filter(UserModel.company_id == company_id)
     
     if search:
         search_filter = (
