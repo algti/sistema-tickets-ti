@@ -22,7 +22,7 @@ async def get_users(
     role: Optional[str] = Query(None),
     is_active: Optional[str] = Query(None),
     search: Optional[str] = Query(None),
-    company_id: Optional[int] = Query(None),
+    company_id: Optional[str] = Query(None),
     current_user: UserSchema = Depends(get_current_technician),
     db: Session = Depends(get_db)
 ):
@@ -47,10 +47,15 @@ async def get_users(
         elif is_active.lower() in ['false', '0', 'no']:
             query = query.filter(UserModel.is_active == False)
     
-    if company_id:
-        query = query.filter(UserModel.company_id == company_id)
+    if company_id and company_id.strip():
+        try:
+            company_id_int = int(company_id)
+            query = query.filter(UserModel.company_id == company_id_int)
+        except ValueError:
+            # Invalid company_id, skip filter
+            pass
     
-    if search:
+    if search and search.strip():
         search_filter = (
             UserModel.full_name.ilike(f"%{search}%") |
             UserModel.username.ilike(f"%{search}%") |
