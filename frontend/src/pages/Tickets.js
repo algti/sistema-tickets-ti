@@ -17,11 +17,31 @@ function Tickets() {
     company_id: ''
   });
   const [companies, setCompanies] = useState([]);
+  const [showStatusDropdown, setShowStatusDropdown] = useState(false);
+  
+  const statusOptions = [
+    { value: 'open', label: 'Aberto' },
+    { value: 'in_progress', label: 'Em Andamento' },
+    { value: 'waiting_user', label: 'Aguardando Usuário' },
+    { value: 'resolved', label: 'Resolvido' },
+    { value: 'closed', label: 'Fechado' },
+    { value: 'reopened', label: 'Reaberto' }
+  ];
 
   useEffect(() => {
     fetchTickets();
     fetchCompanies();
   }, [filters]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (showStatusDropdown && !event.target.closest('.relative')) {
+        setShowStatusDropdown(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [showStatusDropdown]);
 
   const fetchCompanies = async () => {
     try {
@@ -198,25 +218,45 @@ function Tickets() {
               ))}
             </select>
           </div>
-          <div>
-            <select
-              multiple
-              value={filters.status}
-              onChange={(e) => {
-                const selected = Array.from(e.target.selectedOptions, option => option.value);
-                setFilters({...filters, status: selected});
-              }}
-              className="input-field"
-              style={{ height: '42px', overflow: 'auto' }}
+          <div className="relative">
+            <button
+              type="button"
+              onClick={() => setShowStatusDropdown(!showStatusDropdown)}
+              className="input-field w-full text-left flex items-center justify-between"
             >
-              <option value="open">Aberto</option>
-              <option value="in_progress">Em Andamento</option>
-              <option value="waiting_user">Aguardando Usuário</option>
-              <option value="resolved">Resolvido</option>
-              <option value="closed">Fechado</option>
-              <option value="reopened">Reaberto</option>
-            </select>
-            <div className="text-xs text-secondary mt-1">Segure Ctrl para múltipla seleção</div>
+              <span>
+                {filters.status.length === 0 
+                  ? 'Todos os Status' 
+                  : `${filters.status.length} selecionado(s)`}
+              </span>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              </svg>
+            </button>
+            {showStatusDropdown && (
+              <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+                {statusOptions.map(option => (
+                  <label
+                    key={option.value}
+                    className="flex items-center px-3 py-2 hover:bg-gray-100 cursor-pointer"
+                  >
+                    <input
+                      type="checkbox"
+                      checked={filters.status.includes(option.value)}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setFilters({...filters, status: [...filters.status, option.value]});
+                        } else {
+                          setFilters({...filters, status: filters.status.filter(s => s !== option.value)});
+                        }
+                      }}
+                      className="mr-2"
+                    />
+                    <span className="text-sm text-gray-900">{option.label}</span>
+                  </label>
+                ))}
+              </div>
+            )}
           </div>
           <div>
             <select
@@ -233,7 +273,10 @@ function Tickets() {
           </div>
           <div>
             <button
-              onClick={() => setFilters({status: [], priority: '', search: '', company_id: ''})}
+              onClick={() => {
+                setFilters({status: [], priority: '', search: '', company_id: ''});
+                setShowStatusDropdown(false);
+              }}
               className="btn-secondary w-full"
             >
               Limpar Filtros

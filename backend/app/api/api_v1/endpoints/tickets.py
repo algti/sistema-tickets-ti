@@ -70,6 +70,7 @@ async def get_tickets(
     category_id: Optional[int] = Query(None),
     assigned_to_id: Optional[int] = Query(None),
     created_by_id: Optional[int] = Query(None),
+    company_id: Optional[int] = Query(None),
     search: Optional[str] = Query(None),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -80,7 +81,8 @@ async def get_tickets(
         query = db.query(Ticket).options(
             joinedload(Ticket.created_by),
             joinedload(Ticket.assigned_to),
-            joinedload(Ticket.category)
+            joinedload(Ticket.category),
+            joinedload(Ticket.company)
         )
         
         # Filter based on user role - FIXED: Added proper enum handling
@@ -100,10 +102,18 @@ async def get_tickets(
         
         # Apply filters
         if status and status.strip():
-            query = query.filter(Ticket.status == status)
+            # Support multiple status values separated by comma
+            status_list = [s.strip() for s in status.split(',') if s.strip()]
+            if len(status_list) > 1:
+                query = query.filter(Ticket.status.in_(status_list))
+            elif len(status_list) == 1:
+                query = query.filter(Ticket.status == status_list[0])
         
         if priority and priority.strip():
             query = query.filter(Ticket.priority == priority)
+        
+        if company_id:
+            query = query.filter(Ticket.company_id == company_id)
         
         if category_id:
             query = query.filter(Ticket.category_id == category_id)

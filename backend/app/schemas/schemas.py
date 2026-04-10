@@ -374,3 +374,67 @@ class TechnicianSatisfactionMetrics(BaseModel):
 class WebSocketMessage(BaseModel):
     type: str
     data: Optional[dict] = None
+
+# Asset Schemas
+class AssetCategoryBase(BaseModel):
+    name: str
+    description: Optional[str] = None
+
+class AssetCategoryCreate(AssetCategoryBase):
+    pass
+
+class AssetCategoryUpdate(BaseModel):
+    name: Optional[str] = None
+    description: Optional[str] = None
+    is_active: Optional[bool] = None
+
+class AssetCategory(AssetCategoryBase):
+    id: int
+    is_active: bool
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+    
+    class Config:
+        from_attributes = True
+
+class AssetBase(BaseModel):
+    name: str
+    asset_tag: str
+    serial_number: Optional[str] = None
+    status: Optional[str] = "active"
+    location: Optional[str] = None
+    purchase_date: Optional[datetime] = None
+    warranty_expiry: Optional[datetime] = None
+    purchase_cost: Optional[float] = None
+    notes: Optional[str] = None
+    in_maintenance: bool = False
+    category_id: Optional[int] = None
+    assigned_to_id: Optional[int] = None
+    company_id: Optional[int] = None
+
+class AssetCreate(AssetBase):
+    pass
+
+class AssetUpdate(BaseModel):
+    name: Optional[str] = None
+    asset_tag: Optional[str] = None
+    serial_number: Optional[str] = None
+    status: Optional[str] = None
+    location: Optional[str] = None
+    purchase_date: Optional[datetime] = None
+    warranty_expiry: Optional[datetime] = None
+    purchase_cost: Optional[float] = None
+    notes: Optional[str] = None
+    in_maintenance: Optional[bool] = None
+    category_id: Optional[int] = None
+    assigned_to_id: Optional[int] = None
+    company_id: Optional[int] = None
+
+class Asset(AssetBase):
+    id: int
+    created_at: datetime
+    updated_at: Optional[datetime] = None
+    category: Optional[AssetCategory] = None
+    
+    class Config:
+        from_attributes = True

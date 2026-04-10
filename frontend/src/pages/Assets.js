@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../contexts/AuthContext';
 import { useTheme } from '../contexts/ThemeContext';
 import LoadingSpinner from '../components/LoadingSpinner';
+import { assetsService } from '../services/api';
 import {
   PlusIcon,
   MagnifyingGlassIcon,
@@ -32,29 +33,24 @@ function Assets() {
   // const [viewingAsset, setViewingAsset] = useState(null);
   const [formData, setFormData] = useState({});
 
-  // Dados reais serão carregados da API
-  const mockAssets = [];
-  const mockCategories = [];
-
   useEffect(() => {
     loadData();
-  }, []);
+  }, [activeTab]);
 
   const loadData = async () => {
     try {
       setLoading(true);
-      // TODO: Implementar chamadas reais à API quando os endpoints estiverem prontos
-      // const assetsResponse = await assetsAPI.getAssets();
-      // const categoriesResponse = await assetsAPI.getCategories();
-      // setAssets(assetsResponse.data);
-      // setCategories(categoriesResponse.data);
-      
-      // Por enquanto, carregar arrays vazios
-      setAssets([]);
-      setCategories([]);
+      const [assetsResponse, categoriesResponse] = await Promise.all([
+        assetsService.getAssets({ in_maintenance: activeTab === 'maintenance' ? true : undefined }),
+        assetsService.getCategories()
+      ]);
+      setAssets(assetsResponse.data || []);
+      setCategories(categoriesResponse.data || []);
       setLoading(false);
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
+      setAssets([]);
+      setCategories([]);
       setLoading(false);
     }
   };
@@ -89,13 +85,26 @@ function Assets() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      console.log('Saving:', modalType, formData);
+      if (modalType === 'asset') {
+        if (editingItem) {
+          await assetsService.updateAsset(editingItem.id, formData);
+        } else {
+          await assetsService.createAsset(formData);
+        }
+      } else if (modalType === 'category') {
+        if (editingItem) {
+          await assetsService.updateCategory(editingItem.id, formData);
+        } else {
+          await assetsService.createCategory(formData);
+        }
+      }
       setShowModal(false);
       setEditingItem(null);
       setFormData({});
       loadData();
     } catch (error) {
       console.error('Erro ao salvar:', error);
+      alert('Erro ao salvar. Verifique os dados e tente novamente.');
     }
   };
 
@@ -113,7 +122,8 @@ function Assets() {
         purchase_date: item.purchase_date,
         warranty_expiry: item.warranty_expiry,
         purchase_cost: item.purchase_cost,
-        notes: item.notes || ''
+        notes: item.notes || '',
+        in_maintenance: item.in_maintenance || false
       });
     } else if (type === 'category') {
       setFormData({
@@ -127,10 +137,15 @@ function Assets() {
   const handleDelete = async (id, type) => {
     if (window.confirm(`Tem certeza que deseja excluir este ${type}?`)) {
       try {
-        console.log('Deleting:', type, id);
+        if (type === 'asset') {
+          await assetsService.deleteAsset(id);
+        } else if (type === 'category') {
+          await assetsService.deleteCategory(id);
+        }
         loadData();
       } catch (error) {
         console.error('Erro ao excluir:', error);
+        alert('Erro ao excluir. Tente novamente.');
       }
     }
   };
@@ -485,6 +500,23 @@ function Assets() {
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
+                    </div>
+
+                    <div>
+                      <label className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          checked={formData.in_maintenance || false}
+                          onChange={(e) => setFormData({...formData, in_maintenance: e.target.checked})}
+                          className="w-4 h-4 text-blue-600 border-gray-300 rounded focus:ring-blue-500"
+                        />
+                        <span className="text-sm font-medium text-gray-700">
+                          Em Manutenção
+                        </span>
+                      </label>
+                      <p className="text-xs text-gray-500 mt-1 ml-6">
+                        Marque esta opção se o ativo estiver atualmente em manutenção
+                      </p>
                     </div>
 
                     <div>
