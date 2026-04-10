@@ -235,8 +235,8 @@ function Tickets() {
                 if (!showStatusDropdown && statusButtonRef.current) {
                   const rect = statusButtonRef.current.getBoundingClientRect();
                   setDropdownPosition({
-                    top: rect.bottom + window.scrollY,
-                    left: rect.left + window.scrollX,
+                    top: rect.bottom,
+                    left: rect.left,
                     width: rect.width
                   });
                 }
