@@ -252,8 +252,8 @@ export const knowledgeService = {
 // Assets API
 export const assetsService = {
   // Asset Categories
-  getCategories: () => authAPI.get('/assets/categories'),
-  createCategory: (data) => authAPI.post('/assets/categories', data),
+  getCategories: () => authAPI.get('/assets/categories/'),
+  createCategory: (data) => authAPI.post('/assets/categories/', data),
   updateCategory: (id, data) => authAPI.put(`/assets/categories/${id}`, data),
   deleteCategory: (id) => authAPI.delete(`/assets/categories/${id}`),
   

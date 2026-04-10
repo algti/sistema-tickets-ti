@@ -56,7 +56,14 @@ function Tickets() {
     try {
       setLoading(true);
       // Converter array de status para string separada por vírgula
-      const statusParam = filters.status.length > 0 ? filters.status.join(',') : '';
+      // Se nenhum status selecionado, buscar todos exceto 'closed'
+      let statusParam = '';
+      if (filters.status.length > 0) {
+        statusParam = filters.status.join(',');
+      } else {
+        // Padrão: todos os status exceto 'closed'
+        statusParam = 'open,in_progress,waiting_user,resolved,reopened';
+      }
       
       const filtersWithCacheBust = {
         search: filters.search,
@@ -234,7 +241,7 @@ function Tickets() {
               </svg>
             </button>
             {showStatusDropdown && (
-              <div className="absolute z-10 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+              <div className="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
                 {statusOptions.map(option => (
                   <label
                     key={option.value}
