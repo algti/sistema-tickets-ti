@@ -165,6 +165,42 @@ function Reports() {
     pdf.text(`Período: ${startDate} até ${endDate}`, 20, 30);
     pdf.text(`Gerado em: ${new Date().toLocaleString('pt-BR')}`, 20, 37);
 
+    let tableData = [];
+    let headers = [];
+
+    if (customReportData.tickets && Array.isArray(customReportData.tickets)) {
+      headers = ['ID', 'Título', 'Status', 'Prioridade', 'Criado em'];
+      tableData = customReportData.tickets.map(ticket => [
+        ticket.id || '-',
+        ticket.title || '-',
+        ticket.status || '-',
+        ticket.priority || '-',
+        ticket.created_at ? new Date(ticket.created_at).toLocaleDateString('pt-BR') : '-'
+      ]);
+    } else if (customReportData.summary) {
+      const summary = customReportData.summary;
+      headers = ['Métrica', 'Valor'];
+      tableData = Object.entries(summary).map(([key, value]) => [
+        key.replace(/_/g, ' ').toUpperCase(),
+        value?.toString() || '-'
+      ]);
+    } else {
+      headers = ['Chave', 'Valor'];
+      tableData = Object.entries(customReportData).map(([key, value]) => [
+        key.replace(/_/g, ' ').toUpperCase(),
+        typeof value === 'object' ? JSON.stringify(value) : (value?.toString() || '-')
+      ]);
+    }
+
+    pdf.autoTable({
+      startY: 45,
+      head: [headers],
+      body: tableData,
+      theme: 'grid',
+      styles: { fontSize: 8 },
+      headStyles: { fillColor: [59, 130, 246] }
+    });
+
     const fileName = `${reportType}_${startDate}_${endDate}.pdf`;
     pdf.save(fileName);
   };
@@ -173,7 +209,40 @@ function Reports() {
     if (!customReportData) return;
 
     const wb = XLSX.utils.book_new();
-    const wsData = [['Relatório Customizado'], [`Período: ${startDate} até ${endDate}`], []];
+    const reportTypeLabel = reportTypes.find(r => r.value === reportType)?.label || 'Relatório';
+    
+    let wsData = [
+      [reportTypeLabel],
+      [`Período: ${startDate} até ${endDate}`],
+      [`Gerado em: ${new Date().toLocaleString('pt-BR')}`],
+      []
+    ];
+
+    if (customReportData.tickets && Array.isArray(customReportData.tickets)) {
+      wsData.push(['ID', 'Título', 'Status', 'Prioridade', 'Criado em']);
+      customReportData.tickets.forEach(ticket => {
+        wsData.push([
+          ticket.id || '-',
+          ticket.title || '-',
+          ticket.status || '-',
+          ticket.priority || '-',
+          ticket.created_at ? new Date(ticket.created_at).toLocaleDateString('pt-BR') : '-'
+        ]);
+      });
+    } else if (customReportData.summary) {
+      wsData.push(['Métrica', 'Valor']);
+      Object.entries(customReportData.summary).forEach(([key, value]) => {
+        wsData.push([key.replace(/_/g, ' ').toUpperCase(), value?.toString() || '-']);
+      });
+    } else {
+      wsData.push(['Chave', 'Valor']);
+      Object.entries(customReportData).forEach(([key, value]) => {
+        wsData.push([
+          key.replace(/_/g, ' ').toUpperCase(),
+          typeof value === 'object' ? JSON.stringify(value) : (value?.toString() || '-')
+        ]);
+      });
+    }
     
     const ws = XLSX.utils.aoa_to_sheet(wsData);
     XLSX.utils.book_append_sheet(wb, ws, 'Relatório');
@@ -621,9 +690,89 @@ function Reports() {
               {customReportData && (
                 <div className="bg-white border border-gray-200 rounded-lg p-6">
                   <h3 className="text-lg font-semibold mb-4">Resultado do Relatório</h3>
-                  <pre className="bg-gray-50 p-4 rounded overflow-auto text-sm">
-                    {JSON.stringify(customReportData, null, 2)}
-                  </pre>
+                  
+                  {customReportData.tickets && Array.isArray(customReportData.tickets) ? (
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">ID</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Título</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prioridade</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Criado em</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {customReportData.tickets.map((ticket, idx) => (
+                            <tr key={idx}>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">{ticket.id || '-'}</td>
+                              <td className="px-6 py-4 text-sm text-gray-900">{ticket.title || '-'}</td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getStatusColor(ticket.status)} text-white`}>
+                                  {ticket.status || '-'}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm">
+                                <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(ticket.priority)} text-white`}>
+                                  {ticket.priority || '-'}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {ticket.created_at ? new Date(ticket.created_at).toLocaleDateString('pt-BR') : '-'}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : customReportData.summary ? (
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Métrica</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {Object.entries(customReportData.summary).map(([key, value], idx) => (
+                            <tr key={idx}>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                {key.replace(/_/g, ' ').toUpperCase()}
+                              </td>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                {value?.toString() || '-'}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  ) : (
+                    <div className="overflow-x-auto">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Chave</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Valor</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          {Object.entries(customReportData).map(([key, value], idx) => (
+                            <tr key={idx}>
+                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                {key.replace(/_/g, ' ').toUpperCase()}
+                              </td>
+                              <td className="px-6 py-4 text-sm text-gray-900">
+                                {typeof value === 'object' ? JSON.stringify(value, null, 2) : (value?.toString() || '-')}
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
                 </div>
               )}
             </div>
