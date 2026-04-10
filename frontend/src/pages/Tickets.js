@@ -296,7 +296,7 @@ function Tickets() {
       </div>
 
       {/* Tickets List */}
-      <div className="card overflow-hidden">
+      <div className="card overflow-hidden" style={{ position: 'relative', zIndex: 1 }}>
         {tickets.length === 0 ? (
           <div className="p-8 text-center">
             <div className="text-muted">
