@@ -225,7 +225,7 @@ function Tickets() {
               ))}
             </select>
           </div>
-          <div className="relative">
+          <div className="relative" style={{ zIndex: 1000 }}>
             <button
               type="button"
               onClick={() => setShowStatusDropdown(!showStatusDropdown)}
@@ -241,7 +241,7 @@ function Tickets() {
               </svg>
             </button>
             {showStatusDropdown && (
-              <div className="absolute z-50 mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
+              <div className="absolute mt-1 w-full bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto" style={{ zIndex: 9999 }}>
                 {statusOptions.map(option => (
                   <label
                     key={option.value}
