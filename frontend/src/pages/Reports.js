@@ -72,9 +72,9 @@ function Reports() {
   const loadFilters = async () => {
     try {
       const [companiesRes, usersRes, categoriesRes] = await Promise.all([
-        companiesService.getAll(),
-        usersService.getAll(),
-        categoriesAPI.getAll()
+        companiesService.getCompanies(),
+        usersService.getUsers(),
+        categoriesAPI.getCategories()
       ]);
       
       setCompanies(companiesRes.data || []);
