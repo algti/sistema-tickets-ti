@@ -67,10 +67,10 @@ async def get_tickets(
     limit: int = Query(50, ge=1, le=100),
     status: Optional[str] = Query(None),
     priority: Optional[str] = Query(None),
-    category_id: Optional[int] = Query(None),
-    assigned_to_id: Optional[int] = Query(None),
-    created_by_id: Optional[int] = Query(None),
-    company_id: Optional[int] = Query(None),
+    category_id: Optional[str] = Query(None),
+    assigned_to_id: Optional[str] = Query(None),
+    created_by_id: Optional[str] = Query(None),
+    company_id: Optional[str] = Query(None),
     search: Optional[str] = Query(None),
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db)
@@ -112,17 +112,33 @@ async def get_tickets(
         if priority and priority.strip():
             query = query.filter(Ticket.priority == priority)
         
-        if company_id:
-            query = query.filter(Ticket.company_id == company_id)
+        if company_id and company_id.strip():
+            try:
+                company_id_int = int(company_id)
+                query = query.filter(Ticket.company_id == company_id_int)
+            except ValueError:
+                pass
         
-        if category_id:
-            query = query.filter(Ticket.category_id == category_id)
+        if category_id and category_id.strip():
+            try:
+                category_id_int = int(category_id)
+                query = query.filter(Ticket.category_id == category_id_int)
+            except ValueError:
+                pass
         
-        if assigned_to_id:
-            query = query.filter(Ticket.assigned_to_id == assigned_to_id)
+        if assigned_to_id and assigned_to_id.strip():
+            try:
+                assigned_to_id_int = int(assigned_to_id)
+                query = query.filter(Ticket.assigned_to_id == assigned_to_id_int)
+            except ValueError:
+                pass
         
-        if created_by_id and user_role_str in ["technician", "admin"]:
-            query = query.filter(Ticket.created_by_id == created_by_id)
+        if created_by_id and created_by_id.strip() and user_role_str in ["technician", "admin"]:
+            try:
+                created_by_id_int = int(created_by_id)
+                query = query.filter(Ticket.created_by_id == created_by_id_int)
+            except ValueError:
+                pass
         
         if search and search.strip():
             search_filter = or_(
