@@ -759,16 +759,61 @@ function Reports() {
                           </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
-                          {Object.entries(customReportData).map(([key, value], idx) => (
-                            <tr key={idx}>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
-                                {key.replace(/_/g, ' ').toUpperCase()}
-                              </td>
-                              <td className="px-6 py-4 text-sm text-gray-900">
-                                {typeof value === 'object' ? JSON.stringify(value, null, 2) : (value?.toString() || '-')}
-                              </td>
-                            </tr>
-                          ))}
+                          {Object.entries(customReportData)
+                            .filter(([key]) => key !== 'period' && key !== 'generated_at')
+                            .map(([key, value], idx) => {
+                              // Se for array de objetos, renderizar como sub-tabela
+                              if (Array.isArray(value) && value.length > 0 && typeof value[0] === 'object') {
+                                return (
+                                  <tr key={idx}>
+                                    <td className="px-6 py-4 text-sm font-medium text-gray-900" colSpan="2">
+                                      <div className="font-semibold mb-2">{key.replace(/_/g, ' ').toUpperCase()}</div>
+                                      <div className="ml-4 space-y-2">
+                                        {value.map((item, itemIdx) => (
+                                          <div key={itemIdx} className="bg-gray-50 p-3 rounded border border-gray-200">
+                                            {Object.entries(item).map(([itemKey, itemValue]) => (
+                                              <div key={itemKey} className="flex justify-between py-1">
+                                                <span className="text-gray-600 text-xs">{itemKey.replace(/_/g, ' ')}:</span>
+                                                <span className="text-gray-900 text-xs font-medium">{itemValue?.toString() || '-'}</span>
+                                              </div>
+                                            ))}
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </td>
+                                  </tr>
+                                );
+                              }
+                              // Se for objeto simples, renderizar chave-valor
+                              if (typeof value === 'object' && value !== null && !Array.isArray(value)) {
+                                return (
+                                  <tr key={idx}>
+                                    <td className="px-6 py-4 text-sm font-medium text-gray-900" colSpan="2">
+                                      <div className="font-semibold mb-2">{key.replace(/_/g, ' ').toUpperCase()}</div>
+                                      <div className="ml-4 bg-gray-50 p-3 rounded border border-gray-200">
+                                        {Object.entries(value).map(([subKey, subValue]) => (
+                                          <div key={subKey} className="flex justify-between py-1">
+                                            <span className="text-gray-600 text-xs">{subKey.replace(/_/g, ' ')}:</span>
+                                            <span className="text-gray-900 text-xs font-medium">{subValue?.toString() || '-'}</span>
+                                          </div>
+                                        ))}
+                                      </div>
+                                    </td>
+                                  </tr>
+                                );
+                              }
+                              // Valores simples
+                              return (
+                                <tr key={idx}>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
+                                    {key.replace(/_/g, ' ').toUpperCase()}
+                                  </td>
+                                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                                    {value?.toString() || '-'}
+                                  </td>
+                                </tr>
+                              );
+                            })}
                         </tbody>
                       </table>
                     </div>
