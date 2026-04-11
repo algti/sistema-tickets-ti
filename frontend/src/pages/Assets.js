@@ -22,6 +22,7 @@ function Assets() {
   const { classes } = useTheme();
   const [assets, setAssets] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [companies, setCompanies] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('assets');
   const [searchTerm, setSearchTerm] = useState('');
@@ -40,17 +41,21 @@ function Assets() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [assetsResponse, categoriesResponse] = await Promise.all([
+      const companiesService = require('../services/api').companiesService;
+      const [assetsResponse, categoriesResponse, companiesResponse] = await Promise.all([
         assetsService.getAssets({ in_maintenance: activeTab === 'maintenance' ? true : undefined }),
-        assetsService.getCategories()
+        assetsService.getCategories(),
+        companiesService.getCompanies()
       ]);
       setAssets(assetsResponse.data || []);
       setCategories(categoriesResponse.data || []);
+      setCompanies(companiesResponse.data || []);
       setLoading(false);
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
       setAssets([]);
       setCategories([]);
+      setCompanies([]);
       setLoading(false);
     }
   };
@@ -117,8 +122,9 @@ function Assets() {
         asset_tag: item.asset_tag,
         serial_number: item.serial_number,
         category_id: item.category_id?.toString() || '',
+        company_id: item.company_id?.toString() || '',
         status: item.status,
-        location: item.location,
+        location: item.location || '',
         purchase_date: item.purchase_date,
         warranty_expiry: item.warranty_expiry,
         purchase_cost: item.purchase_cost,
@@ -422,7 +428,7 @@ function Assets() {
           <div className="p-6">
             <div className="space-y-4">
               {assets.flatMap(asset => 
-                asset.maintenance_records.map(record => (
+                (asset.maintenance_records || []).map(record => (
                   <div
                     key={`${asset.id}-${record.id}`}
                     className={`${classes.bg.card} ${classes.border.primary} border rounded-lg p-4 shadow-sm`}
@@ -500,6 +506,55 @@ function Assets() {
                           className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                         />
                       </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Categoria
+                        </label>
+                        <select
+                          required
+                          value={formData.category_id || ''}
+                          onChange={(e) => setFormData({...formData, category_id: e.target.value})}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="">Selecione uma categoria</option>
+                          {categories.map(category => (
+                            <option key={category.id} value={category.id}>{category.name}</option>
+                          ))}
+                        </select>
+                      </div>
+
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 mb-2">
+                          Localização
+                        </label>
+                        <input
+                          type="text"
+                          value={formData.location || ''}
+                          onChange={(e) => setFormData({...formData, location: e.target.value})}
+                          className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="Ex: Sala 101, Prédio A"
+                        />
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700 mb-2">
+                        Empresa
+                      </label>
+                      <select
+                        required
+                        value={formData.company_id || ''}
+                        onChange={(e) => setFormData({...formData, company_id: e.target.value})}
+                        className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="">Selecione uma empresa</option>
+                        {companies.map(company => (
+                          <option key={company.id} value={company.id}>{company.name}</option>
+                        ))}
+                      </select>
                     </div>
 
                     <div>
