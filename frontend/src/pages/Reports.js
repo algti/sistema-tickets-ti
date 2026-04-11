@@ -3,8 +3,8 @@ import { Link } from 'react-router-dom';
 import { dashboardService, reportsAPI, companiesService, usersService, categoriesAPI } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import LoadingSpinner from '../components/LoadingSpinner';
-import jsPDF from 'jspdf';
-import 'jspdf-autotable';
+import { jsPDF } from 'jspdf';
+import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
 import {
   ChartBarIcon,
