@@ -971,8 +971,8 @@ input[type="checkbox"]:hover {
 }
 
 input[type="checkbox"]:checked {
-  background-color: #00ffd1;
-  border-color: #00ffd1;
+  background-color: #00ffd1 !important;
+  border-color: #00ffd1 !important;
 }
 
 input[type="checkbox"]:checked::after {
@@ -981,7 +981,7 @@ input[type="checkbox"]:checked::after {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  color: #000000;
+  color: #ffffff !important;
   font-size: 0.75rem;
   font-weight: bold;
 }
