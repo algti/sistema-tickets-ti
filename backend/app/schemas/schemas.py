@@ -436,7 +436,7 @@ class Asset(AssetBase):
     updated_at: Optional[datetime] = None
     category: Optional[AssetCategory] = None
     company: Optional['Company'] = None
-    assigned_to: Optional['UserResponse'] = None
+    assigned_user: Optional['User'] = None
     
     class Config:
         from_attributes = True
