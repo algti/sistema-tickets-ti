@@ -144,6 +144,7 @@
     backdrop-filter: blur(10px);
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
     transition: all 0.3s ease;
+    position: relative;
   }
   
   .card:hover {
@@ -940,4 +941,13 @@ div[class*="bg-"][class*="-50"] span {
 /* Ensure dropdowns always appear above other content */
 .absolute.z-50 {
   z-index: 9999 !important;
+}
+
+/* Z-index hierarchy for Tickets page */
+.card.overflow-hidden {
+  z-index: 1 !important;
+}
+
+.card.p-4 {
+  z-index: 100 !important;
 }
