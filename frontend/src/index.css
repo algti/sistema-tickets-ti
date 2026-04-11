@@ -971,8 +971,8 @@ input[type="checkbox"]:hover {
 }
 
 input[type="checkbox"]:checked {
-  background-color: var(--brand-primary);
-  border-color: var(--brand-primary);
+  background-color: #00ffd1;
+  border-color: #00ffd1;
 }
 
 input[type="checkbox"]:checked::after {

@@ -306,7 +306,7 @@ function Assets() {
                           </span>
                         </div>
                         
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+                        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-sm">
                           <div>
                             <span className={`font-medium ${classes.text.secondary}`}>Tag:</span>
                             <p className={classes.text.primary}>{asset.asset_tag}</p>
@@ -318,6 +318,10 @@ function Assets() {
                           <div>
                             <span className={`font-medium ${classes.text.secondary}`}>Localização:</span>
                             <p className={classes.text.primary}>{asset.location}</p>
+                          </div>
+                          <div>
+                            <span className={`font-medium ${classes.text.secondary}`}>Empresa:</span>
+                            <p className={classes.text.primary}>{asset.company?.name || 'Não atribuída'}</p>
                           </div>
                           <div>
                             <span className={`font-medium ${classes.text.secondary}`}>Responsável:</span>
