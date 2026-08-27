@@ -8,9 +8,7 @@ import {
   UserPlusIcon,
   ServerIcon,
   CheckIcon,
-  XMarkIcon,
-  EyeIcon,
-  EyeSlashIcon
+  XMarkIcon
 } from '@heroicons/react/24/outline';
 
 function Users() {
@@ -35,13 +33,11 @@ function Users() {
 
     // User form data
   const [userForm, setUserForm] = useState({
-    username: '',
     email: '',
     full_name: '',
     department: '',
     phone: '',
     role: 'user',
-    password: '',
     is_active: true,
     company_id: null
   });
@@ -57,7 +53,6 @@ function Users() {
     enabled: false
   });
   
-  const [showPassword, setShowPassword] = useState(false);
 
   useEffect(() => {
     fetchUsers();
@@ -70,8 +65,8 @@ function Users() {
       const response = await usersAPI.getUsers(filters);
       // Ordenar usuários por ordem alfabética (full_name ou username)
       const sortedUsers = (response.data || []).sort((a, b) => {
-        const nameA = (a.full_name || a.username || '').toLowerCase();
-        const nameB = (b.full_name || b.username || '').toLowerCase();
+        const nameA = (a.full_name || '').toLowerCase();
+        const nameB = (b.full_name || '').toLowerCase();
         return nameA.localeCompare(nameB);
       });
       setUsers(sortedUsers);
@@ -135,26 +130,22 @@ function Users() {
     if (userToEdit) {
       setEditingUser(userToEdit);
       setUserForm({
-        username: userToEdit.username || '',
         email: userToEdit.email || '',
         full_name: userToEdit.full_name || '',
         department: userToEdit.department || '',
         phone: userToEdit.phone || '',
         role: userToEdit.role || 'user',
-        password: '',
         is_active: userToEdit.is_active !== undefined ? userToEdit.is_active : true,
         company_id: userToEdit.company_id || null
       });
     } else {
       setEditingUser(null);
       setUserForm({
-        username: '',
         email: '',
         full_name: '',
         department: '',
         phone: '',
         role: 'user',
-        password: '',
         is_active: true,
         company_id: null
       });
@@ -166,13 +157,11 @@ function Users() {
     setShowUserModal(false);
     setEditingUser(null);
     setUserForm({
-      username: '',
       email: '',
       full_name: '',
       department: '',
       phone: '',
       role: 'user',
-      password: '',
       is_active: true,
       company_id: null
     });
@@ -185,11 +174,7 @@ function Users() {
     try {
       if (editingUser) {
         // Update user
-        const updateData = { ...userForm };
-        if (!updateData.password) {
-          delete updateData.password; // Don't send empty password
-        }
-        await usersAPI.updateUser(editingUser.id, updateData);
+        await usersAPI.updateUser(editingUser.id, userForm);
       } else {
         // Create user
         await usersAPI.createUser(userForm);
@@ -611,32 +596,6 @@ function Users() {
                         </option>
                       ))}
                     </select>
-                  </div>
-                </div>
-                
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    {editingUser ? 'Nova Senha (deixe em branco para manter a atual)' : 'Senha *'}
-                  </label>
-                  <div className="relative">
-                    <input
-                      type={showPassword ? 'text' : 'password'}
-                      required={!editingUser}
-                      value={userForm.password}
-                      onChange={(e) => setUserForm({...userForm, password: e.target.value})}
-                      className="w-full px-3 py-2 pr-10 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                    >
-                      {showPassword ? (
-                        <EyeSlashIcon className="h-5 w-5 text-gray-400" />
-                      ) : (
-                        <EyeIcon className="h-5 w-5 text-gray-400" />
-                      )}
-                    </button>
                   </div>
                 </div>
                 

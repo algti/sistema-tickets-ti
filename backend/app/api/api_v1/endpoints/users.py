@@ -58,7 +58,6 @@ async def get_users(
     if search and search.strip():
         search_filter = (
             UserModel.full_name.ilike(f"%{search}%") |
-            UserModel.username.ilike(f"%{search}%") |
             UserModel.email.ilike(f"%{search}%") |
             UserModel.department.ilike(f"%{search}%")
         )
@@ -262,14 +261,6 @@ async def create_user(
 ):
     """Create new user (admin only)"""
     
-    # Check if username already exists
-    existing_user = db.query(UserModel).filter(UserModel.username == user.username).first()
-    if existing_user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Username already registered"
-        )
-    
     # Check if email already exists
     existing_email = db.query(UserModel).filter(UserModel.email == user.email).first()
     if existing_email:
@@ -279,19 +270,12 @@ async def create_user(
         )
     
     # Create user
-    hashed_password = None
-    if user.password:
-        hashed_password = get_password_hash(user.password)
-    
     db_user = UserModel(
-        username=user.username,
         email=user.email,
         full_name=user.full_name,
         department=user.department,
         phone=user.phone,
         role=user.role,
-        hashed_password=hashed_password,
-        is_ldap_user=False if user.password else True,
         is_active=True
     )
     
