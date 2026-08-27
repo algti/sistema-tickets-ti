@@ -83,11 +83,6 @@ class User(Base):
     is_active = Column(Boolean, default=True)
     tutorial_viewed = Column(Boolean, default=False)  # Tutorial system
     
-    # Login tracking
-    last_login = Column(DateTime, nullable=True)
-    last_login_ip = Column(String(45), nullable=True)
-    login_attempts = Column(Integer, default=0)
-    
     # Foreign Keys
     company_id = Column(Integer, ForeignKey("companies.id"))
     
