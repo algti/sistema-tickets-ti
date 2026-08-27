@@ -45,35 +45,61 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const login = async (username, password) => {
+  const requestOTP = async (email) => {
+    try {
+      const response = await authAPI.post('/auth/request-otp', { email });
+      return { success: true, expiresIn: response.data.expires_in };
+    } catch (error) {
+      const message = error.response?.data?.detail || 'Erro ao solicitar código';
+      return { success: false, error: message };
+    }
+  };
+
+  const verifyOTP = async (email, code) => {
     try {
       setLoading(true);
-      const response = await authAPI.post('/auth/login', {
-        username,
-        password
-      });
-      
+      const response = await authAPI.post('/auth/verify-otp', { email, code });
       const { access_token } = response.data;
       
-      // Store token
       localStorage.setItem('token', access_token);
       setToken(access_token);
-      
-      // Set token in API headers
       authAPI.defaults.headers.common['Authorization'] = `Bearer ${access_token}`;
       
-      // Get user info
       await getCurrentUser();
-      
       toast.success('Login realizado com sucesso!');
       return { success: true };
     } catch (error) {
-      console.error('Login error:', error);
-      const message = error.response?.data?.detail || 'Erro ao fazer login';
+      const message = error.response?.data?.detail || 'Erro ao verificar código';
       toast.error(message);
       return { success: false, error: message };
     } finally {
       setLoading(false);
+    }
+  };
+
+  const resendOTP = async (email) => {
+    try {
+      const response = await authAPI.post('/auth/resend-otp', { email });
+      return { success: true, expiresIn: response.data.expires_in };
+    } catch (error) {
+      const message = error.response?.data?.detail || 'Erro ao reenviar código';
+      return { success: false, error: message };
+    }
+  };
+
+  const register = async (email, full_name, department) => {
+    try {
+      const response = await authAPI.post('/auth/register', {
+        email,
+        full_name,
+        department
+      });
+      toast.success('Registro realizado com sucesso!');
+      return { success: true };
+    } catch (error) {
+      const message = error.response?.data?.detail || 'Erro ao registrar';
+      toast.error(message);
+      return { success: false, error: message };
     }
   };
 
@@ -111,7 +137,10 @@ export const AuthProvider = ({ children }) => {
     user,
     token,
     loading,
-    login,
+    requestOTP,
+    verifyOTP,
+    resendOTP,
+    register,
     logout,
     refreshToken,
     updateUser,
