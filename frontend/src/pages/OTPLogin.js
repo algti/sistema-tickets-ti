@@ -1,8 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../contexts/AuthContext';
-import EmailStep from '../components/EmailStep';
-import CodeStep from '../components/CodeStep';
 import toast from 'react-hot-toast';
 
 export default function OTPLogin() {
@@ -10,6 +8,7 @@ export default function OTPLogin() {
   const { user } = useAuth();
   const [step, setStep] = useState('email'); // 'email' ou 'code'
   const [email, setEmail] = useState('');
+  const [emailInput, setEmailInput] = useState('');
   const [code, setCode] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
@@ -38,7 +37,13 @@ export default function OTPLogin() {
   }, [timeLeft, step]);
 
   // Solicitar OTP
-  const handleRequestOTP = async (emailValue) => {
+  const handleRequestOTP = async (e) => {
+    e.preventDefault();
+    if (!emailInput.trim()) {
+      setError('Digite seu email');
+      return;
+    }
+
     try {
       setLoading(true);
       setError('');
@@ -48,7 +53,7 @@ export default function OTPLogin() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email: emailValue })
+        body: JSON.stringify({ email: emailInput })
       });
 
       if (!response.ok) {
@@ -57,7 +62,7 @@ export default function OTPLogin() {
       }
 
       const data = await response.json();
-      setEmail(emailValue);
+      setEmail(emailInput);
       setExpiresIn(data.expires_in);
       setTimeLeft(data.expires_in);
       setAttempts(0);
@@ -73,7 +78,13 @@ export default function OTPLogin() {
   };
 
   // Verificar OTP
-  const handleVerifyOTP = async (codeValue) => {
+  const handleVerifyOTP = async (e) => {
+    e.preventDefault();
+    if (!code.trim()) {
+      setError('Digite o código');
+      return;
+    }
+
     try {
       setLoading(true);
       setError('');
@@ -83,7 +94,7 @@ export default function OTPLogin() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ email, code: codeValue })
+        body: JSON.stringify({ email, code })
       });
 
       if (!response.ok) {
@@ -150,65 +161,153 @@ export default function OTPLogin() {
   // Voltar para email
   const handleBackToEmail = () => {
     setStep('email');
+    setEmailInput('');
     setCode('');
     setError('');
     setTimeLeft(480);
     setAttempts(0);
   };
 
+  // Formatar tempo
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins}:${secs.toString().padStart(2, '0')}`;
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 flex items-center justify-center p-4">
+    <div className="min-h-screen bg-black flex items-center justify-center p-4" style={{
+      backgroundImage: 'radial-gradient(circle at 50% 0%, rgba(0, 255, 255, 0.1) 0%, transparent 50%)'
+    }}>
+      <style>{`
+        @keyframes glow {
+          0%, 100% { box-shadow: 0 0 20px rgba(0, 255, 255, 0.5), 0 0 40px rgba(0, 255, 255, 0.3); }
+          50% { box-shadow: 0 0 30px rgba(0, 255, 255, 0.8), 0 0 60px rgba(0, 255, 255, 0.5); }
+        }
+        .glow-box {
+          animation: glow 3s ease-in-out infinite;
+        }
+      `}</style>
+      
       <div className="w-full max-w-md">
-        {/* Logo/Header */}
+        {/* Logo */}
         <div className="text-center mb-8">
-          <div className="inline-flex items-center justify-center w-16 h-16 bg-cyan-500/20 rounded-full mb-4">
-            <svg className="w-8 h-8 text-cyan-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
-            </svg>
+          <img src="/logo-alg.png" alt="ALG" className="w-20 h-20 mx-auto mb-4" />
+        </div>
+
+        {/* Título com glow */}
+        <div className="text-center mb-8">
+          <div className="glow-box border-2 border-cyan-400 rounded-lg py-4 px-6 mb-4">
+            <h1 className="text-3xl font-mono font-bold text-white tracking-wider">SISTEMA DE TICKETS</h1>
           </div>
-          <h1 className="text-3xl font-bold text-white mb-2">Sistema de Tickets</h1>
-          <p className="text-slate-400">ALG Soluções em Tecnologia</p>
+          <p className="text-cyan-400 text-lg font-semibold mb-2">ALG Soluções em Tecnologia</p>
+          <p className="text-gray-400 text-sm">Faça login com suas credenciais</p>
         </div>
 
         {/* Card */}
-        <div className="bg-slate-800 rounded-lg shadow-2xl p-8 border border-slate-700">
+        <div className="bg-gray-900 border border-gray-700 rounded-lg p-8 mb-8">
           {step === 'email' ? (
-            <EmailStep 
-              onSubmit={handleRequestOTP}
-              loading={loading}
-              error={error}
-            />
+            // Email Step
+            <form onSubmit={handleRequestOTP} className="space-y-6">
+              <div>
+                <label className="block text-white text-sm font-medium mb-2">Email</label>
+                <input
+                  type="email"
+                  value={emailInput}
+                  onChange={(e) => setEmailInput(e.target.value)}
+                  placeholder="Digite seu email"
+                  className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition-colors"
+                  disabled={loading}
+                />
+              </div>
+
+              {error && (
+                <div className="bg-red-900/20 border border-red-700 rounded-lg p-3">
+                  <p className="text-red-400 text-sm">{error}</p>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-cyan-500 hover:bg-cyan-600 disabled:bg-gray-600 text-black font-bold py-3 rounded-lg transition-colors"
+              >
+                {loading ? 'Enviando...' : 'Entrar'}
+              </button>
+            </form>
           ) : (
-            <CodeStep
-              email={email}
-              onSubmit={handleVerifyOTP}
-              onResend={handleResendOTP}
-              onBack={handleBackToEmail}
-              timeLeft={timeLeft}
-              attempts={attempts}
-              loading={loading}
-              error={error}
-            />
+            // Code Step
+            <form onSubmit={handleVerifyOTP} className="space-y-6">
+              <div className="text-center mb-4">
+                <p className="text-gray-400 text-sm">Código enviado para:</p>
+                <p className="text-white font-medium">{email}</p>
+              </div>
+
+              <div>
+                <label className="block text-white text-sm font-medium mb-2">Código OTP</label>
+                <input
+                  type="text"
+                  value={code}
+                  onChange={(e) => setCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  placeholder="000000"
+                  maxLength="6"
+                  className="w-full bg-gray-800 border border-gray-600 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:border-cyan-400 transition-colors text-center text-2xl tracking-widest font-mono"
+                  disabled={loading}
+                />
+              </div>
+
+              <div className="text-center">
+                <p className="text-cyan-400 text-sm">
+                  Expira em: <span className="font-mono font-bold">{formatTime(timeLeft)}</span>
+                </p>
+                {attempts > 0 && (
+                  <p className="text-yellow-400 text-xs mt-1">Tentativa {attempts}/5</p>
+                )}
+              </div>
+
+              {error && (
+                <div className="bg-red-900/20 border border-red-700 rounded-lg p-3">
+                  <p className="text-red-400 text-sm">{error}</p>
+                </div>
+              )}
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full bg-cyan-500 hover:bg-cyan-600 disabled:bg-gray-600 text-black font-bold py-3 rounded-lg transition-colors"
+              >
+                {loading ? 'Verificando...' : 'Verificar'}
+              </button>
+
+              <div className="flex gap-2">
+                <button
+                  type="button"
+                  onClick={handleBackToEmail}
+                  disabled={loading}
+                  className="flex-1 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 text-white font-medium py-2 rounded-lg transition-colors text-sm"
+                >
+                  Voltar
+                </button>
+                <button
+                  type="button"
+                  onClick={handleResendOTP}
+                  disabled={loading}
+                  className="flex-1 bg-gray-700 hover:bg-gray-600 disabled:bg-gray-800 text-white font-medium py-2 rounded-lg transition-colors text-sm"
+                >
+                  Reenviar
+                </button>
+              </div>
+            </form>
           )}
         </div>
 
-        {/* Footer */}
-        <div className="text-center mt-8">
-          <p className="text-slate-400 text-sm">
-            Não tem conta?{' '}
-            <button
-              onClick={() => navigate('/register')}
-              className="text-cyan-400 hover:text-cyan-300 font-medium transition-colors"
-            >
-              Registre-se aqui
-            </button>
-          </p>
-        </div>
-
         {/* Info */}
-        <div className="mt-8 p-4 bg-slate-700/50 rounded-lg border border-slate-600">
-          <p className="text-slate-300 text-xs text-center">
+        <div className="text-center p-4 bg-gray-800/50 rounded-lg border border-gray-700">
+          <p className="text-gray-400 text-xs">
             🔐 Seu código de acesso é enviado por email. Nunca compartilhe com ninguém.
+          </p>
+          <p className="text-gray-500 text-xs mt-2">
+            Desenvolvido por: ALG Soluções em Tecnologia
           </p>
         </div>
       </div>
