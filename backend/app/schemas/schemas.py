@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, validator, EmailStr
+from pydantic import BaseModel, Field, validator
 from typing import List, Optional, Dict
 from datetime import datetime
 from enum import Enum
@@ -50,11 +50,24 @@ class User(UserBase):
 
 # Auth Schemas - OTP
 class EmailRequest(BaseModel):
-    email: EmailStr
+    email: str = Field(..., min_length=5, max_length=255)
+    
+    @validator('email')
+    def email_must_be_valid(cls, v):
+        # Validação básica de email (permite .local para desenvolvimento)
+        if '@' not in v or '.' not in v.split('@')[1]:
+            raise ValueError('Email inválido')
+        return v.lower()
 
 class OTPVerifyRequest(BaseModel):
-    email: EmailStr
+    email: str = Field(..., min_length=5, max_length=255)
     code: str = Field(..., min_length=6, max_length=6)
+    
+    @validator('email')
+    def email_must_be_valid(cls, v):
+        if '@' not in v or '.' not in v.split('@')[1]:
+            raise ValueError('Email inválido')
+        return v.lower()
     
     @validator('code')
     def code_must_be_digits(cls, v):
@@ -63,9 +76,15 @@ class OTPVerifyRequest(BaseModel):
         return v
 
 class RegisterRequest(BaseModel):
-    email: EmailStr
+    email: str = Field(..., min_length=5, max_length=255)
     full_name: str = Field(..., min_length=3, max_length=255)
     department: Optional[str] = None
+    
+    @validator('email')
+    def email_must_be_valid(cls, v):
+        if '@' not in v or '.' not in v.split('@')[1]:
+            raise ValueError('Email inválido')
+        return v.lower()
 
 class UserResponseSchema(BaseModel):
     id: int
