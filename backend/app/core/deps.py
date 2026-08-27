@@ -16,58 +16,26 @@ def get_current_user(
     db: Session = Depends(get_db)
 ) -> UserModel:
     """Get current authenticated user"""
-    print(f"=== GET_CURRENT_USER CALLED ===")
-    
     credentials_exception = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
     
-    print(f" === GET_CURRENT_USER CALLED ===")
-    print(f"Token received: {credentials.credentials[:20]}...")
-    print(f"SECRET_KEY (first 10 chars): {settings.SECRET_KEY[:10]}...")
-    print(f"ALGORITHM: {settings.ALGORITHM}")
-    
     try:
         payload = jwt.decode(credentials.credentials, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
-        print(f"Token payload: {payload}")
-        username: str = payload.get("sub")
-        if username is None:
-            print(f"✗ No username in token payload")
+        email: str = payload.get("sub")
+        if email is None:
             raise credentials_exception
-        print(f"Username from token: {username}")
     except JWTError as e:
-        print(f"✗ JWT decode error: {e}")
         raise credentials_exception
     
-    user = db.query(UserModel).filter(UserModel.username == username).first()
+    user = db.query(UserModel).filter(UserModel.email == email).first()
     if user is None:
-        print(f"✗ User not found in database: {username}")
         raise credentials_exception
-    
-    print(f"User found: {user.username}, active: {user.is_active}, role: {user.role}")
     
     if not user.is_active:
-        print(f"✗ User is inactive: {username}")
         raise HTTPException(status_code=403, detail="Inactive user")
-    
-    print(f"✓ User authenticated successfully: {username}")
-    
-    # Check if there's a hidden dependency calling get_current_admin
-    import inspect
-    frame = inspect.currentframe()
-    try:
-        current_frame = frame.f_back
-        while current_frame:
-            filename = current_frame.f_code.co_filename
-            function_name = current_frame.f_code.co_name
-            if 'get_current_admin' in function_name:
-                print(f"FOUND get_current_admin in call stack: {filename}:{current_frame.f_lineno}")
-                raise HTTPException(status_code=403, detail="Not enough permissions. Admin role required.")
-            current_frame = current_frame.f_back
-    finally:
-        del frame
     
     return user
 
@@ -129,11 +97,11 @@ def get_optional_current_user(
             settings.SECRET_KEY, 
             algorithms=[settings.ALGORITHM]
         )
-        username: str = payload.get("sub")
-        if username is None:
+        email: str = payload.get("sub")
+        if email is None:
             return None
         
-        user = db.query(UserModel).filter(UserModel.username == username).first()
+        user = db.query(UserModel).filter(UserModel.email == email).first()
         if user and user.is_active:
             return user
         
@@ -161,14 +129,14 @@ def get_user_from_token_param(
             settings.SECRET_KEY, 
             algorithms=[settings.ALGORITHM]
         )
-        username: str = payload.get("sub")
-        if username is None:
+        email: str = payload.get("sub")
+        if email is None:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Invalid token"
             )
         
-        user = db.query(UserModel).filter(UserModel.username == username).first()
+        user = db.query(UserModel).filter(UserModel.email == email).first()
         if not user:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,

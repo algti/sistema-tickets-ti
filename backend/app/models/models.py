@@ -75,16 +75,18 @@ class User(Base):
     __tablename__ = "users"
     
     id = Column(Integer, primary_key=True, index=True)
-    username = Column(String(100), unique=True, index=True, nullable=False)
     email = Column(String(255), unique=True, index=True, nullable=False)
     full_name = Column(String(255), nullable=False)
     department = Column(String(100))
     phone = Column(String(20))
     role = Column(Enum(UserRole), default=UserRole.user)
     is_active = Column(Boolean, default=True)
-    is_ldap_user = Column(Boolean, default=True)
-    hashed_password = Column(String(255))  # For non-LDAP users
     tutorial_viewed = Column(Boolean, default=False)  # Tutorial system
+    
+    # Login tracking
+    last_login = Column(DateTime, nullable=True)
+    last_login_ip = Column(String(45), nullable=True)
+    login_attempts = Column(Integer, default=0)
     
     # Foreign Keys
     company_id = Column(Integer, ForeignKey("companies.id"))
@@ -99,6 +101,7 @@ class User(Base):
     assigned_tickets = relationship("Ticket", foreign_keys="Ticket.assigned_to_id", back_populates="assigned_to")
     comments = relationship("TicketComment", back_populates="user")
     evaluations = relationship("TicketEvaluation", back_populates="user")
+    login_audits = relationship("LoginAudit", back_populates="user")
 
 class Category(Base):
     __tablename__ = "categories"
@@ -291,3 +294,34 @@ class Asset(Base):
     category = relationship("AssetCategory", back_populates="assets")
     assigned_to = relationship("User")
     company = relationship("Company")
+
+class LoginOTP(Base):
+    __tablename__ = "login_otp"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    email = Column(String(255), nullable=False, index=True)
+    code = Column(String(6), nullable=False, index=True)
+    attempts = Column(Integer, default=0)
+    max_attempts = Column(Integer, default=5)
+    created_at = Column(DateTime, server_default=func.now(), index=True)
+    expires_at = Column(DateTime, nullable=False, index=True)
+    used = Column(Boolean, default=False)
+    used_at = Column(DateTime, nullable=True)
+    ip_address = Column(String(45), nullable=True)
+    user_agent = Column(Text, nullable=True)
+
+class LoginAudit(Base):
+    __tablename__ = "login_audit"
+    
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=True, index=True)
+    email = Column(String(255), nullable=False, index=True)
+    login_method = Column(String(50), default="otp")
+    ip_address = Column(String(45), nullable=True)
+    user_agent = Column(Text, nullable=True)
+    success = Column(Boolean, default=False)
+    reason = Column(String(255), nullable=True)
+    created_at = Column(DateTime, server_default=func.now(), index=True)
+    
+    # Relationships
+    user = relationship("User", back_populates="login_audits")
