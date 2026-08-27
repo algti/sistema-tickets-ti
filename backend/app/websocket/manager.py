@@ -27,7 +27,7 @@ class ConnectionManager:
         self.active_connections[user.id].add(websocket)
         self.connection_users[websocket] = user
         
-        logger.info(f"User {user.username} connected via WebSocket")
+        logger.info(f"User {user.email} connected via WebSocket")
         
         # Envia mensagem de boas-vindas
         await self.send_personal_message({
@@ -51,7 +51,7 @@ class ConnectionManager:
             # Remove do mapeamento de usuários
             del self.connection_users[websocket]
             
-            logger.info(f"User {user.username} disconnected from WebSocket")
+            logger.info(f"User {user.email} disconnected from WebSocket")
 
     async def send_personal_message(self, message: dict, websocket: WebSocket):
         """Envia mensagem para uma conexão específica"""
@@ -128,7 +128,7 @@ class ConnectionManager:
         for websocket, user in self.connection_users.items():
             users.append({
                 "id": user.id,
-                "username": user.username,
+                "email": user.email,
                 "role": user.role.value,
                 "full_name": user.full_name
             })

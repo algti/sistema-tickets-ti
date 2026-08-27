@@ -21,22 +21,22 @@ async def get_user_from_websocket_token(token: str, db: Session) -> User:
         payload = verify_token(token)
         logger.info(f"Token payload: {payload}")
         
-        username = payload.get("sub")
-        if not username:
-            logger.error("No username in token payload")
+        email = payload.get("sub")
+        if not email:
+            logger.error("No email in token payload")
             raise HTTPException(status_code=401, detail="Invalid token")
         
-        logger.info(f"Looking for user: {username}")
-        user = db.query(User).filter(User.username == username).first()
+        logger.info(f"Looking for user: {email}")
+        user = db.query(User).filter(User.email == email).first()
         if not user:
-            logger.error(f"User not found: {username}")
+            logger.error(f"User not found: {email}")
             raise HTTPException(status_code=401, detail="User not found")
         
         if not user.is_active:
-            logger.error(f"User inactive: {username}")
+            logger.error(f"User inactive: {email}")
             raise HTTPException(status_code=401, detail="User inactive")
         
-        logger.info(f"WebSocket auth successful for user: {username}")
+        logger.info(f"WebSocket auth successful for user: {email}")
         return user
     except Exception as e:
         logger.error(f"WebSocket authentication error: {e}")
@@ -56,9 +56,9 @@ async def websocket_endpoint(
         user = await get_user_from_websocket_token(token, db)
         
         # Conecta o usuário
-        logger.info(f"Connecting user {user.username} to WebSocket")
+        logger.info(f"Connecting user {user.email} to WebSocket")
         await manager.connect(websocket, user)
-        logger.info(f"User {user.username} connected successfully")
+        logger.info(f"User {user.email} connected successfully")
         
         try:
             while True:
