@@ -96,7 +96,11 @@ async def request_otp(
         db.commit()
         
         # 6. Enviar email
-        email_service.send_otp_email(email, code, expires_in_minutes=8)
+        try:
+            email_service.send_otp_email(email, code, expires_in_minutes=8)
+        except Exception as e:
+            print(f"Erro ao enviar email: {str(e)}")
+            # Continuar mesmo se email falhar
         
         # 7. Registrar em auditoria
         audit = LoginAudit(
@@ -273,7 +277,11 @@ async def resend_otp(
         db.commit()
         
         # 5. Enviar email
-        email_service.send_otp_email(email, code, expires_in_minutes=8)
+        try:
+            email_service.send_otp_email(email, code, expires_in_minutes=8)
+        except Exception as e:
+            print(f"Erro ao enviar email: {str(e)}")
+            # Continuar mesmo se email falhar
         
         return {
             "message": "Novo código enviado para seu email",
