@@ -1,119 +1,354 @@
-from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordRequestForm
+from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
-from datetime import timedelta
+from datetime import datetime, timedelta
 
 from app.core.config import settings
 from app.core.database import get_db
-from app.core.security import create_access_token, verify_password
+from app.core.security import create_access_token
 from app.core.deps import get_current_user
-from app.models.models import User as UserModel, UserRole
-from app.schemas.schemas import Token, LoginRequest, User as UserSchema
-from app.services.ldap_service import ldap_service
+from app.models.models import User as UserModel, UserRole, LoginOTP, LoginAudit
+from app.schemas.schemas import (
+    Token, User as UserSchema, EmailRequest, OTPVerifyRequest, 
+    RegisterRequest, LoginResponseSchema, UserResponseSchema
+)
+from app.services.email_service import send_otp_email
+from app.utils.otp import (
+    generate_otp_code, get_otp_expiration, is_otp_expired,
+    validate_otp_attempts, get_client_ip, get_user_agent
+)
 
 router = APIRouter()
 
-@router.post("/login", response_model=Token)
-async def login(
-    login_data: LoginRequest,
+@router.post("/request-otp")
+async def request_otp(
+    request: Request,
+    email_request: EmailRequest,
     db: Session = Depends(get_db)
 ):
-    """Login with LDAP or local credentials"""
-    
-    # First try LDAP authentication
-    ldap_user_info = ldap_service.authenticate_user(login_data.username, login_data.password)
-    
-    if ldap_user_info:
-        # LDAP authentication successful
-        user = db.query(UserModel).filter(UserModel.username == login_data.username).first()
+    """
+    Solicitar código OTP para login
+    """
+    try:
+        email = email_request.email.lower()
+        client_ip = get_client_ip(request)
+        user_agent = get_user_agent(request)
+        
+        # 1. Validar email cadastrado
+        user = db.query(UserModel).filter(UserModel.email == email).first()
         
         if not user:
-            # Create new user from LDAP info
-            user = UserModel(
-                username=ldap_user_info['username'],
-                email=ldap_user_info['email'],
-                full_name=ldap_user_info['full_name'],
-                department=ldap_user_info.get('department'),
-                phone=ldap_user_info.get('phone'),
-                role=UserRole.user,
-                is_ldap_user=True,
-                is_active=True
+            # Registrar tentativa falhada
+            audit = LoginAudit(
+                email=email,
+                login_method="otp",
+                ip_address=client_ip,
+                user_agent=user_agent,
+                success=False,
+                reason="Email não cadastrado"
             )
-            
-            # Check if user should be technician or admin based on AD groups
-            groups = ldap_user_info.get('groups', [])
-            if any('ti-admin' in group.lower() or 'helpdesk-admin' in group.lower() for group in groups):
-                user.role = UserRole.admin
-            elif any('ti-tech' in group.lower() or 'helpdesk-tech' in group.lower() for group in groups):
-                user.role = UserRole.technician
-            
-            db.add(user)
+            db.add(audit)
             db.commit()
-            db.refresh(user)
-        else:
-            # Update existing user info from LDAP
-            user.email = ldap_user_info['email']
-            user.full_name = ldap_user_info['full_name']
-            user.department = ldap_user_info.get('department')
-            user.phone = ldap_user_info.get('phone')
             
-            # Update role based on AD groups if user is still LDAP user
-            if user.is_ldap_user:
-                groups = ldap_user_info.get('groups', [])
-                if any('ti-admin' in group.lower() or 'helpdesk-admin' in group.lower() for group in groups):
-                    user.role = UserRole.admin
-                elif any('ti-tech' in group.lower() or 'helpdesk-tech' in group.lower() for group in groups):
-                    user.role = UserRole.technician
-                else:
-                    # Safe role comparison for demotion
-                    current_role = user.role
-                    if isinstance(current_role, str):
-                        current_role_str = current_role.lower()
-                    else:
-                        current_role_str = current_role.value.lower()
-                    
-                    if current_role_str in ["admin", "technician"]:
-                        # Demote if no longer in groups
-                        user.role = UserRole.user
-            
-            db.commit()
-            db.refresh(user)
-    
-    else:
-        # Try local authentication (for non-LDAP users like admins)
-        user = db.query(UserModel).filter(UserModel.username == login_data.username).first()
-        
-        if not user or user.is_ldap_user or not verify_password(login_data.password, user.hashed_password):
             raise HTTPException(
-                status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Incorrect username or password",
-                headers={"WWW-Authenticate": "Bearer"},
+                status_code=404,
+                detail="Email não cadastrado no sistema"
             )
-    
-    if not user.is_active:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="Inactive user"
+        
+        # 2. Validar usuário ativo
+        if not user.is_active:
+            audit = LoginAudit(
+                user_id=user.id,
+                email=email,
+                login_method="otp",
+                ip_address=client_ip,
+                user_agent=user_agent,
+                success=False,
+                reason="Usuário inativo"
+            )
+            db.add(audit)
+            db.commit()
+            
+            raise HTTPException(
+                status_code=403,
+                detail="Usuário inativo. Contate o administrador."
+            )
+        
+        # 3. Limpar OTPs anteriores expirados
+        db.query(LoginOTP).filter(
+            LoginOTP.email == email,
+            LoginOTP.expires_at < datetime.utcnow()
+        ).delete()
+        db.commit()
+        
+        # 4. Gerar novo código
+        code = generate_otp_code(6)
+        expires_at = get_otp_expiration(8)  # 8 minutos
+        
+        # 5. Salvar no banco
+        otp = LoginOTP(
+            email=email,
+            code=code,
+            expires_at=expires_at,
+            ip_address=client_ip,
+            user_agent=user_agent
         )
-    
-    access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
-    access_token = create_access_token(
-        subject=user.username, expires_delta=access_token_expires
-    )
-    
-    return {
-        "access_token": access_token,
-        "token_type": "bearer"
-    }
+        db.add(otp)
+        db.commit()
+        
+        # 6. Enviar email
+        await send_otp_email(email, code, expires_in_minutes=8)
+        
+        # 7. Registrar em auditoria
+        audit = LoginAudit(
+            user_id=user.id,
+            email=email,
+            login_method="otp",
+            ip_address=client_ip,
+            user_agent=user_agent,
+            success=True,
+            reason="OTP enviado"
+        )
+        db.add(audit)
+        db.commit()
+        
+        return {
+            "message": "Código enviado para seu email",
+            "expires_in": 480  # 8 minutos em segundos
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail="Erro ao processar requisição"
+        )
 
-@router.post("/login/form", response_model=Token)
-async def login_form(
-    form_data: OAuth2PasswordRequestForm = Depends(),
+@router.post("/verify-otp", response_model=LoginResponseSchema)
+async def verify_otp(
+    request: Request,
+    otp_request: OTPVerifyRequest,
     db: Session = Depends(get_db)
 ):
-    """Login endpoint compatible with OAuth2PasswordRequestForm"""
-    login_data = LoginRequest(username=form_data.username, password=form_data.password)
-    return await login(login_data, db)
+    """
+    Verificar código OTP e fazer login
+    """
+    try:
+        email = otp_request.email.lower()
+        code = otp_request.code
+        client_ip = get_client_ip(request)
+        user_agent = get_user_agent(request)
+        
+        # 1. Buscar OTP
+        otp = db.query(LoginOTP).filter(
+            LoginOTP.email == email,
+            LoginOTP.code == code
+        ).first()
+        
+        if not otp:
+            raise HTTPException(
+                status_code=400,
+                detail="Código inválido"
+            )
+        
+        # 2. Verificar expiração
+        if is_otp_expired(otp.expires_at):
+            raise HTTPException(
+                status_code=401,
+                detail="Código expirado"
+            )
+        
+        # 3. Verificar tentativas
+        if not validate_otp_attempts(otp.attempts, 5):
+            raise HTTPException(
+                status_code=403,
+                detail="Máximo de tentativas atingido"
+            )
+        
+        # 4. Verificar se já foi usado
+        if otp.used:
+            raise HTTPException(
+                status_code=400,
+                detail="Código já foi utilizado"
+            )
+        
+        # 5. Buscar usuário
+        user = db.query(UserModel).filter(UserModel.email == email).first()
+        
+        if not user or not user.is_active:
+            raise HTTPException(
+                status_code=403,
+                detail="Usuário não encontrado ou inativo"
+            )
+        
+        # 6. Marcar OTP como usado
+        otp.used = True
+        otp.used_at = datetime.utcnow()
+        
+        # 7. Atualizar último login do usuário
+        user.last_login = datetime.utcnow()
+        user.last_login_ip = client_ip
+        user.login_attempts = 0
+        
+        # 8. Gerar JWT token
+        access_token = create_access_token(subject=user.email)
+        
+        # 9. Registrar sucesso em auditoria
+        audit = LoginAudit(
+            user_id=user.id,
+            email=email,
+            login_method="otp",
+            ip_address=client_ip,
+            user_agent=user_agent,
+            success=True,
+            reason="Login bem-sucedido"
+        )
+        
+        db.add(audit)
+        db.commit()
+        
+        return LoginResponseSchema(
+            access_token=access_token,
+            token_type="bearer",
+            user=UserResponseSchema.from_orm(user)
+        )
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail="Erro ao processar requisição"
+        )
+
+@router.post("/resend-otp")
+async def resend_otp(
+    request: Request,
+    email_request: EmailRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    Reenviar código OTP
+    """
+    try:
+        email = email_request.email.lower()
+        client_ip = get_client_ip(request)
+        user_agent = get_user_agent(request)
+        
+        # 1. Validar email cadastrado
+        user = db.query(UserModel).filter(UserModel.email == email).first()
+        
+        if not user:
+            raise HTTPException(
+                status_code=404,
+                detail="Email não cadastrado"
+            )
+        
+        if not user.is_active:
+            raise HTTPException(
+                status_code=403,
+                detail="Usuário inativo"
+            )
+        
+        # 2. Deletar OTP anterior
+        db.query(LoginOTP).filter(
+            LoginOTP.email == email,
+            LoginOTP.used == False
+        ).delete()
+        db.commit()
+        
+        # 3. Gerar novo código
+        code = generate_otp_code(6)
+        expires_at = get_otp_expiration(8)
+        
+        # 4. Salvar
+        otp = LoginOTP(
+            email=email,
+            code=code,
+            expires_at=expires_at,
+            ip_address=client_ip,
+            user_agent=user_agent
+        )
+        db.add(otp)
+        db.commit()
+        
+        # 5. Enviar email
+        await send_otp_email(email, code, expires_in_minutes=8)
+        
+        return {
+            "message": "Novo código enviado para seu email",
+            "expires_in": 480
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail="Erro ao processar requisição"
+        )
+
+@router.post("/register")
+async def register(
+    request: Request,
+    register_request: RegisterRequest,
+    db: Session = Depends(get_db)
+):
+    """
+    Registrar novo usuário
+    """
+    try:
+        email = register_request.email.lower()
+        client_ip = get_client_ip(request)
+        user_agent = get_user_agent(request)
+        
+        # 1. Validar email não existe
+        existing_user = db.query(UserModel).filter(UserModel.email == email).first()
+        
+        if existing_user:
+            raise HTTPException(
+                status_code=409,
+                detail="Email já cadastrado no sistema"
+            )
+        
+        # 2. Criar novo usuário
+        new_user = UserModel(
+            email=email,
+            full_name=register_request.full_name,
+            department=register_request.department,
+            role=UserRole.user,  # Role padrão
+            is_active=True
+        )
+        
+        db.add(new_user)
+        db.commit()
+        db.refresh(new_user)
+        
+        # 3. Registrar em auditoria
+        audit = LoginAudit(
+            user_id=new_user.id,
+            email=email,
+            login_method="otp",
+            ip_address=client_ip,
+            user_agent=user_agent,
+            success=True,
+            reason="Novo usuário registrado"
+        )
+        db.add(audit)
+        db.commit()
+        
+        return {
+            "message": "Usuário registrado com sucesso",
+            "email": email
+        }
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail="Erro ao processar requisição"
+        )
 
 @router.get("/me", response_model=UserSchema)
 async def read_users_me(current_user: UserModel = Depends(get_current_user)):
@@ -125,11 +360,16 @@ async def refresh_token(current_user: UserModel = Depends(get_current_user)):
     """Refresh access token"""
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = create_access_token(
-        subject=current_user.username, expires_delta=access_token_expires
+        subject=current_user.email, expires_delta=access_token_expires
     )
     
     return {
         "access_token": access_token,
         "token_type": "bearer"
     }
+
+@router.post("/logout")
+async def logout(current_user: UserModel = Depends(get_current_user)):
+    """Logout endpoint"""
+    return {"message": "Logout realizado com sucesso"}
 

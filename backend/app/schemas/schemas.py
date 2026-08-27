@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, Field, validator, EmailStr
 from typing import List, Optional, Dict
 from datetime import datetime
 from enum import Enum
@@ -48,17 +48,76 @@ class User(UserBase):
     class Config:
         from_attributes = True
 
-# Auth Schemas
+# Auth Schemas - OTP
+class EmailRequest(BaseModel):
+    email: EmailStr
+
+class OTPVerifyRequest(BaseModel):
+    email: EmailStr
+    code: str = Field(..., min_length=6, max_length=6)
+    
+    @validator('code')
+    def code_must_be_digits(cls, v):
+        if not v.isdigit():
+            raise ValueError('Código deve conter apenas dígitos')
+        return v
+
+class RegisterRequest(BaseModel):
+    email: EmailStr
+    full_name: str = Field(..., min_length=3, max_length=255)
+    department: Optional[str] = None
+
+class UserResponseSchema(BaseModel):
+    id: int
+    email: str
+    full_name: str
+    role: str
+    is_active: bool
+    department: Optional[str] = None
+    
+    class Config:
+        from_attributes = True
+
+class LoginResponseSchema(BaseModel):
+    access_token: str
+    token_type: str
+    user: UserResponseSchema
+
+class LoginOTPSchema(BaseModel):
+    id: int
+    email: str
+    code: str
+    attempts: int
+    max_attempts: int
+    created_at: datetime
+    expires_at: datetime
+    used: bool
+    ip_address: Optional[str] = None
+    user_agent: Optional[str] = None
+    
+    class Config:
+        from_attributes = True
+
+class LoginAuditSchema(BaseModel):
+    id: int
+    user_id: Optional[int] = None
+    email: str
+    login_method: str
+    ip_address: Optional[str] = None
+    success: bool
+    reason: Optional[str] = None
+    created_at: datetime
+    
+    class Config:
+        from_attributes = True
+
+# Legacy Token Schemas (mantém compatibilidade)
 class Token(BaseModel):
     access_token: str
     token_type: str
 
 class TokenData(BaseModel):
     username: Optional[str] = None
-
-class LoginRequest(BaseModel):
-    username: str
-    password: str
 
 # Category Schemas
 class CategoryBase(BaseModel):
