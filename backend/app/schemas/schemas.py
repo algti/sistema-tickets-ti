@@ -6,7 +6,6 @@ from app.models.models import UserRole, TicketStatus, TicketPriority, ContractSt
 
 # User Schemas
 class UserBase(BaseModel):
-    username: str
     email: str
     full_name: str
     department: Optional[str] = None
@@ -41,7 +40,6 @@ class User(UserBase):
     id: int
     role: UserRole
     is_active: bool
-    is_ldap_user: bool
     tutorial_viewed: bool = False
     created_at: datetime
     
