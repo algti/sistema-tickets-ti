@@ -617,5 +617,139 @@ class EmailService:
         return self._get_base_template(content)
 
 
+    def send_otp_email(self, email: str, code: str, expires_in_minutes: int = 8) -> bool:
+        """Envia código OTP por email para login"""
+        
+        subject = "Seu código de acesso - Sistema de Tickets ALG TI"
+        
+        # Template HTML para OTP
+        html_content = f"""
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        body {{ 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+            margin: 0;
+            padding: 0;
+        }}
+        .container {{ 
+            max-width: 600px; 
+            margin: 20px auto; 
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }}
+        .header {{ 
+            background: linear-gradient(135deg, #06b6d4 0%, #0891b2 100%);
+            color: white; 
+            padding: 30px 20px;
+            text-align: center;
+        }}
+        .header h1 {{
+            margin: 0;
+            font-size: 24px;
+        }}
+        .header p {{
+            margin: 5px 0 0 0;
+            font-size: 14px;
+            opacity: 0.9;
+        }}
+        .content {{ 
+            padding: 30px 20px; 
+        }}
+        .content p {{
+            color: #333;
+            line-height: 1.6;
+            margin: 15px 0;
+        }}
+        .code-box {{ 
+            background: #f1f5f9;
+            border: 2px solid #06b6d4;
+            border-radius: 8px;
+            padding: 25px;
+            text-align: center;
+            margin: 25px 0;
+        }}
+        .code-box .code {{
+            font-size: 48px;
+            font-weight: bold;
+            color: #06b6d4;
+            letter-spacing: 10px;
+            font-family: 'Courier New', monospace;
+        }}
+        .code-box .expires {{
+            font-size: 12px;
+            color: #666;
+            margin-top: 10px;
+        }}
+        .warning {{
+            background: #fef3c7;
+            border-left: 4px solid #f59e0b;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 4px;
+        }}
+        .warning p {{
+            margin: 5px 0;
+            font-size: 14px;
+            color: #92400e;
+        }}
+        .footer {{
+            background: #f8fafc;
+            padding: 20px;
+            text-align: center;
+            font-size: 12px;
+            color: #64748b;
+            border-top: 1px solid #e2e8f0;
+        }}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🔐 Código de Acesso</h1>
+            <p>Sistema de Tickets ALG TI</p>
+        </div>
+        <div class="content">
+            <p>Olá,</p>
+            
+            <p>Você solicitou um código de acesso para fazer login no Sistema de Tickets ALG TI.</p>
+            
+            <p>Use o código abaixo para completar seu login:</p>
+            
+            <div class="code-box">
+                <div class="code">{code}</div>
+                <div class="expires">Válido por {expires_in_minutes} minutos</div>
+            </div>
+            
+            <div class="warning">
+                <p><strong>⚠️ Segurança:</strong></p>
+                <p>• Nunca compartilhe este código com ninguém</p>
+                <p>• O código expira em {expires_in_minutes} minutos</p>
+                <p>• Você tem até 5 tentativas para usar o código</p>
+                <p>• Se não solicitou este código, ignore este email</p>
+            </div>
+            
+            <p>Se tiver dúvidas, entre em contato com o suporte técnico.</p>
+            
+            <p>Atenciosamente,<br>Equipe de Suporte ALG TI</p>
+        </div>
+        <div class="footer">
+            <p>Este é um email automático. Por favor, não responda.</p>
+            <p>© 2024 ALG TI - Sistema de Gerenciamento de Tickets</p>
+        </div>
+    </div>
+</body>
+</html>
+"""
+        
+        return self._send_email([email], subject, html_content)
+
+
 # Instância global do serviço de email
 email_service = EmailService()

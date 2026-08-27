@@ -11,7 +11,7 @@ from app.schemas.schemas import (
     Token, User as UserSchema, EmailRequest, OTPVerifyRequest, 
     RegisterRequest, LoginResponseSchema, UserResponseSchema
 )
-from app.services.email_service import send_otp_email
+from app.services.email_service import email_service
 from app.utils.otp import (
     generate_otp_code, get_otp_expiration, is_otp_expired,
     validate_otp_attempts, get_client_ip, get_user_agent
@@ -96,7 +96,7 @@ async def request_otp(
         db.commit()
         
         # 6. Enviar email
-        await send_otp_email(email, code, expires_in_minutes=8)
+        email_service.send_otp_email(email, code, expires_in_minutes=8)
         
         # 7. Registrar em auditoria
         audit = LoginAudit(
@@ -273,7 +273,7 @@ async def resend_otp(
         db.commit()
         
         # 5. Enviar email
-        await send_otp_email(email, code, expires_in_minutes=8)
+        email_service.send_otp_email(email, code, expires_in_minutes=8)
         
         return {
             "message": "Novo código enviado para seu email",
