@@ -95,15 +95,13 @@
 
 ---
 
-## 📋 PRÓXIMOS PASSOS
-
-### FASE 2: FRONTEND (A FAZER)
+## FASE 2: FRONTEND (CONCLUÍDA)
 
 #### PASSO 2.1: Criar página OTPLogin.js
-- [ ] Componente principal com 2 passos (email e código)
-- [ ] Estado para controlar passo atual
-- [ ] Timer de expiração (8 minutos)
-- [ ] Contador de tentativas
+- [x] Componente principal com 2 passos (email e código)
+- [x] Estado para controlar passo atual
+- [x] Timer de expiração (8 minutos)
+- [x] Contador de tentativas
 
 #### PASSO 2.2: Criar componente EmailStep.js
 - [ ] Input para email
