@@ -181,12 +181,16 @@ export default function OTPLogin() {
     }}>
       <style>{`
         @keyframes glow {
-          0%, 100% { text-shadow: 0 0 20px rgba(0, 255, 255, 0.5), 0 0 40px rgba(0, 255, 255, 0.3); }
-          50% { text-shadow: 0 0 30px rgba(0, 255, 255, 0.8), 0 0 60px rgba(0, 255, 255, 0.5); }
+          0%, 100% { 
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.5), 0 0 40px rgba(0, 255, 255, 0.3), inset 0 0 20px rgba(0, 255, 255, 0.1);
+          }
+          50% { 
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.8), 0 0 60px rgba(0, 255, 255, 0.5), inset 0 0 30px rgba(0, 255, 255, 0.2);
+          }
         }
-        .glow-text {
+        .glow-neon {
           animation: glow 3s ease-in-out infinite;
-          background: linear-gradient(135deg, rgba(0, 255, 255, 0.1) 0%, rgba(0, 150, 150, 0.05) 100%);
+          background: linear-gradient(135deg, rgba(0, 255, 255, 0.15) 0%, rgba(0, 150, 150, 0.08) 100%);
           padding: 20px 40px;
           border-radius: 12px;
         }
@@ -198,10 +202,10 @@ export default function OTPLogin() {
           <img src="/logo-alg.png" alt="ALG" className="w-20 h-20 mx-auto mb-4" />
         </div>
 
-        {/* Título com glow */}
+        {/* Título com glow neon */}
         <div className="text-center mb-8">
-          <div className="glow-text mb-4">
-            <h1 className="text-4xl font-mono font-bold text-white tracking-wider">SISTEMA DE TICKETS</h1>
+          <div className="glow-neon mb-4">
+            <h1 className="text-3xl font-mono font-bold text-white tracking-wider">SISTEMA DE TICKETS</h1>
           </div>
           <p className="text-cyan-400 text-lg font-semibold mb-2">ALG Soluções em Tecnologia</p>
           <p className="text-gray-400 text-sm">Faça login com suas credenciais</p>
