@@ -24,11 +24,34 @@ authAPI.interceptors.request.use(
   }
 );
 
+// Função para extrair mensagem de erro real
+const getErrorMessage = (error) => {
+  if (error.response?.data?.detail) {
+    return error.response.data.detail;
+  }
+  if (error.response?.data?.message) {
+    return error.response.data.message;
+  }
+  if (error.response?.data?.error) {
+    return error.response.data.error;
+  }
+  if (typeof error.response?.data === 'string') {
+    return error.response.data;
+  }
+  if (error.message) {
+    return error.message;
+  }
+  return 'Erro desconhecido ao processar requisição';
+};
+
 // Response interceptor to handle token expiration
 authAPI.interceptors.response.use(
   (response) => response,
   async (error) => {
     const originalRequest = error.config;
+    
+    // Adicionar mensagem de erro real ao erro
+    error.userMessage = getErrorMessage(error);
     
     // Don't try to refresh if the request is already a refresh request
     if (originalRequest.url?.includes('/auth/refresh')) {

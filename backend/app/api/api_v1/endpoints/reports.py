@@ -42,7 +42,6 @@ async def get_technician_performance(
     query = db.query(
         User.id,
         User.full_name,
-        User.username,
         User.department,
         func.count(Ticket.id).label('total_tickets'),
         func.count(case([(Ticket.status == TicketStatus.RESOLVED, 1)])).label('resolved_tickets'),
@@ -69,7 +68,7 @@ async def get_technician_performance(
         query = query.filter(User.id == technician_id)
     
     # Group by user
-    query = query.group_by(User.id, User.full_name, User.username, User.department)
+    query = query.group_by(User.id, User.full_name, User.department)
     
     results = query.all()
     
@@ -80,7 +79,6 @@ async def get_technician_performance(
         performance_data.append({
             'technician_id': result.id,
             'name': result.full_name,
-            'username': result.username,
             'department': result.department,
             'total_tickets': result.total_tickets,
             'resolved_tickets': result.resolved_tickets,

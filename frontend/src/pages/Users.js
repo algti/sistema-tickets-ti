@@ -184,7 +184,8 @@ function Users() {
       fetchUsers();
     } catch (error) {
       console.error('Erro ao salvar usuário:', error);
-      alert('Erro ao salvar usuário. Verifique os dados e tente novamente.');
+      const errorMessage = error.userMessage || error.response?.data?.detail || 'Erro ao salvar usuário. Verifique os dados e tente novamente.';
+      alert(errorMessage);
     } finally {
       setModalLoading(false);
     }

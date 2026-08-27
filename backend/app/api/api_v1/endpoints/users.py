@@ -110,7 +110,7 @@ async def update_profile(
     """Update current user profile"""
     
     print(f"=== USERS.PY PROFILE UPDATE ENDPOINT CALLED ===")
-    print(f"Current user: {current_user.username} (ID: {current_user.id})")
+    print(f"Current user: {current_user.email} (ID: {current_user.id})")
     print(f"User active: {current_user.is_active}")
     print(f"User role: {current_user.role}")
     print(f"Profile data: {profile_data.dict(exclude_unset=True)}")
@@ -123,7 +123,7 @@ async def update_profile(
             print(f"✗ User not found in database: ID {current_user.id}")
             raise HTTPException(status_code=404, detail="User not found")
         
-        print(f"Database user found: {user.username}, active: {user.is_active}")
+        print(f"Database user found: {user.email}, active: {user.is_active}")
         
         # Convert ProfileUpdate to dict, excluding None values
         update_data = profile_data.dict(exclude_unset=True)

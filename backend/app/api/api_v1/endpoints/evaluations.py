@@ -335,7 +335,7 @@ async def get_technician_satisfaction_metrics(
         if technician.id not in technician_metrics:
             technician_metrics[technician.id] = {
                 'technician_id': technician.id,
-                'technician_name': technician.full_name or technician.username,
+                'technician_name': technician.full_name or technician.email,
                 'ratings': []
             }
         
