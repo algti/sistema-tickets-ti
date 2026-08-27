@@ -4,6 +4,14 @@ from datetime import datetime
 from enum import Enum
 from app.models.models import UserRole, TicketStatus, TicketPriority, ContractStatus
 
+# Company Schema
+class CompanySimple(BaseModel):
+    id: int
+    name: str
+    
+    class Config:
+        from_attributes = True
+
 # User Schemas
 class UserBase(BaseModel):
     email: str
@@ -42,6 +50,7 @@ class User(UserBase):
     is_active: bool
     tutorial_viewed: bool = False
     created_at: datetime
+    company: Optional[CompanySimple] = None
     
     class Config:
         from_attributes = True
