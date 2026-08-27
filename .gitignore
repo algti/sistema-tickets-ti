@@ -48,3 +48,11 @@ env/
 dist/
 build/
 *.egg-info/
+
+# Documentação (manter apenas README.md)
+*.md
+!README.md
+
+# Backups
+*.backup
+*.backup.*
