@@ -1,6 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from datetime import datetime, timedelta
+import logging
 
 from app.core.config import settings
 from app.core.database import get_db
@@ -18,6 +19,7 @@ from app.utils.otp import (
 )
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 @router.post("/request-otp")
 async def request_otp(
@@ -99,7 +101,7 @@ async def request_otp(
         try:
             email_service.send_otp_email(email, code, expires_in_minutes=8)
         except Exception as e:
-            print(f"Erro ao enviar email: {str(e)}")
+            logger.error(f"Erro ao enviar email para {email}: {str(e)}", exc_info=True)
             # Continuar mesmo se email falhar
         
         # 7. Registrar em auditoria
@@ -123,6 +125,7 @@ async def request_otp(
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Erro ao processar request-otp: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=500,
             detail="Erro ao processar requisição"
@@ -280,7 +283,7 @@ async def resend_otp(
         try:
             email_service.send_otp_email(email, code, expires_in_minutes=8)
         except Exception as e:
-            print(f"Erro ao enviar email: {str(e)}")
+            logger.error(f"Erro ao enviar email para {email}: {str(e)}", exc_info=True)
             # Continuar mesmo se email falhar
         
         return {
@@ -291,6 +294,7 @@ async def resend_otp(
     except HTTPException:
         raise
     except Exception as e:
+        logger.error(f"Erro ao processar resend-otp: {str(e)}", exc_info=True)
         raise HTTPException(
             status_code=500,
             detail="Erro ao processar requisição"
