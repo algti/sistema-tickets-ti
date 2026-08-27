@@ -5,6 +5,8 @@ import { ThemeProvider } from './contexts/ThemeContext';
 import { WebSocketProvider } from './contexts/WebSocketContext';
 import Layout from './components/Layout';
 import Login from './pages/Login';
+import OTPLogin from './pages/OTPLogin';
+import Register from './pages/Register';
 import Dashboard from './pages/Dashboard';
 import Tickets from './pages/Tickets';
 import TicketDetail from './pages/TicketDetail';
@@ -85,7 +87,15 @@ function AppRoutes() {
     <Routes>
       <Route 
         path="/login" 
-        element={user ? <Navigate to="/dashboard" replace /> : <Login />} 
+        element={user ? <Navigate to="/dashboard" replace /> : <Navigate to="/otp-login" replace />} 
+      />
+      <Route 
+        path="/otp-login" 
+        element={user ? <Navigate to="/dashboard" replace /> : <OTPLogin />} 
+      />
+      <Route 
+        path="/register" 
+        element={user ? <Navigate to="/dashboard" replace /> : <Register />} 
       />
       
       <Route path="/" element={<ProtectedRoute><Layout /></ProtectedRoute>}>
