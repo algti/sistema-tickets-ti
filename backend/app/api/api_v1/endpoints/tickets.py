@@ -192,13 +192,11 @@ async def get_tickets(
                 "solution": ticket.solution or "",
                 "created_by": {
                     "id": ticket.created_by.id,
-                    "username": ticket.created_by.username,
                     "full_name": ticket.created_by.full_name,
                     "email": ticket.created_by.email
                 } if ticket.created_by else None,
                 "assigned_to": {
                     "id": ticket.assigned_to.id,
-                    "username": ticket.assigned_to.username,
                     "full_name": ticket.assigned_to.full_name,
                     "email": ticket.assigned_to.email
                 } if ticket.assigned_to else None,
@@ -217,7 +215,7 @@ async def get_tickets(
         import logging
         logger = logging.getLogger(__name__)
         logger.error(f"Error in get_tickets: {str(e)}")
-        logger.error(f"User: {current_user.username}, Role: {current_user.role}")
+        logger.error(f"User: {current_user.email}, Role: {current_user.role}")
         
         # Return empty list instead of crashing
         return []
@@ -288,13 +286,11 @@ async def get_ticket(
             "solution": ticket.solution or "",
             "created_by": {
                 "id": ticket.created_by.id,
-                "username": ticket.created_by.username,
                 "full_name": ticket.created_by.full_name,
                 "email": ticket.created_by.email
             } if ticket.created_by else None,
             "assigned_to": {
                 "id": ticket.assigned_to.id,
-                "username": ticket.assigned_to.username,
                 "full_name": ticket.assigned_to.full_name,
                 "email": ticket.assigned_to.email
             } if ticket.assigned_to else None,
@@ -325,7 +321,7 @@ async def get_ticket(
         import logging
         logger = logging.getLogger(__name__)
         logger.error(f"Error in get_ticket: {str(e)}")
-        logger.error(f"Ticket ID: {ticket_id}, User: {current_user.username}")
+        logger.error(f"Ticket ID: {ticket_id}, User: {current_user.email}")
         
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -384,7 +380,7 @@ async def create_ticket(
             ticket_description=db_ticket.description,
             ticket_priority=db_ticket.priority.value if hasattr(db_ticket.priority, 'value') else str(db_ticket.priority),
             ticket_category=category_name,
-            created_by_name=current_user.full_name or current_user.username,
+            created_by_name=current_user.full_name or current_user.email,
             created_by_email=current_user.email,
             ticket_url=ticket_url
         )
@@ -403,9 +399,9 @@ async def create_ticket(
                 email_service.send_ticket_assigned_notification(
                     ticket_id=db_ticket.id,
                     ticket_title=db_ticket.title,
-                    assigned_to_name=assigned_user.full_name or assigned_user.username,
+                    assigned_to_name=assigned_user.full_name or assigned_user.email,
                     assigned_to_email=assigned_user.email,
-                    assigned_by_name=current_user.full_name or current_user.username,
+                    assigned_by_name=current_user.full_name or current_user.email,
                     ticket_owner_email=current_user.email,
                     ticket_url=ticket_url
                 )
@@ -559,7 +555,7 @@ async def update_ticket(
                     ticket_title=ticket.title,
                     old_status=old_status_str,
                     new_status=new_status_str,
-                    changed_by_name=current_user.full_name or current_user.username,
+                    changed_by_name=current_user.full_name or current_user.email,
                     ticket_owner_email=ticket_owner.email,
                     ticket_url=ticket_url
                 )
@@ -580,7 +576,7 @@ async def update_ticket(
                     ticket_id=ticket.id,
                     ticket_title=ticket.title,
                     changes=changes,
-                    updated_by_name=current_user.full_name or current_user.username,
+                    updated_by_name=current_user.full_name or current_user.email,
                     ticket_owner_email=ticket_owner.email,
                     ticket_url=ticket_url
                 )
@@ -601,9 +597,9 @@ async def update_ticket(
                     email_service.send_ticket_assigned_notification(
                         ticket_id=ticket.id,
                         ticket_title=ticket.title,
-                        assigned_to_name=assigned_user.full_name or assigned_user.username,
+                        assigned_to_name=assigned_user.full_name or assigned_user.email,
                         assigned_to_email=assigned_user.email,
-                        assigned_by_name=current_user.full_name or current_user.username,
+                        assigned_by_name=current_user.full_name or current_user.email,
                         ticket_owner_email=ticket_owner.email,
                         ticket_url=ticket_url
                     )
@@ -693,7 +689,7 @@ async def add_comment(
                         ticket_id=ticket.id,
                         ticket_title=ticket.title,
                         comment_text=comment.content,
-                        comment_by_name=current_user.full_name or current_user.username,
+                        comment_by_name=current_user.full_name or current_user.email,
                         ticket_owner_email=ticket_owner.email,
                         ticket_url=ticket_url
                     )
@@ -711,7 +707,7 @@ async def add_comment(
         import logging
         logger = logging.getLogger(__name__)
         logger.error(f"Error in add_comment: {str(e)}")
-        logger.error(f"Ticket ID: {ticket_id}, User: {current_user.username}")
+        logger.error(f"Ticket ID: {ticket_id}, User: {current_user.email}")
         
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -779,7 +775,6 @@ async def get_ticket_comments(
                 "created_at": comment.created_at.isoformat() if comment.created_at else None,
                 "user": {
                     "id": comment.user.id,
-                    "username": comment.user.username,
                     "full_name": comment.user.full_name,
                     "role": user_role_value
                 } if comment.user else None
@@ -794,7 +789,7 @@ async def get_ticket_comments(
         import logging
         logger = logging.getLogger(__name__)
         logger.error(f"Error in get_ticket_comments: {str(e)}")
-        logger.error(f"Ticket ID: {ticket_id}, User: {current_user.username}")
+        logger.error(f"Ticket ID: {ticket_id}, User: {current_user.email}")
         
         # Return empty list instead of crashing
         return []
@@ -924,7 +919,7 @@ async def download_attachment(
         if username is None:
             raise HTTPException(status_code=401, detail="Invalid token")
         
-        current_user = db.query(User).filter(User.username == username).first()
+        current_user = db.query(User).filter(User.email == username).first()
         if not current_user or not current_user.is_active:
             raise HTTPException(status_code=401, detail="User not found or inactive")
             
