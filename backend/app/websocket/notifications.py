@@ -23,7 +23,7 @@ class NotificationService:
             "status": ticket.status.value,
             "created_by": {
                 "id": created_by.id,
-                "username": created_by.username,
+                "email": created_by.email,
                 "full_name": created_by.full_name
             },
             "created_at": ticket.created_at.isoformat(),
@@ -47,12 +47,12 @@ class NotificationService:
             "priority": ticket.priority.value,
             "assigned_to": {
                 "id": assigned_to.id,
-                "username": assigned_to.username,
+                "email": assigned_to.email,
                 "full_name": assigned_to.full_name
             },
             "assigned_by": {
                 "id": assigned_by.id,
-                "username": assigned_by.username,
+                "email": assigned_by.email,
                 "full_name": assigned_by.full_name
             },
             "message": f"Ticket #{ticket.id} foi atribuído para você",
@@ -90,7 +90,7 @@ class NotificationService:
             "new_status": ticket.status.value,
             "changed_by": {
                 "id": changed_by.id,
-                "username": changed_by.username,
+                "email": changed_by.email,
                 "full_name": changed_by.full_name
             },
             "message": f"Status do ticket #{ticket.id} alterado para {status_messages.get(ticket.status, ticket.status.value)}",
@@ -126,7 +126,7 @@ class NotificationService:
             "comment_preview": comment_text[:100] + "..." if len(comment_text) > 100 else comment_text,
             "commented_by": {
                 "id": commented_by.id,
-                "username": commented_by.username,
+                "email": commented_by.email,
                 "full_name": commented_by.full_name
             },
             "message": f"Novo comentário no ticket #{ticket.id} por {commented_by.full_name}",
@@ -161,7 +161,7 @@ class NotificationService:
             "title": ticket.title,
             "resolved_by": {
                 "id": resolved_by.id,
-                "username": resolved_by.username,
+                "email": resolved_by.email,
                 "full_name": resolved_by.full_name
             },
             "message": f"Ticket #{ticket.id} foi resolvido por {resolved_by.full_name}",
