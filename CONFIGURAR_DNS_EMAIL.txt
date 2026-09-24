@@ -1,0 +1,54 @@
+CONFIGURAÇÃO DE AUTENTICAÇÃO DE EMAIL - HOSTINGER
+====================================================
+
+Para melhorar a entregabilidade de emails do tickets@algti.com e evitar spam:
+
+1. ACESSAR PAINEL DNS NA HOSTINGER
+   - Ir para: https://hpanel.hostinger.com
+   - Selecionar domínio: algti.com
+   - Ir para: DNS / Registros DNS
+
+2. ADICIONAR REGISTRO SPF
+   Tipo: TXT
+   Nome: @
+   Valor: v=spf1 include:sendgrid.net ~all
+   (ou ajuste conforme seu provedor de email)
+
+3. ADICIONAR REGISTRO DKIM
+   Seu provedor de email (Gmail, SendGrid, etc) fornecerá:
+   - Seletor (geralmente "default" ou "google")
+   - Chave pública
+   
+   Tipo: TXT
+   Nome: default._domainkey
+   Valor: v=DKIM1; k=rsa; p=YOUR_PUBLIC_KEY_HERE
+
+4. ADICIONAR REGISTRO DMARC
+   Tipo: TXT
+   Nome: _dmarc
+   Valor: v=DMARC1; p=quarantine; rua=mailto:admin@algti.com; ruf=mailto:admin@algti.com; fo=1
+
+5. VERIFICAR CONFIGURAÇÃO
+   - Aguardar 24-48h para propagação DNS
+   - Testar em: https://mxtoolbox.com/dmarc.aspx
+   - Verificar SPF em: https://mxtoolbox.com/spf.aspx
+
+6. MONITORAR ENTREGABILIDADE
+   - Verificar bounce rates
+   - Monitorar relatórios DMARC
+   - Ajustar política se necessário
+
+CONFIGURAÇÃO NO CÓDIGO
+======================
+✅ Headers de autenticação já adicionados em email_service.py:
+   - Reply-To: suporte@algti.com
+   - X-Mailer: Sistema de Tickets ALG
+   - List-Unsubscribe: mailto:unsubscribe@algti.com
+   - MIME-Version e Content-Type corretos
+
+PRÓXIMOS PASSOS
+===============
+1. Configurar os 3 registros DNS (SPF, DKIM, DMARC)
+2. Fazer deploy do código atualizado
+3. Testar envio de email de verificação
+4. Monitorar entregabilidade por 7 dias

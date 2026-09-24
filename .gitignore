@@ -1,7 +1,10 @@
  # Environment files
 .env
 *.env
+.env.local
+.env.*.local
 backend/.env
+frontend/.env.local
 
 # Database
 *.db
@@ -56,3 +59,4 @@ build/
 # Backups
 *.backup
 *.backup.*
+backend/.venv_check/

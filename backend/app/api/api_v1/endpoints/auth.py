@@ -21,6 +21,41 @@ from app.utils.otp import (
 router = APIRouter()
 logger = logging.getLogger(__name__)
 
+# Rate limiting para solicitação de OTP (evita spam de email e DoS)
+OTP_REQUEST_RATE_LIMIT_WINDOW_MINUTES = 10
+OTP_REQUEST_RATE_LIMIT_MAX_PER_EMAIL = 3
+OTP_REQUEST_RATE_LIMIT_MAX_PER_IP = 10
+
+
+def check_otp_request_rate_limit(db: Session, email: str, client_ip: str) -> None:
+    """
+    Bloqueia novas solicitações de OTP se o email ou o IP excederem o limite
+    de requisições dentro da janela de tempo configurada.
+    """
+    window_start = datetime.utcnow() - timedelta(minutes=OTP_REQUEST_RATE_LIMIT_WINDOW_MINUTES)
+
+    email_requests = db.query(LoginOTP).filter(
+        LoginOTP.email == email,
+        LoginOTP.created_at >= window_start
+    ).count()
+    if email_requests >= OTP_REQUEST_RATE_LIMIT_MAX_PER_EMAIL:
+        raise HTTPException(
+            status_code=429,
+            detail="Muitas solicitações de código para este email. Aguarde alguns minutos e tente novamente."
+        )
+
+    if client_ip and client_ip != "unknown":
+        ip_requests = db.query(LoginOTP).filter(
+            LoginOTP.ip_address == client_ip,
+            LoginOTP.created_at >= window_start
+        ).count()
+        if ip_requests >= OTP_REQUEST_RATE_LIMIT_MAX_PER_IP:
+            raise HTTPException(
+                status_code=429,
+                detail="Muitas solicitações de código a partir deste IP. Aguarde alguns minutos e tente novamente."
+            )
+
+
 @router.post("/request-otp")
 async def request_otp(
     request: Request,
@@ -75,18 +110,21 @@ async def request_otp(
                 detail="Usuário inativo. Contate o administrador."
             )
         
-        # 3. Limpar OTPs anteriores expirados
+        # 3. Verificar rate limit antes de gerar novo código
+        check_otp_request_rate_limit(db, email, client_ip)
+        
+        # 4. Limpar OTPs anteriores expirados
         db.query(LoginOTP).filter(
             LoginOTP.email == email,
             LoginOTP.expires_at < datetime.utcnow()
         ).delete()
         db.commit()
         
-        # 4. Gerar novo código
+        # 5. Gerar novo código
         code = generate_otp_code(6)
         expires_at = get_otp_expiration(8)  # 8 minutos
         
-        # 5. Salvar no banco
+        # 6. Salvar no banco
         otp = LoginOTP(
             email=email,
             code=code,
@@ -97,14 +135,14 @@ async def request_otp(
         db.add(otp)
         db.commit()
         
-        # 6. Enviar email
+        # 7. Enviar email
         try:
             email_service.send_otp_email(email, code, expires_in_minutes=8)
         except Exception as e:
             logger.error(f"Erro ao enviar email para {email}: {str(e)}", exc_info=True)
             # Continuar mesmo se email falhar
         
-        # 7. Registrar em auditoria
+        # 8. Registrar em auditoria
         audit = LoginAudit(
             user_id=user.id,
             email=email,
@@ -146,16 +184,18 @@ async def verify_otp(
         client_ip = get_client_ip(request)
         user_agent = get_user_agent(request)
         
-        # 1. Buscar OTP
+        # 1. Buscar o OTP mais recente não utilizado para este email (não filtra
+        # pelo código digitado, para conseguirmos contabilizar tentativas erradas
+        # mesmo quando o código informado está incorreto)
         otp = db.query(LoginOTP).filter(
             LoginOTP.email == email,
-            LoginOTP.code == code
-        ).first()
+            LoginOTP.used == False
+        ).order_by(LoginOTP.created_at.desc()).first()
         
         if not otp:
             raise HTTPException(
                 status_code=400,
-                detail="Código inválido"
+                detail="Código inválido ou não solicitado"
             )
         
         # 2. Verificar expiração
@@ -165,18 +205,34 @@ async def verify_otp(
                 detail="Código expirado"
             )
         
-        # 3. Verificar tentativas
-        if not validate_otp_attempts(otp.attempts, 5):
+        # 3. Verificar tentativas ANTES de validar o código, para bloquear brute-force
+        if not validate_otp_attempts(otp.attempts, otp.max_attempts):
             raise HTTPException(
                 status_code=403,
-                detail="Máximo de tentativas atingido"
+                detail="Máximo de tentativas atingido. Solicite um novo código."
             )
         
-        # 4. Verificar se já foi usado
-        if otp.used:
+        # 4. Comparar o código informado - se estiver errado, incrementa as
+        # tentativas e registra a falha em auditoria
+        if otp.code != code:
+            otp.attempts += 1
+            db.commit()
+            
+            audit = LoginAudit(
+                email=email,
+                login_method="otp",
+                ip_address=client_ip,
+                user_agent=user_agent,
+                success=False,
+                reason="Código incorreto"
+            )
+            db.add(audit)
+            db.commit()
+            
+            remaining = max(otp.max_attempts - otp.attempts, 0)
             raise HTTPException(
                 status_code=400,
-                detail="Código já foi utilizado"
+                detail=f"Código inválido. Tentativas restantes: {remaining}"
             )
         
         # 5. Buscar usuário
@@ -257,18 +313,21 @@ async def resend_otp(
                 detail="Usuário inativo"
             )
         
-        # 2. Deletar OTP anterior
+        # 2. Verificar rate limit antes de gerar novo código
+        check_otp_request_rate_limit(db, email, client_ip)
+        
+        # 3. Deletar OTP anterior
         db.query(LoginOTP).filter(
             LoginOTP.email == email,
             LoginOTP.used == False
         ).delete()
         db.commit()
         
-        # 3. Gerar novo código
+        # 4. Gerar novo código
         code = generate_otp_code(6)
         expires_at = get_otp_expiration(8)
         
-        # 4. Salvar
+        # 5. Salvar
         otp = LoginOTP(
             email=email,
             code=code,
@@ -279,7 +338,7 @@ async def resend_otp(
         db.add(otp)
         db.commit()
         
-        # 5. Enviar email
+        # 6. Enviar email
         try:
             email_service.send_otp_email(email, code, expires_in_minutes=8)
         except Exception as e:

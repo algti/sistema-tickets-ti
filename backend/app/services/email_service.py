@@ -53,6 +53,14 @@ class EmailService:
             msg['From'] = f"{self.from_name} <{self.from_email}>"
             msg['To'] = ', '.join(to_emails)
             
+            # Headers de autenticação para melhorar entregabilidade
+            msg['Reply-To'] = 'suporte@algti.com'
+            msg['X-Mailer'] = 'Sistema de Tickets ALG'
+            msg['X-Priority'] = '3'
+            msg['List-Unsubscribe'] = '<mailto:unsubscribe@algti.com>'
+            msg['MIME-Version'] = '1.0'
+            msg['Content-Type'] = 'text/html; charset=utf-8'
+            
             # Adicionar conteúdo HTML
             html_part = MIMEText(html_content, 'html', 'utf-8')
             msg.attach(html_part)

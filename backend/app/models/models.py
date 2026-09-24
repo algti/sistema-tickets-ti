@@ -117,20 +117,20 @@ class Ticket(Base):
     id = Column(Integer, primary_key=True, index=True)
     title = Column(String(255), nullable=False)
     description = Column(Text, nullable=False)
-    status = Column(Enum(TicketStatus), default=TicketStatus.OPEN)
-    priority = Column(Enum(TicketPriority), default=TicketPriority.MEDIUM)
+    status = Column(Enum(TicketStatus), default=TicketStatus.OPEN, index=True)
+    priority = Column(Enum(TicketPriority), default=TicketPriority.MEDIUM, index=True)
     
     # Time tracking for billing
     time_spent_hours = Column(Float, default=0.0)  # Horas gastas no atendimento
     
     # Foreign Keys
-    created_by_id = Column(Integer, ForeignKey("users.id"), nullable=False)
-    assigned_to_id = Column(Integer, ForeignKey("users.id"))
-    category_id = Column(Integer, ForeignKey("categories.id"))
-    company_id = Column(Integer, ForeignKey("companies.id"))
+    created_by_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    assigned_to_id = Column(Integer, ForeignKey("users.id"), index=True)
+    category_id = Column(Integer, ForeignKey("categories.id"), index=True)
+    company_id = Column(Integer, ForeignKey("companies.id"), index=True)
     
     # Timestamps
-    created_at = Column(DateTime(timezone=True), server_default=func.now())
+    created_at = Column(DateTime(timezone=True), server_default=func.now(), index=True)
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
     resolved_at = Column(DateTime(timezone=True))
     closed_at = Column(DateTime(timezone=True))
@@ -156,8 +156,8 @@ class TicketComment(Base):
     is_internal = Column(Boolean, default=False)  # Internal comments only visible to technicians
     
     # Foreign Keys
-    ticket_id = Column(Integer, ForeignKey("tickets.id"), nullable=False)
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    ticket_id = Column(Integer, ForeignKey("tickets.id"), nullable=False, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now())
@@ -178,7 +178,7 @@ class TicketAttachment(Base):
     content_type = Column(String(100))
     
     # Foreign Keys
-    ticket_id = Column(Integer, ForeignKey("tickets.id"), nullable=False)
+    ticket_id = Column(Integer, ForeignKey("tickets.id"), nullable=False, index=True)
     uploaded_by_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     
     # Timestamps
@@ -198,7 +198,7 @@ class TicketActivity(Base):
     new_value = Column(Text)
     
     # Foreign Keys
-    ticket_id = Column(Integer, ForeignKey("tickets.id"), nullable=False)
+    ticket_id = Column(Integer, ForeignKey("tickets.id"), nullable=False, index=True)
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
     
     # Timestamps
@@ -277,9 +277,9 @@ class Asset(Base):
     in_maintenance = Column(Boolean, default=False)
     
     # Foreign Keys
-    category_id = Column(Integer, ForeignKey("asset_categories.id"))
-    assigned_to_id = Column(Integer, ForeignKey("users.id"))
-    company_id = Column(Integer, ForeignKey("companies.id"))
+    category_id = Column(Integer, ForeignKey("asset_categories.id"), index=True)
+    assigned_to_id = Column(Integer, ForeignKey("users.id"), index=True)
+    company_id = Column(Integer, ForeignKey("companies.id"), index=True)
     
     # Timestamps
     created_at = Column(DateTime(timezone=True), server_default=func.now())

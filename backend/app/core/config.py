@@ -1,5 +1,14 @@
 from pydantic_settings import BaseSettings
 from typing import Optional
+import logging
+
+logger = logging.getLogger(__name__)
+
+# Valor de exemplo usado apenas em .env.example - nunca deve chegar em produção
+INSECURE_DEFAULT_SECRET_KEYS = {
+    "your-super-secret-key-change-in-production",
+    "dev-secret-key-change-in-production-12345",
+}
 
 
 class Settings(BaseSettings):
@@ -53,3 +62,20 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
+
+# Impede rodar em produção (DEBUG=false) com uma SECRET_KEY de exemplo -
+# isso permitiria forjar tokens JWT de qualquer usuário.
+if settings.SECRET_KEY in INSECURE_DEFAULT_SECRET_KEYS:
+    if settings.DEBUG:
+        logger.warning(
+            "SECRET_KEY está usando um valor de exemplo/inseguro. "
+            "Isso só é tolerado porque DEBUG=true. Gere uma chave forte "
+            "(ex: python -c \"import secrets; print(secrets.token_urlsafe(64))\") "
+            "antes de ir para produção."
+        )
+    else:
+        raise RuntimeError(
+            "SECRET_KEY está usando um valor de exemplo/inseguro com DEBUG=false. "
+            "Gere uma chave forte (ex: python -c \"import secrets; print(secrets.token_urlsafe(64))\") "
+            "e defina SECRET_KEY no .env antes de iniciar em produção."
+        )
